@@ -1,0 +1,9 @@
+node_modules/
+uploads/
+*.log
+.DS_Store
+.env
+results/
+tmp/
+*.csv
+*.txt

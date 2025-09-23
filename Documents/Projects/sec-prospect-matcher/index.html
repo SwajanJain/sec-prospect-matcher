@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SEC Prospect Matcher</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: #2c3e50;
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.8;
+            font-size: 1.1em;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .upload-section {
+            margin-bottom: 30px;
+            padding: 25px;
+            border: 2px dashed #e74c3c;
+            border-radius: 10px;
+            background: #fdf2f2;
+        }
+
+        .upload-section.secondary {
+            border-color: #3498db;
+            background: #f0f8ff;
+        }
+
+        .upload-section h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .file-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            background: white;
+        }
+
+        .file-input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .file-info {
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .match-btn {
+            width: 100%;
+            padding: 15px;
+            background: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .match-btn:hover:not(:disabled) {
+            background: #229954;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(39, 174, 96, 0.3);
+        }
+
+        .match-btn:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .cancel-btn {
+            width: 100%;
+            padding: 15px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .cancel-btn:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
+        }
+
+        .progress {
+            display: none;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: #ecf0f1;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #3498db;
+            transition: width 0.3s ease;
+            border-radius: 5px;
+        }
+
+        .results {
+            display: none;
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .download-btn {
+            display: inline-block;
+            padding: 12px 25px;
+            background: #e74c3c;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: bold;
+            transition: background 0.3s ease;
+        }
+
+        .download-btn:hover {
+            background: #c0392b;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+            border: 1px solid #f5c6cb;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+            border: 1px solid #c3e6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 SEC Prospect Matcher</h1>
+            <p>Match prospect data with SEC filings automatically</p>
+        </div>
+
+        <div class="content">
+            <form id="matchForm">
+                <div class="upload-section">
+                    <h3>📊 Upload Prospects CSV</h3>
+                    <input type="file" id="prospectsFile" class="file-input" accept=".csv" required>
+                    <div class="file-info">Expected format: prospect_id, prospect_name, company_name</div>
+                </div>
+
+                <div class="upload-section secondary">
+                    <h3>📄 Upload SEC Filing Files</h3>
+                    <input type="file" id="secFiles" class="file-input" accept=".txt" multiple required>
+                    <div class="file-info">Select multiple .txt files (format: 0000000000-23-010578.txt)</div>
+                </div>
+
+                <button type="submit" class="match-btn" id="matchBtn">
+                    🚀 Start Matching Process
+                </button>
+
+                <button type="button" class="cancel-btn" id="cancelBtn" style="display: none;">
+                    ❌ Cancel Processing
+                </button>
+            </form>
+
+            <div class="progress" id="progress">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div id="progressText">Processing files...</div>
+            </div>
+
+            <div class="results" id="results"></div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        const form = document.getElementById('matchForm');
+        const matchBtn = document.getElementById('matchBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const progress = document.getElementById('progress');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        const results = document.getElementById('results');
+
+        let isProcessing = false;
+        let currentRequest = null;
+
+        // Real-time progress updates
+        socket.on('status', (status) => {
+            progressText.textContent = status;
+        });
+
+        socket.on('progress', (data) => {
+            console.log('Progress data received:', data); // Debug log
+
+            // Update progress bar
+            const percentage = Math.round(data.progress || 0);
+            progressFill.style.width = percentage + '%';
+
+            // Calculate detailed stats
+            const current = data.current || 0;
+            const total = data.total || 0;
+            const filesLeft = total - current;
+            const avgTimePerFile = data.avgProcessingTime || data.processingTime || 0;
+
+            // Calculate ETA
+            let etaDisplay = 'Calculating...';
+            if (avgTimePerFile > 0 && filesLeft > 0) {
+                const etaSeconds = Math.round((filesLeft * avgTimePerFile) / 1000);
+                const etaMinutes = Math.floor(etaSeconds / 60);
+                const etaSecondsRem = etaSeconds % 60;
+
+                if (etaMinutes > 60) {
+                    const hours = Math.floor(etaMinutes / 60);
+                    const minutes = etaMinutes % 60;
+                    etaDisplay = `${hours}h ${minutes}m`;
+                } else if (etaMinutes > 0) {
+                    etaDisplay = `${etaMinutes}m ${etaSecondsRem}s`;
+                } else {
+                    etaDisplay = `${etaSeconds}s`;
+                }
+            }
+
+            // Format processing speed
+            const speedText = avgTimePerFile > 0 ? `${Math.round(avgTimePerFile)}ms/file` : 'Calculating...';
+
+            // Update display with enhanced formatting
+            progressText.innerHTML = `
+                <div style="font-size: 18px; margin-bottom: 10px;">
+                    <strong style="color: #2c3e50;">${percentage}% COMPLETE</strong>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                    <div>
+                        <strong>📊 Files Progress:</strong><br>
+                        <span style="font-size: 16px; color: #3498db;">${current} / ${total}</span><br>
+                        <span style="color: #e74c3c;">${filesLeft} files remaining</span>
+                    </div>
+                    <div>
+                        <strong>⏱️ Time Remaining:</strong><br>
+                        <span style="font-size: 16px; color: #27ae60;">${etaDisplay}</span><br>
+                        <span style="color: #7f8c8d;">Speed: ${speedText}</span>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 10px;">
+                    <strong>🔥 Current File:</strong><br>
+                    <span style="font-size: 12px; color: #34495e;">${data.file || 'Processing...'}</span>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; font-size: 14px;">
+                    <div>
+                        <strong>🎯 Matches:</strong><br>
+                        <span style="color: #27ae60; font-weight: bold;">${data.matches || 0}</span>
+                    </div>
+                    <div>
+                        <strong>👥 Candidates:</strong><br>
+                        <span style="color: #3498db;">${data.candidates || 0}</span>
+                    </div>
+                    <div>
+                        <strong>📄 Tokens:</strong><br>
+                        <span style="color: #9b59b6;">${(data.tokens || 0).toLocaleString()}</span>
+                    </div>
+                </div>
+            `;
+        });
+
+        socket.on('complete', (data) => {
+            isProcessing = false;
+            matchBtn.disabled = false;
+            matchBtn.textContent = '🚀 Start Matching Process';
+            cancelBtn.style.display = 'none';
+
+            progressText.innerHTML = `
+                <div style="text-align: center; padding: 20px;">
+                    <div style="font-size: 24px; color: #27ae60; margin-bottom: 15px;">
+                        ✅ PROCESSING COMPLETE!
+                    </div>
+                    <div style="font-size: 18px; margin-bottom: 10px;">
+                        <strong style="color: #2c3e50;">Total Matches Found: <span style="color: #27ae60;">${data.matches}</span></strong>
+                    </div>
+                    <div style="color: #7f8c8d;">
+                        Ready to download results!
+                    </div>
+                </div>
+            `;
+        });
+
+        socket.on('error', (error) => {
+            isProcessing = false;
+            showError('Server error: ' + error);
+            matchBtn.disabled = false;
+            matchBtn.textContent = '🚀 Start Matching Process';
+            cancelBtn.style.display = 'none';
+            progress.style.display = 'none';
+        });
+
+        // Cancel button functionality
+        cancelBtn.addEventListener('click', () => {
+            if (isProcessing && currentRequest) {
+                // Abort the current request
+                currentRequest.abort();
+
+                // Reset UI
+                isProcessing = false;
+                matchBtn.disabled = false;
+                matchBtn.textContent = '🚀 Start Matching Process';
+                cancelBtn.style.display = 'none';
+                progress.style.display = 'none';
+
+                showError('Processing cancelled by user.');
+            }
+        });
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const prospectsFile = document.getElementById('prospectsFile').files[0];
+            const secFiles = document.getElementById('secFiles').files;
+
+            if (!prospectsFile || secFiles.length === 0) {
+                showError('Please select both prospects CSV and SEC filing files');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('prospects', prospectsFile);
+
+            for (let i = 0; i < secFiles.length; i++) {
+                formData.append('secFiles', secFiles[i]);
+            }
+
+            isProcessing = true;
+            matchBtn.disabled = true;
+            matchBtn.textContent = '⏳ Processing...';
+            cancelBtn.style.display = 'block';
+            progress.style.display = 'block';
+            results.style.display = 'none';
+            progressFill.style.width = '0%';
+            progressText.textContent = 'Preparing files for upload...';
+
+            try {
+                // Create AbortController for cancellation
+                const controller = new AbortController();
+                currentRequest = controller;
+
+                const response = await fetch('/match', {
+                    method: 'POST',
+                    body: formData,
+                    signal: controller.signal
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showSuccess(result.message, result.matches, result.downloadUrl);
+                } else {
+                    showError(result.error);
+                }
+            } catch (error) {
+                if (error.name === 'AbortError') {
+                    showError('Processing was cancelled.');
+                } else {
+                    showError('Error processing files: ' + error.message);
+                }
+            } finally {
+                isProcessing = false;
+                currentRequest = null;
+                matchBtn.disabled = false;
+                matchBtn.textContent = '🚀 Start Matching Process';
+                cancelBtn.style.display = 'none';
+
+                // Only hide progress after delay if processing completed (not cancelled)
+                if (!error || error.name !== 'AbortError') {
+                    setTimeout(() => {
+                        if (!isProcessing) {
+                            progress.style.display = 'none';
+                        }
+                    }, 3000);
+                } else {
+                    progress.style.display = 'none';
+                }
+            }
+        });
+
+        function showError(message) {
+            results.innerHTML = `<div class="error">❌ ${message}</div>`;
+            results.style.display = 'block';
+        }
+
+        function showSuccess(message, matches, downloadUrl) {
+            results.innerHTML = `
+                <div class="success">✅ ${message}</div>
+                <p style="margin: 15px 0;"><strong>Found ${matches} matches!</strong></p>
+                <a href="${downloadUrl}" class="download-btn" download>📥 Download Results CSV</a>
+            `;
+            results.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
