@@ -7,12 +7,8 @@ An intelligent system for matching alumni/prospect names with SEC filings using 
 This tool helps organizations (universities, investment firms, etc.) track their alumni/prospects mentioned in SEC filings by:
 - **Finding exact name + company mentions** with proximity-based confidence
 - **Preventing false positives** through strict validation rules
-- **Processing massive datasets** (780 prospects × 287 SEC files in ~9 minutes)
+- **Processing massive datasets**
 
-### Example Use Case
-**Input:** Carnegie Mellon alumni database (780 prospects)  
-**Input:** 287 SEC filing text files  
-**Output:** 113 high-quality matches with confidence scores
 
 ---
 
