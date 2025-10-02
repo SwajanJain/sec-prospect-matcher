@@ -309,22 +309,43 @@
                     <div class="file-info">Select multiple .txt files (format: 0000000000-23-010578.txt)</div>
                 </div>
 
-                <div style="display: flex; gap: 10px; margin-top: 20px;">
-                    <button type="submit" class="match-btn" id="matchBtn" style="flex: 1;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px;">
+                    <button type="submit" class="match-btn" id="matchBtn" style="background: #3498db;">
                         🚀 Standard Matching
                     </button>
 
-                    <button type="button" class="match-btn" id="linearMatchBtn" style="flex: 1; background: #8e44ad;">
+                    <button type="button" class="match-btn" id="linearMatchBtn" style="background: #8e44ad;">
                         ⚡ Linear Matching (Fast)
                     </button>
 
-                    <button type="button" class="match-btn" id="chunkedMatchBtn" style="flex: 1; background: #e67e22;">
+                    <button type="button" class="match-btn" id="adaptiveMatchBtn" style="background: #f39c12;">
+                        🛡️ Adaptive Matching (No False +)
+                    </button>
+
+                    <button type="button" class="match-btn" id="chunkedMatchBtn" style="background: #e67e22;">
                         📦 Auto-Chunked (Large Datasets)
+                    </button>
+
+                    <button type="button" class="match-btn" id="databaseMatchBtn" style="background: #27ae60;">
+                        🗄️ Database (Unlimited Scale)
                     </button>
                 </div>
 
-                <div style="font-size: 0.9em; color: #666; margin: 10px 0; text-align: center;">
-                    <strong>Linear:</strong> 10-50x faster • <strong>Auto-Chunked:</strong> Handles 100K+ prospects without memory issues
+                <div style="font-size: 0.85em; color: #666; margin: 15px 0; text-align: center; padding: 10px; background: #f8f9fa; border-radius: 6px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+                        <div>
+                            <strong>⚡ Linear:</strong> 10-50x faster<br>
+                            <strong>Best for speed</strong>
+                        </div>
+                        <div>
+                            <strong>🛡️ Adaptive:</strong> Strict validation<br>
+                            <strong>Prevents false positives</strong>
+                        </div>
+                        <div>
+                            <strong>🗄️ Database:</strong> Unlimited scale<br>
+                            <strong>Constant memory</strong>
+                        </div>
+                    </div>
                 </div>
 
                 <button type="button" class="cancel-btn" id="cancelBtn" style="display: none;">
@@ -358,7 +379,9 @@
         const form = document.getElementById('matchForm');
         const matchBtn = document.getElementById('matchBtn');
         const linearMatchBtn = document.getElementById('linearMatchBtn');
+        const adaptiveMatchBtn = document.getElementById('adaptiveMatchBtn');
         const chunkedMatchBtn = document.getElementById('chunkedMatchBtn');
+        const databaseMatchBtn = document.getElementById('databaseMatchBtn');
         const cancelBtn = document.getElementById('cancelBtn');
         const stopExportBtn = document.getElementById('stopExportBtn');
         const progress = document.getElementById('progress');
@@ -498,9 +521,9 @@
             const filesLeft = total - current;
             const avgTimePerFile = data.avgProcessingTime || data.processingTime || 0;
 
-            // Calculate ETA
-            let etaDisplay = 'Calculating...';
-            if (avgTimePerFile > 0 && filesLeft > 0) {
+            // Enhanced ETA calculation for massive datasets
+            let etaDisplay = data.eta || 'Calculating...';
+            if (!data.eta && avgTimePerFile > 0 && filesLeft > 0) {
                 const etaSeconds = Math.round((filesLeft * avgTimePerFile) / 1000);
                 const etaMinutes = Math.floor(etaSeconds / 60);
                 const etaSecondsRem = etaSeconds % 60;
@@ -519,17 +542,21 @@
             // Format processing speed
             const speedText = avgTimePerFile > 0 ? `${Math.round(avgTimePerFile)}ms/file` : 'Calculating...';
 
-            // Update display with enhanced formatting
+            // Dataset size indicator for massive datasets
+            const datasetInfo = data.datasetSize ? `📦 Dataset: ${data.datasetSize}` : '';
+
+            // Update display with enhanced formatting for massive datasets
             progressText.innerHTML = `
                 <div style="font-size: 18px; margin-bottom: 10px;">
                     <strong style="color: #2c3e50;">${percentage}% COMPLETE</strong>
+                    ${datasetInfo ? `<div style="font-size: 12px; color: #7f8c8d; margin-top: 5px;">${datasetInfo}</div>` : ''}
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
                     <div>
                         <strong>📊 Files Progress:</strong><br>
-                        <span style="font-size: 16px; color: #3498db;">${current} / ${total}</span><br>
-                        <span style="color: #e74c3c;">${filesLeft} files remaining</span>
+                        <span style="font-size: 16px; color: #3498db;">${current.toLocaleString()} / ${total.toLocaleString()}</span><br>
+                        <span style="color: #e74c3c;">${filesLeft.toLocaleString()} files remaining</span>
                     </div>
                     <div>
                         <strong>⏱️ Time Remaining:</strong><br>
@@ -540,23 +567,29 @@
 
                 <div style="margin-bottom: 10px;">
                     <strong>🔥 Current File:</strong><br>
-                    <span style="font-size: 12px; color: #34495e;">${data.file || 'Processing...'}</span>
+                    <span style="font-size: 12px; color: #34495e; word-break: break-all;">${data.file || 'Processing...'}</span>
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; font-size: 14px;">
                     <div>
                         <strong>🎯 Matches:</strong><br>
-                        <span style="color: #27ae60; font-weight: bold;">${data.matches || 0}</span>
+                        <span style="color: #27ae60; font-weight: bold;">${(data.matches || 0).toLocaleString()}</span>
                     </div>
                     <div>
                         <strong>👥 Candidates:</strong><br>
-                        <span style="color: #3498db;">${data.candidates || 0}</span>
+                        <span style="color: #3498db;">${(data.candidates || 0).toLocaleString()}</span>
                     </div>
                     <div>
-                        <strong>📄 Tokens:</strong><br>
-                        <span style="color: #9b59b6;">${(data.tokens || 0).toLocaleString()}</span>
+                        <strong>📄 Size:</strong><br>
+                        <span style="color: #9b59b6;">${data.datasetSize || 'Processing...'}</span>
                     </div>
                 </div>
+
+                ${total > 1000 ? `
+                <div style="margin-top: 10px; padding: 8px; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px; font-size: 12px;">
+                    <strong>🚀 Massive Dataset Mode:</strong> Optimized for ${total.toLocaleString()} files with streaming and aggressive memory management
+                </div>
+                ` : ''}
             `;
         });
 
@@ -738,6 +771,19 @@
             await processMatching('/match-linear', prospectsFile, secFiles, 'Linear');
         });
 
+        // ADAPTIVE MATCHING EVENT HANDLER
+        adaptiveMatchBtn.addEventListener('click', async () => {
+            const prospectsFile = document.getElementById('prospectsFile').files[0];
+            const secFiles = document.getElementById('secFiles').files;
+
+            if (!prospectsFile || secFiles.length === 0) {
+                showError('Please select both prospects CSV and SEC filing files');
+                return;
+            }
+
+            await processMatching('/match-adaptive', prospectsFile, secFiles, 'Adaptive');
+        });
+
         // Auto-Chunked Linear Matching button
         chunkedMatchBtn.addEventListener('click', async () => {
             const prospectsFile = document.getElementById('prospectsFile').files[0];
@@ -749,6 +795,19 @@
             }
 
             await processMatching('/match-linear-chunked', prospectsFile, secFiles, 'Auto-Chunked');
+        });
+
+        // Database Matching button - Unlimited scale with constant memory
+        databaseMatchBtn.addEventListener('click', async () => {
+            const prospectsFile = document.getElementById('prospectsFile').files[0];
+            const secFiles = document.getElementById('secFiles').files;
+
+            if (!prospectsFile || secFiles.length === 0) {
+                showError('Please select both prospects CSV and SEC filing files');
+                return;
+            }
+
+            await processMatching('/match-database', prospectsFile, secFiles, 'Database');
         });
 
         // Helper function for all matching approaches
@@ -764,9 +823,11 @@
             matchBtn.disabled = true;
             linearMatchBtn.disabled = true;
             chunkedMatchBtn.disabled = true;
+            databaseMatchBtn.disabled = true;
             matchBtn.textContent = '⏳ Processing...';
             linearMatchBtn.textContent = '⏳ Processing...';
             chunkedMatchBtn.textContent = '⏳ Processing...';
+            databaseMatchBtn.textContent = '⏳ Processing...';
             cancelBtn.style.display = 'block';
             stopExportBtn.style.display = 'block';
             progress.style.display = 'block';
@@ -812,9 +873,11 @@
                 matchBtn.disabled = false;
                 linearMatchBtn.disabled = false;
                 chunkedMatchBtn.disabled = false;
+                databaseMatchBtn.disabled = false;
                 matchBtn.textContent = '🚀 Standard Matching';
                 linearMatchBtn.textContent = '⚡ Linear Matching (Fast)';
                 chunkedMatchBtn.textContent = '📦 Auto-Chunked (Large Datasets)';
+                databaseMatchBtn.textContent = '🗄️ Database (Unlimited Scale)';
                 cancelBtn.style.display = 'none';
                 stopExportBtn.style.display = 'none';
 

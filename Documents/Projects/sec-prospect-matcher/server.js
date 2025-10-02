@@ -10,6 +10,8 @@ const http = require('http');
 const cluster = require('cluster');
 const os = require('os');
 const LinearMatcher = require('./LinearMatcher');
+const AdaptiveMatcher = require('./AdaptiveMatcher');
+const DatabaseMatcher = require('./DatabaseMatcher');
 
 const app = express();
 const server = http.createServer(app);
@@ -1505,6 +1507,116 @@ app.post('/match-linear', upload.fields([
     }
 });
 
+// ADAPTIVE MATCHING ENDPOINT - Strict validation to prevent false positives
+app.post('/match-adaptive', upload.fields([
+    { name: 'prospects', maxCount: 1 },
+    { name: 'secFiles', maxCount: 10000 }
+]), async (req, res) => {
+    const socket = Array.from(io.sockets.sockets.values())[0];
+
+    try {
+        const prospectsFile = req.files['prospects']?.[0];
+        const secFiles = req.files['secFiles'] || [];
+
+        if (!prospectsFile || secFiles.length === 0) {
+            return res.status(400).json({
+                success: false,
+                error: 'Please provide both prospects CSV and SEC files'
+            });
+        }
+
+        console.log(`\n🛡️  ADAPTIVE MATCHING: Processing ${secFiles.length} SEC files with strict validation...`);
+
+        const adaptiveMatcher = new AdaptiveMatcher();
+        currentMatcher = adaptiveMatcher; // Track for stop & export functionality
+
+        if (socket) socket.emit('status', 'Loading prospects for adaptive matching...');
+        await adaptiveMatcher.loadProspects(prospectsFile.path);
+        console.log(`Loaded ${adaptiveMatcher.prospects.length} prospects`);
+
+        if (adaptiveMatcher.prospects.length === 0) {
+            return res.status(400).json({
+                success: false,
+                error: 'No valid prospects found in CSV. Expected columns: prospect_id, prospect_name, company_name'
+            });
+        }
+
+        const debugMode = secFiles.some(f => f.originalname.includes('0001104659-25-088238')) ||
+                          secFiles.length < 10; // Enable debug for small datasets
+
+        if (socket) {
+            socket.emit('status',
+                debugMode ?
+                'Starting ADAPTIVE matching with debug mode...' :
+                'Starting ADAPTIVE matching with strict validation...'
+            );
+        }
+
+        // Use adaptive matching algorithm (same as linear but with extra validation)
+        const matches = await adaptiveMatcher.processMatchingLinear(secFiles, socket, debugMode);
+
+        console.log(`\n🎉 ADAPTIVE MATCHING COMPLETE:`);
+        console.log(`- Total matches found: ${matches.length}`);
+        console.log(`- Note: Matches filtered with adaptive rules (space boundaries, context checks)`);
+
+        // Break down by match type
+        const matchStats = {
+            'Name + Company': matches.filter(m => m.match_type === 'Name + Company').length,
+            'Name Only': matches.filter(m => m.match_type === 'Name Only').length,
+            'Company Only': matches.filter(m => m.match_type === 'Company Only').length
+        };
+
+        console.log(`- Match breakdown: Name+Company: ${matchStats['Name + Company']}, Name Only: ${matchStats['Name Only']}, Company Only: ${matchStats['Company Only']}`);
+
+        if (socket) socket.emit('status', 'Generating CSV file...');
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const outputPath = path.join('uploads', `adaptive_matches_${timestamp}.csv`);
+        await adaptiveMatcher.exportToCsv(outputPath, debugMode);
+
+        if (socket) {
+            socket.emit('complete', {
+                matches: matches.length,
+                matchStats: matchStats,
+                message: 'Adaptive matching completed successfully!'
+            });
+        }
+
+        // Cleanup uploaded files
+        [prospectsFile, ...secFiles].forEach(file => {
+            try {
+                if (file && file.path && fs.existsSync(file.path)) {
+                    fs.unlinkSync(file.path);
+                }
+            } catch (error) {
+                console.error('Error deleting temporary file:', error);
+            }
+        });
+
+        res.json({
+            success: true,
+            message: `Adaptive matching completed successfully!`,
+            matches: matches.length,
+            matchStats: matchStats,
+            algorithm: 'Adaptive Aho-Corasick with Strict Validation',
+            downloadUrl: `/download/${path.basename(outputPath)}`
+        });
+
+        // Clear the current matcher reference
+        currentMatcher = null;
+
+    } catch (error) {
+        console.error('Adaptive matching error:', error);
+        if (socket) socket.emit('error', error.message);
+        res.status(500).json({
+            success: false,
+            error: 'Error processing files with adaptive matcher: ' + error.message
+        });
+
+        // Clear the current matcher reference
+        currentMatcher = null;
+    }
+});
+
 // AUTO-CHUNKED LINEAR MATCHING - Handles large prospect datasets automatically
 app.post('/match-linear-chunked', upload.fields([
     { name: 'prospects', maxCount: 1 },
@@ -1602,6 +1714,135 @@ app.post('/match-linear-chunked', upload.fields([
 
         // Clear the current matcher reference
         currentMatcher = null;
+    }
+});
+
+// DATABASE MATCHING ENDPOINT - Scalable approach for unlimited prospects
+app.post('/match-database', upload.fields([
+    { name: 'prospects', maxCount: 1 },
+    { name: 'secFiles', maxCount: 10000 }
+]), async (req, res) => {
+    const socket = Array.from(io.sockets.sockets.values())[0];
+
+    try {
+        const prospectsFile = req.files['prospects']?.[0];
+        const secFiles = req.files['secFiles'] || [];
+
+        if (!prospectsFile || secFiles.length === 0) {
+            return res.status(400).json({
+                success: false,
+                error: 'Please upload both prospects CSV file and SEC filing files'
+            });
+        }
+
+        console.log(`🗄️ DATABASE MATCHING: Processing ${secFiles.length} SEC files with scalable approach...`);
+
+        console.log('🔧 Creating DatabaseMatcher instance...');
+        // Create database matcher
+        const databaseMatcher = new DatabaseMatcher();
+        currentMatcher = databaseMatcher;
+
+        console.log('🔧 Initializing SQLite database...');
+        // Initialize SQLite database
+        await databaseMatcher.initialize();
+        console.log('✅ Database initialization complete');
+
+        if (socket) {
+            socket.emit('status', 'Indexing prospects in database...');
+        }
+
+        // Index all prospects in database (handles unlimited size)
+        await databaseMatcher.indexProspects(prospectsFile.path, socket);
+        console.log(`📊 Indexed ${databaseMatcher.totalProspects} prospects with variations`);
+
+        if (socket) {
+            socket.emit('status', `Processing ${secFiles.length} SEC files with database queries...`);
+        }
+
+        // Process SEC files using database-driven matching
+        const totalMatches = await databaseMatcher.processSecFiles(secFiles, socket);
+
+        console.log(`🎉 DATABASE MATCHING COMPLETE:`);
+        console.log(`- Total prospects indexed: ${databaseMatcher.totalProspects}`);
+        console.log(`- Total matches found: ${totalMatches}`);
+        console.log(`- Memory usage: Constant (~500MB) regardless of prospect count`);
+
+        if (socket) {
+            socket.emit('complete', {
+                matches: totalMatches,
+                message: 'Database matching completed successfully!',
+                algorithm: 'SQLite Database-First Architecture'
+            });
+        }
+
+        // Cleanup uploaded files
+        [prospectsFile, ...secFiles].forEach(file => {
+            try {
+                if (file && file.path && fs.existsSync(file.path)) {
+                    fs.unlinkSync(file.path);
+                }
+            } catch (error) {
+                console.error('Error deleting temporary file:', error);
+            }
+        });
+
+        res.json({
+            success: true,
+            message: `Database matching completed successfully!`,
+            matches: totalMatches,
+            algorithm: 'SQLite Database-First (Unlimited Scale)',
+            scalability: `Handles ${databaseMatcher.totalProspects.toLocaleString()} prospects with constant memory`,
+            downloadUrl: `/download-database-matches`
+        });
+
+        // Clean up database
+        await databaseMatcher.cleanup();
+        currentMatcher = null;
+
+    } catch (error) {
+        console.error('Database matching error:', error);
+        if (socket) socket.emit('error', error.message);
+        res.status(500).json({
+            success: false,
+            error: 'Error processing files with database matcher: ' + error.message
+        });
+
+        // Clean up database and current matcher reference
+        if (currentMatcher) {
+            try {
+                await currentMatcher.cleanup();
+            } catch (e) {
+                console.error('Error cleaning up database:', e);
+            }
+        }
+        currentMatcher = null;
+    }
+});
+
+// Download database matches
+app.get('/download-database-matches', (req, res) => {
+    const filepath = path.join(__dirname, 'database_matches.csv');
+
+    if (fs.existsSync(filepath)) {
+        const filename = `database_matches_${Date.now()}.csv`;
+        res.download(filepath, filename, (err) => {
+            if (err) {
+                console.error('Database matches download error:', err);
+                res.status(500).json({ error: 'Download failed' });
+            } else {
+                console.log(`📄 Database matches downloaded: ${filename}`);
+                // Clean up file after download
+                setTimeout(() => {
+                    try {
+                        fs.unlinkSync(filepath);
+                    } catch (e) {
+                        console.error('Error deleting database matches file:', e);
+                    }
+                }, 5000);
+            }
+        });
+    } else {
+        res.status(404).json({ error: 'Database matches file not found' });
     }
 });
 

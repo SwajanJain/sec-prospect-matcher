@@ -71,73 +71,74 @@ class LinearMatcher {
     normalizeTextChunk(text) {
         return text
             .toLowerCase()
-            .normalize('NFKC')
-            .replace(/[^\p{L}\p{N}]/gu, ' ')
-            .replace(/\s+/g, ' ')
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // Remove accents
+            .replace(/[^\w\s]/g, ' ') // Remove punctuation
+            .replace(/\s+/g, ' ') // Collapse spaces
             .trim();
     }
 
     /**
-     * MEMORY-OPTIMIZED: Generate essential name patterns only
-     * Reduces automaton size significantly
+     * Generate name patterns: First + Last adjacent OR with single initial between
+     * No partial matches (no individual words)
      */
     generateNamePatterns(fullName) {
-        const patterns = new Set();
+        const variations = [];
         const normalized = this.normalizeText(fullName);
         const tokens = normalized.split(' ').filter(t => t.length > 0);
 
-        if (tokens.length === 0) return [];
+        if (tokens.length < 2) return []; // Need at least first and last name
 
-        // OPTIMIZATION: Only generate most essential patterns to reduce memory
+        const firstName = tokens[0];
+        const lastName = tokens[tokens.length - 1];
 
-        // Full name (most reliable)
-        if (normalized.length > 4) { // Avoid very short names
-            patterns.add(normalized);
-        }
+        if (firstName.length < 2 || lastName.length < 2) return [];
 
-        // First + Last name only (common in documents)
-        if (tokens.length >= 2 && tokens[0].length > 1 && tokens[tokens.length - 1].length > 1) {
-            const firstLast = `${tokens[0]} ${tokens[tokens.length - 1]}`;
-            patterns.add(firstLast);
-        }
+        // Pattern 1: Exact "First Last" (adjacent)
+        variations.push({
+            text: `${firstName} ${lastName}`,
+            type: 'first_last_exact',
+            firstName: firstName,
+            lastName: lastName
+        });
 
-        // Skip initial patterns for memory optimization - they cause too many false positives
+        // Pattern 2: "First Last" with single initial between (e.g., "Swajan K. Jain")
+        // We'll store this metadata and check dynamically during matching
+        variations.push({
+            text: `${firstName} ${lastName}`,
+            type: 'first_last_with_initial',
+            firstName: firstName,
+            lastName: lastName,
+            allowInitial: true
+        });
 
-        return Array.from(patterns).filter(p => p.length > 4); // Higher threshold for quality
+        return variations;
     }
 
     /**
-     * MEMORY-OPTIMIZED: Generate essential company patterns only
+     * Generate company patterns: Normalize root by stripping suffixes
+     * Then match with word boundaries
      */
     generateCompanyPatterns(companyName) {
-        const patterns = new Set();
+        const variations = [];
         const normalized = this.normalizeText(companyName);
 
-        if (!normalized || normalized.length < 4) return []; // Higher threshold
+        if (!normalized || normalized.length < 3) return [];
 
-        // OPTIMIZATION: Only most essential patterns to reduce memory
+        // Remove common legal suffixes to get root company name
+        const root = normalized
+            .replace(/\b(inc|incorporated|corp|corporation|company|co|llc|ltd|limited|plc|lp|l p)\b/g, '')
+            .replace(/\s+/g, ' ')
+            .trim();
 
-        // Original normalized form (most reliable)
-        patterns.add(normalized);
+        if (root.length < 3) return [];
 
-        // Remove common legal suffixes (very useful variation)
-        const withoutSuffixes = normalized.replace(
-            /\b(inc|incorporated|corp|corporation|company|co|llc|ltd|limited|plc)\b/g,
-            ''
-        ).replace(/\s+/g, ' ').trim();
+        // Main pattern: normalized root (matches "PNC" or "PNC Capital Markets")
+        variations.push({
+            text: root,
+            type: 'company_root'
+        });
 
-        if (withoutSuffixes.length > 3 && withoutSuffixes !== normalized) {
-            patterns.add(withoutSuffixes);
-        }
-
-        // Skip tech/technology variations for memory optimization
-        // Only add & replacement if it's not too short
-        const ampersandVariation = normalized.replace(/\band\b/g, '&');
-        if (ampersandVariation !== normalized && ampersandVariation.length > 4) {
-            patterns.add(ampersandVariation);
-        }
-
-        return Array.from(patterns).filter(p => p.length > 3);
+        return variations;
     }
 
     /**
@@ -151,24 +152,44 @@ class LinearMatcher {
         this.patternMap.clear();
 
         for (const prospect of this.prospects) {
-            // Generate name patterns
-            const namePatterns = this.generateNamePatterns(prospect.name);
-            namePatterns.forEach(pattern => {
+            // Generate name patterns (returns variation objects)
+            const nameVariations = this.generateNamePatterns(prospect.name);
+            nameVariations.forEach(variation => {
+                const pattern = variation.text;
                 if (!this.patternMap.has(pattern)) {
-                    this.patternMap.set(pattern, { type: 'name', prospectIds: [] });
+                    this.patternMap.set(pattern, {
+                        type: 'name',
+                        prospectIds: [],
+                        variations: [] // Store variation metadata
+                    });
                     allPatterns.push(pattern);
                 }
-                this.patternMap.get(pattern).prospectIds.push(prospect.id);
+                const patternInfo = this.patternMap.get(pattern);
+                patternInfo.prospectIds.push(prospect.id);
+                patternInfo.variations.push({
+                    prospectId: prospect.id,
+                    ...variation
+                });
             });
 
-            // Generate company patterns
-            const companyPatterns = this.generateCompanyPatterns(prospect.company);
-            companyPatterns.forEach(pattern => {
+            // Generate company patterns (returns variation objects)
+            const companyVariations = this.generateCompanyPatterns(prospect.company);
+            companyVariations.forEach(variation => {
+                const pattern = variation.text;
                 if (!this.patternMap.has(pattern)) {
-                    this.patternMap.set(pattern, { type: 'company', prospectIds: [] });
+                    this.patternMap.set(pattern, {
+                        type: 'company',
+                        prospectIds: [],
+                        variations: []
+                    });
                     allPatterns.push(pattern);
                 }
-                this.patternMap.get(pattern).prospectIds.push(prospect.id);
+                const patternInfo = this.patternMap.get(pattern);
+                patternInfo.prospectIds.push(prospect.id);
+                patternInfo.variations.push({
+                    prospectId: prospect.id,
+                    ...variation
+                });
             });
         }
 
@@ -232,17 +253,8 @@ class LinearMatcher {
                     console.log(`File size: ${(fileSizeBytes / 1024 / 1024).toFixed(2)} MB`);
                 }
 
-                // Track hits per prospect in this file
+                // Track hits per prospect in this file - LAZY INITIALIZATION for memory efficiency
                 const prospectHits = new Map(); // prospect_id -> {nameHit: boolean, companyHit: boolean, contexts: [...]}
-
-                // Initialize all prospects
-                this.prospects.forEach(prospect => {
-                    prospectHits.set(prospect.id, {
-                        nameHit: false,
-                        companyHit: false,
-                        contexts: []
-                    });
-                });
 
                 let processedBytes = 0;
                 let previousOverlap = '';
@@ -281,10 +293,45 @@ class LinearMatcher {
                                     return; // Skip invalid boundary matches
                                 }
 
-                                // Record hits for all prospects matching this pattern
-                                patternInfo.prospectIds.forEach(prospectId => {
-                                    const hit = prospectHits.get(prospectId);
-                                    if (!hit) return;
+                                // Record hits for each prospect's specific variation
+                                patternInfo.variations.forEach(variation => {
+                                    const prospectId = variation.prospectId;
+
+                                    // LAZY INITIALIZATION: Create entry only when we find a match
+                                    let hit = prospectHits.get(prospectId);
+                                    if (!hit) {
+                                        hit = {
+                                            nameHit: false,
+                                            companyHit: false,
+                                            contexts: []
+                                        };
+                                        prospectHits.set(prospectId, hit);
+                                    }
+
+                                    // For name patterns, check if it's "First Last" with optional initial
+                                    if (patternInfo.type === 'name' && variation.allowInitial) {
+                                        // Check if match is "First Last" (exact adjacent)
+                                        const matchText = normalizedText.slice(startIndex, endIndex + 1);
+                                        const firstName = variation.firstName;
+                                        const lastName = variation.lastName;
+
+                                        // Build regex: \bFirst\s+(?:[a-z]\.?\s+)?Last\b
+                                        const escapedFirst = firstName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                                        const escapedLast = lastName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                                        const nameRegex = new RegExp(
+                                            `\\b${escapedFirst}\\s+(?:[a-z]\\.?\\s+)?${escapedLast}\\b`,
+                                            'i'
+                                        );
+
+                                        // Check if the pattern appears in the surrounding context
+                                        const contextStart = Math.max(0, startIndex - 10);
+                                        const contextEnd = Math.min(normalizedText.length, endIndex + 20);
+                                        const contextText = normalizedText.slice(contextStart, contextEnd);
+
+                                        if (!nameRegex.test(contextText)) {
+                                            return; // Not a valid "First [Initial] Last" match
+                                        }
+                                    }
 
                                     // Record the match type
                                     if (patternInfo.type === 'name') {
@@ -293,16 +340,16 @@ class LinearMatcher {
                                         hit.companyHit = true;
                                     }
 
-                                    // MEMORY OPTIMIZATION: Limit context storage and size
-                                    if (hit.contexts.length < 3) { // Max 3 contexts per prospect
-                                        const contextStart = Math.max(0, startIndex - 30); // Reduced context
-                                        const contextEnd = Math.min(normalizedText.length, endIndex + 30);
+                                    // AGGRESSIVE MEMORY OPTIMIZATION for massive datasets: Only 1 context, smaller size
+                                    if (hit.contexts.length < 1) { // Max 1 context per prospect (reduced from 3)
+                                        const contextStart = Math.max(0, startIndex - 20); // Reduced context size
+                                        const contextEnd = Math.min(normalizedText.length, endIndex + 20);
                                         const context = normalizedText.slice(contextStart, contextEnd);
 
                                         hit.contexts.push({
                                             pattern: pattern,
                                             type: patternInfo.type,
-                                            context: context.length > 100 ? context.slice(0, 100) + '...' : context,
+                                            context: context.length > 60 ? context.slice(0, 60) + '...' : context, // Smaller context
                                             position: startIndex + processedBytes
                                         });
                                     }
@@ -446,7 +493,7 @@ class LinearMatcher {
      * Breaks prospects into 15K chunks and processes each chunk against all SEC files
      */
     async processMatchingLinearChunked(secFiles, socket, debugMode = false) {
-        const CHUNK_SIZE = 15000; // 15K prospects per chunk (memory safe)
+        const CHUNK_SIZE = 50000; // 50K prospects per chunk (adjusted for M1 8GB)
         const totalProspects = this.prospects.length;
         const totalChunks = Math.ceil(totalProspects / CHUNK_SIZE);
 
@@ -583,9 +630,17 @@ class LinearMatcher {
                 const processingTime = Date.now() - startTime;
                 console.log(`File ${i + 1}/${secFiles.length}: ${secFile.originalname} - ${fileMatches.length} matches (${processingTime}ms)`);
 
-                // MEMORY MANAGEMENT: Clean up after batches
+                // AGGRESSIVE MEMORY MANAGEMENT for massive datasets
                 if ((i + 1) % BATCH_SIZE === 0) {
                     console.log(`\n🧹 Memory cleanup after ${i + 1} files...`);
+
+                    // Clear contexts from matches to free memory
+                    allMatches.forEach(match => {
+                        if (match.contexts && match.contexts.length > 0) {
+                            match.contexts = [match.contexts[0]]; // Keep only first context
+                        }
+                    });
+
                     if (global.gc) {
                         global.gc();
                         console.log(`Memory freed. Continuing with remaining ${secFiles.length - i - 1} files.`);
