@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SEC Prospect Matcher</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: #2c3e50;
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.8;
+            font-size: 1.1em;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .upload-section {
+            margin-bottom: 30px;
+            padding: 25px;
+            border: 2px dashed #e74c3c;
+            border-radius: 10px;
+            background: #fdf2f2;
+        }
+
+        .upload-section.secondary {
+            border-color: #3498db;
+            background: #f0f8ff;
+        }
+
+        .upload-section h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .file-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            background: white;
+        }
+
+        .file-input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .file-info {
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .match-btn {
+            width: 100%;
+            padding: 15px;
+            background: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .match-btn:hover:not(:disabled) {
+            background: #229954;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(39, 174, 96, 0.3);
+        }
+
+        .match-btn:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .cancel-btn {
+            width: 100%;
+            padding: 15px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .cancel-btn:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
+        }
+
+        .stop-export-btn {
+            width: 100%;
+            padding: 15px;
+            background: #f39c12;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .stop-export-btn:hover {
+            background: #d68910;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(243, 156, 18, 0.3);
+        }
+
+        .progress {
+            display: none;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: #ecf0f1;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #3498db;
+            transition: width 0.3s ease;
+            border-radius: 5px;
+        }
+
+        .results {
+            display: none;
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .download-btn {
+            display: inline-block;
+            padding: 12px 25px;
+            background: #e74c3c;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: bold;
+            transition: background 0.3s ease;
+        }
+
+        .download-btn:hover {
+            background: #c0392b;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+            border: 1px solid #f5c6cb;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+            border: 1px solid #c3e6cb;
+        }
+
+        .checkpoints-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+
+        .checkpoint-item {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .checkpoint-info {
+            flex: 1;
+        }
+
+        .checkpoint-info h4 {
+            margin: 0 0 5px 0;
+            color: #2c3e50;
+        }
+
+        .checkpoint-info p {
+            margin: 0;
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+
+        .checkpoint-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .resume-btn {
+            padding: 8px 15px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background 0.3s ease;
+        }
+
+        .resume-btn:hover {
+            background: #218838;
+        }
+
+        .delete-checkpoint-btn {
+            padding: 8px 15px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background 0.3s ease;
+        }
+
+        .delete-checkpoint-btn:hover {
+            background: #c82333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 SEC Prospect Matcher</h1>
+            <p>Match prospect names and companies with SEC filings automatically</p>
+        </div>
+
+        <div class="content">
+            <form id="matchForm">
+                <div class="upload-section">
+                    <h3>📊 Upload Prospects CSV</h3>
+                    <input type="file" id="prospectsFile" class="file-input" accept=".csv" required>
+                    <div class="file-info">Expected format: prospect_id, prospect_name, company_name</div>
+                </div>
+
+                <div class="upload-section secondary">
+                    <h3>📄 Upload SEC Filing Files</h3>
+                    <input type="file" id="secFiles" class="file-input" accept=".txt" multiple required>
+                    <div class="file-info">Select multiple .txt files (format: 0000000000-23-010578.txt)</div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px;">
+                    <button type="submit" class="match-btn" id="matchBtn" style="background: #3498db;">
+                        🚀 Standard Matching
+                    </button>
+
+                    <button type="button" class="match-btn" id="linearMatchBtn" style="background: #8e44ad;">
+                        ⚡ Linear Matching (Fast)
+                    </button>
+
+                    <button type="button" class="match-btn" id="adaptiveMatchBtn" style="background: #f39c12;">
+                        🛡️ Adaptive Matching (No False +)
+                    </button>
+
+                    <button type="button" class="match-btn" id="chunkedMatchBtn" style="background: #e67e22;">
+                        📦 Auto-Chunked (Large Datasets)
+                    </button>
+
+                    <button type="button" class="match-btn" id="databaseMatchBtn" style="background: #27ae60;">
+                        🗄️ Database (Unlimited Scale)
+                    </button>
+                </div>
+
+                <div style="font-size: 0.85em; color: #666; margin: 15px 0; text-align: center; padding: 10px; background: #f8f9fa; border-radius: 6px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+                        <div>
+                            <strong>⚡ Linear:</strong> 10-50x faster<br>
+                            <strong>Best for speed</strong>
+                        </div>
+                        <div>
+                            <strong>🛡️ Adaptive:</strong> Strict validation<br>
+                            <strong>Prevents false positives</strong>
+                        </div>
+                        <div>
+                            <strong>🗄️ Database:</strong> Unlimited scale<br>
+                            <strong>Constant memory</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="button" class="cancel-btn" id="cancelBtn" style="display: none;">
+                    ❌ Cancel Processing
+                </button>
+
+                <button type="button" class="stop-export-btn" id="stopExportBtn" style="display: none;">
+                    🛑 Stop & Export Current Results
+                </button>
+            </form>
+
+            <div class="checkpoints-section" id="checkpointsSection" style="display: none;">
+                <h3 style="color: #2c3e50; margin-bottom: 15px;">🔄 Resume Previous Sessions</h3>
+                <div id="checkpointsList"></div>
+            </div>
+
+            <div class="progress" id="progress">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div id="progressText">Processing files...</div>
+            </div>
+
+            <div class="results" id="results"></div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        const form = document.getElementById('matchForm');
+        const matchBtn = document.getElementById('matchBtn');
+        const linearMatchBtn = document.getElementById('linearMatchBtn');
+        const adaptiveMatchBtn = document.getElementById('adaptiveMatchBtn');
+        const chunkedMatchBtn = document.getElementById('chunkedMatchBtn');
+        const databaseMatchBtn = document.getElementById('databaseMatchBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const stopExportBtn = document.getElementById('stopExportBtn');
+        const progress = document.getElementById('progress');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        const results = document.getElementById('results');
+
+        let isProcessing = false;
+        let currentRequest = null;
+
+        // Load checkpoints on page load
+        loadCheckpoints();
+
+        // Checkpoint management functions
+        async function loadCheckpoints() {
+            try {
+                const response = await fetch('/checkpoints');
+                const result = await response.json();
+
+                if (result.success && result.checkpoints.length > 0) {
+                    displayCheckpoints(result.checkpoints);
+                    document.getElementById('checkpointsSection').style.display = 'block';
+                } else {
+                    document.getElementById('checkpointsSection').style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error loading checkpoints:', error);
+            }
+        }
+
+        function displayCheckpoints(checkpoints) {
+            const checkpointsList = document.getElementById('checkpointsList');
+            checkpointsList.innerHTML = '';
+
+            checkpoints.forEach(checkpoint => {
+                const checkpointDiv = document.createElement('div');
+                checkpointDiv.className = 'checkpoint-item';
+
+                const progressPercent = Math.round((checkpoint.processedFiles / checkpoint.totalFiles) * 100);
+                const checkpointDate = new Date(checkpoint.checkpointTime).toLocaleString();
+
+                checkpointDiv.innerHTML = `
+                    <div class="checkpoint-info">
+                        <h4>📋 Session: ${checkpoint.sessionId.substring(8, 24)}</h4>
+                        <p><strong>Progress:</strong> ${checkpoint.processedFiles}/${checkpoint.totalFiles} files (${progressPercent}%) | <strong>Matches:</strong> ${checkpoint.matches} | <strong>Saved:</strong> ${checkpointDate}</p>
+                    </div>
+                    <div class="checkpoint-actions">
+                        <button class="resume-btn" onclick="resumeCheckpoint('${checkpoint.sessionId}')">
+                            🔄 Resume
+                        </button>
+                        <button class="delete-checkpoint-btn" onclick="deleteCheckpoint('${checkpoint.sessionId}')">
+                            🗑️ Delete
+                        </button>
+                    </div>
+                `;
+
+                checkpointsList.appendChild(checkpointDiv);
+            });
+        }
+
+        async function resumeCheckpoint(sessionId) {
+            try {
+                isProcessing = true;
+                matchBtn.disabled = true;
+                matchBtn.textContent = '⏳ Resuming...';
+                cancelBtn.style.display = 'block';
+                stopExportBtn.style.display = 'block';
+                progress.style.display = 'block';
+                results.style.display = 'none';
+                document.getElementById('checkpointsSection').style.display = 'none';
+
+                const response = await fetch(`/resume/${sessionId}`, {
+                    method: 'POST'
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showSuccess(result.message, result.matches, result.downloadUrl);
+                } else {
+                    showError(result.error);
+                }
+
+            } catch (error) {
+                showError('Error resuming checkpoint: ' + error.message);
+            } finally {
+                isProcessing = false;
+                matchBtn.disabled = false;
+                matchBtn.textContent = '🚀 Start Matching Process';
+                cancelBtn.style.display = 'none';
+                stopExportBtn.style.display = 'none';
+                loadCheckpoints(); // Refresh checkpoints list
+            }
+        }
+
+        async function deleteCheckpoint(sessionId) {
+            if (!confirm('Are you sure you want to delete this checkpoint? This cannot be undone.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/checkpoints/${sessionId}`, {
+                    method: 'DELETE'
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    loadCheckpoints(); // Refresh the list
+                } else {
+                    showError('Failed to delete checkpoint: ' + result.error);
+                }
+            } catch (error) {
+                showError('Error deleting checkpoint: ' + error.message);
+            }
+        }
+
+        // Real-time progress updates
+        socket.on('status', (status) => {
+            progressText.textContent = status;
+        });
+
+        socket.on('progress', (data) => {
+            console.log('Progress data received:', data); // Debug log
+
+            // Update progress bar
+            const percentage = Math.round(data.progress || 0);
+            progressFill.style.width = percentage + '%';
+
+            // Calculate detailed stats
+            const current = data.current || 0;
+            const total = data.total || 0;
+            const filesLeft = total - current;
+            const avgTimePerFile = data.avgProcessingTime || data.processingTime || 0;
+
+            // Enhanced ETA calculation for massive datasets
+            let etaDisplay = data.eta || 'Calculating...';
+            if (!data.eta && avgTimePerFile > 0 && filesLeft > 0) {
+                const etaSeconds = Math.round((filesLeft * avgTimePerFile) / 1000);
+                const etaMinutes = Math.floor(etaSeconds / 60);
+                const etaSecondsRem = etaSeconds % 60;
+
+                if (etaMinutes > 60) {
+                    const hours = Math.floor(etaMinutes / 60);
+                    const minutes = etaMinutes % 60;
+                    etaDisplay = `${hours}h ${minutes}m`;
+                } else if (etaMinutes > 0) {
+                    etaDisplay = `${etaMinutes}m ${etaSecondsRem}s`;
+                } else {
+                    etaDisplay = `${etaSeconds}s`;
+                }
+            }
+
+            // Format processing speed
+            const speedText = avgTimePerFile > 0 ? `${Math.round(avgTimePerFile)}ms/file` : 'Calculating...';
+
+            // Dataset size indicator for massive datasets
+            const datasetInfo = data.datasetSize ? `📦 Dataset: ${data.datasetSize}` : '';
+
+            // Update display with enhanced formatting for massive datasets
+            progressText.innerHTML = `
+                <div style="font-size: 18px; margin-bottom: 10px;">
+                    <strong style="color: #2c3e50;">${percentage}% COMPLETE</strong>
+                    ${datasetInfo ? `<div style="font-size: 12px; color: #7f8c8d; margin-top: 5px;">${datasetInfo}</div>` : ''}
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                    <div>
+                        <strong>📊 Files Progress:</strong><br>
+                        <span style="font-size: 16px; color: #3498db;">${current.toLocaleString()} / ${total.toLocaleString()}</span><br>
+                        <span style="color: #e74c3c;">${filesLeft.toLocaleString()} files remaining</span>
+                    </div>
+                    <div>
+                        <strong>⏱️ Time Remaining:</strong><br>
+                        <span style="font-size: 16px; color: #27ae60;">${etaDisplay}</span><br>
+                        <span style="color: #7f8c8d;">Speed: ${speedText}</span>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 10px;">
+                    <strong>🔥 Current File:</strong><br>
+                    <span style="font-size: 12px; color: #34495e; word-break: break-all;">${data.file || 'Processing...'}</span>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; font-size: 14px;">
+                    <div>
+                        <strong>🎯 Matches:</strong><br>
+                        <span style="color: #27ae60; font-weight: bold;">${(data.matches || 0).toLocaleString()}</span>
+                    </div>
+                    <div>
+                        <strong>👥 Candidates:</strong><br>
+                        <span style="color: #3498db;">${(data.candidates || 0).toLocaleString()}</span>
+                    </div>
+                    <div>
+                        <strong>📄 Size:</strong><br>
+                        <span style="color: #9b59b6;">${data.datasetSize || 'Processing...'}</span>
+                    </div>
+                </div>
+
+                ${total > 1000 ? `
+                <div style="margin-top: 10px; padding: 8px; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px; font-size: 12px;">
+                    <strong>🚀 Massive Dataset Mode:</strong> Optimized for ${total.toLocaleString()} files with streaming and aggressive memory management
+                </div>
+                ` : ''}
+            `;
+        });
+
+        socket.on('complete', (data) => {
+            isProcessing = false;
+            matchBtn.disabled = false;
+            matchBtn.textContent = '🚀 Start Matching Process';
+            cancelBtn.style.display = 'none';
+            stopExportBtn.style.display = 'none';
+
+            progressText.innerHTML = `
+                <div style="text-align: center; padding: 20px;">
+                    <div style="font-size: 24px; color: #27ae60; margin-bottom: 15px;">
+                        ✅ PROCESSING COMPLETE!
+                    </div>
+                    <div style="font-size: 18px; margin-bottom: 10px;">
+                        <strong style="color: #2c3e50;">Total Matches Found: <span style="color: #27ae60;">${data.matches}</span></strong>
+                    </div>
+                    <div style="color: #7f8c8d;">
+                        Ready to download results!
+                    </div>
+                </div>
+            `;
+        });
+
+        socket.on('error', (error) => {
+            isProcessing = false;
+            showError('Server error: ' + error);
+            matchBtn.disabled = false;
+            matchBtn.textContent = '🚀 Start Matching Process';
+            cancelBtn.style.display = 'none';
+            stopExportBtn.style.display = 'none';
+            progress.style.display = 'none';
+        });
+
+        // Chunk progress listener for auto-chunked processing
+        socket.on('chunk-progress', (data) => {
+            if (data.currentChunk !== undefined && data.totalChunks !== undefined) {
+                const chunkText = `📦 Chunk ${data.currentChunk}/${data.totalChunks}`;
+                const currentStatusText = statusText.textContent;
+
+                // Update status to include chunk info
+                if (currentStatusText.includes('📦 Chunk')) {
+                    // Replace existing chunk info
+                    statusText.textContent = currentStatusText.replace(/📦 Chunk \d+\/\d+/, chunkText);
+                } else {
+                    // Add chunk info to existing status
+                    statusText.textContent = `${chunkText} - ${currentStatusText}`;
+                }
+            }
+        });
+
+        // Chunk completion listener - shows download buttons for each completed chunk
+        socket.on('chunk-complete', (data) => {
+            console.log('Chunk completed:', data);
+
+            // Create chunk download section if it doesn't exist
+            let chunkDownloads = document.getElementById('chunk-downloads');
+            if (!chunkDownloads) {
+                chunkDownloads = document.createElement('div');
+                chunkDownloads.id = 'chunk-downloads';
+                chunkDownloads.innerHTML = '<h3>📄 Download Individual Chunks:</h3>';
+                chunkDownloads.style.cssText = `
+                    margin-top: 20px;
+                    padding: 15px;
+                    background: #f8f9fa;
+                    border-radius: 5px;
+                    border-left: 4px solid #28a745;
+                `;
+
+                // Insert after results section or status section
+                const progressSection = document.querySelector('.progress-section');
+                if (progressSection) {
+                    progressSection.appendChild(chunkDownloads);
+                }
+            }
+
+            // Add download button for this chunk
+            const chunkBtn = document.createElement('button');
+            chunkBtn.textContent = `📦 Chunk ${data.chunkNumber} (${data.matchCount} matches)`;
+            chunkBtn.style.cssText = `
+                margin: 5px;
+                padding: 10px 15px;
+                background: #28a745;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 0.9em;
+                transition: background 0.3s ease;
+            `;
+
+            chunkBtn.onmouseover = () => chunkBtn.style.background = '#218838';
+            chunkBtn.onmouseout = () => chunkBtn.style.background = '#28a745';
+
+            chunkBtn.onclick = () => {
+                window.open(data.downloadUrl, '_blank');
+            };
+
+            chunkDownloads.appendChild(chunkBtn);
+        });
+
+        // Cancel button functionality
+        cancelBtn.addEventListener('click', () => {
+            if (isProcessing && currentRequest) {
+                // Abort the current request
+                currentRequest.abort();
+
+                // Reset UI
+                isProcessing = false;
+                matchBtn.disabled = false;
+                matchBtn.textContent = '🚀 Start Matching Process';
+                cancelBtn.style.display = 'none';
+            stopExportBtn.style.display = 'none';
+                stopExportBtn.style.display = 'none';
+                progress.style.display = 'none';
+
+                showError('Processing cancelled by user.');
+            }
+        });
+
+        // Stop & Export button functionality
+        stopExportBtn.addEventListener('click', async () => {
+            if (isProcessing) {
+                try {
+                    // Request server to stop processing and export current results
+                    const response = await fetch('/stop-export', {
+                        method: 'POST'
+                    });
+
+                    if (response.ok) {
+                        const result = await response.json();
+                        if (result.success && result.downloadUrl) {
+                            showSuccess(`Processing stopped. Exported ${result.matches} matches.`, result.matches, result.downloadUrl);
+                        } else {
+                            showError(result.error || 'Failed to export results');
+                        }
+                    } else {
+                        showError('Failed to stop processing and export results');
+                    }
+                } catch (error) {
+                    showError('Error requesting stop & export: ' + error.message);
+                }
+
+                // Reset UI
+                isProcessing = false;
+                matchBtn.disabled = false;
+                matchBtn.textContent = '🚀 Start Matching Process';
+                cancelBtn.style.display = 'none';
+            stopExportBtn.style.display = 'none';
+                stopExportBtn.style.display = 'none';
+            }
+        });
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const prospectsFile = document.getElementById('prospectsFile').files[0];
+            const secFiles = document.getElementById('secFiles').files;
+
+            if (!prospectsFile || secFiles.length === 0) {
+                showError('Please select both prospects CSV and SEC filing files');
+                return;
+            }
+
+            await processMatching('/match', prospectsFile, secFiles, 'Standard');
+        });
+
+        // LINEAR MATCHING EVENT HANDLER
+        linearMatchBtn.addEventListener('click', async () => {
+            const prospectsFile = document.getElementById('prospectsFile').files[0];
+            const secFiles = document.getElementById('secFiles').files;
+
+            if (!prospectsFile || secFiles.length === 0) {
+                showError('Please select both prospects CSV and SEC filing files');
+                return;
+            }
+
+            await processMatching('/match-linear', prospectsFile, secFiles, 'Linear');
+        });
+
+        // ADAPTIVE MATCHING EVENT HANDLER
+        adaptiveMatchBtn.addEventListener('click', async () => {
+            const prospectsFile = document.getElementById('prospectsFile').files[0];
+            const secFiles = document.getElementById('secFiles').files;
+
+            if (!prospectsFile || secFiles.length === 0) {
+                showError('Please select both prospects CSV and SEC filing files');
+                return;
+            }
+
+            await processMatching('/match-adaptive', prospectsFile, secFiles, 'Adaptive');
+        });
+
+        // Auto-Chunked Linear Matching button
+        chunkedMatchBtn.addEventListener('click', async () => {
+            const prospectsFile = document.getElementById('prospectsFile').files[0];
+            const secFiles = document.getElementById('secFiles').files;
+
+            if (!prospectsFile || secFiles.length === 0) {
+                showError('Please select both prospects CSV and SEC filing files');
+                return;
+            }
+
+            await processMatching('/match-linear-chunked', prospectsFile, secFiles, 'Auto-Chunked');
+        });
+
+        // Database Matching button - Unlimited scale with constant memory
+        databaseMatchBtn.addEventListener('click', async () => {
+            const prospectsFile = document.getElementById('prospectsFile').files[0];
+            const secFiles = document.getElementById('secFiles').files;
+
+            if (!prospectsFile || secFiles.length === 0) {
+                showError('Please select both prospects CSV and SEC filing files');
+                return;
+            }
+
+            await processMatching('/match-database', prospectsFile, secFiles, 'Database');
+        });
+
+        // Helper function for all matching approaches
+        async function processMatching(endpoint, prospectsFile, secFiles, algorithmName) {
+            const formData = new FormData();
+            formData.append('prospects', prospectsFile);
+
+            for (let i = 0; i < secFiles.length; i++) {
+                formData.append('secFiles', secFiles[i]);
+            }
+
+            isProcessing = true;
+            matchBtn.disabled = true;
+            linearMatchBtn.disabled = true;
+            chunkedMatchBtn.disabled = true;
+            databaseMatchBtn.disabled = true;
+            matchBtn.textContent = '⏳ Processing...';
+            linearMatchBtn.textContent = '⏳ Processing...';
+            chunkedMatchBtn.textContent = '⏳ Processing...';
+            databaseMatchBtn.textContent = '⏳ Processing...';
+            cancelBtn.style.display = 'block';
+            stopExportBtn.style.display = 'block';
+            progress.style.display = 'block';
+            results.style.display = 'none';
+            progressFill.style.width = '0%';
+            progressText.textContent = `Preparing files for ${algorithmName} matching...`;
+
+            try {
+                // Create AbortController for cancellation
+                const controller = new AbortController();
+                currentRequest = controller;
+
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    body: formData,
+                    signal: controller.signal
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+
+                if (result.success) {
+                    if (result.matchStats && result.algorithm) {
+                        showLinearSuccess(result.message, result.matches, result.downloadUrl, result.matchStats, result.algorithm);
+                    } else {
+                        showSuccess(result.message, result.matches, result.downloadUrl);
+                    }
+                } else {
+                    showError(result.error);
+                }
+            } catch (error) {
+                if (error.name === 'AbortError') {
+                    showError('Processing was cancelled.');
+                } else {
+                    showError('Error processing files: ' + error.message);
+                }
+            } finally {
+                isProcessing = false;
+                currentRequest = null;
+                matchBtn.disabled = false;
+                linearMatchBtn.disabled = false;
+                chunkedMatchBtn.disabled = false;
+                databaseMatchBtn.disabled = false;
+                matchBtn.textContent = '🚀 Standard Matching';
+                linearMatchBtn.textContent = '⚡ Linear Matching (Fast)';
+                chunkedMatchBtn.textContent = '📦 Auto-Chunked (Large Datasets)';
+                databaseMatchBtn.textContent = '🗄️ Database (Unlimited Scale)';
+                cancelBtn.style.display = 'none';
+                stopExportBtn.style.display = 'none';
+
+                // Only hide progress after delay if processing completed (not cancelled)
+                if (!error || error.name !== 'AbortError') {
+                    setTimeout(() => {
+                        if (!isProcessing) {
+                            progress.style.display = 'none';
+                        }
+                    }, 3000);
+                } else {
+                    progress.style.display = 'none';
+                }
+            }
+        }
+
+        function showError(message) {
+            results.innerHTML = `<div class="error">❌ ${message}</div>`;
+            results.style.display = 'block';
+        }
+
+        function showSuccess(message, matches, downloadUrl) {
+            results.innerHTML = `
+                <div class="success">✅ ${message}</div>
+                <p style="margin: 15px 0;"><strong>Found ${matches} matches!</strong></p>
+                <a href="${downloadUrl}" class="download-btn" download>📥 Download Results CSV</a>
+            `;
+            results.style.display = 'block';
+        }
+
+        function showLinearSuccess(message, matches, downloadUrl, matchStats, algorithm) {
+            const statsHtml = matchStats ? `
+                <div style="margin: 15px 0; padding: 10px; background: #f8f9fa; border-radius: 6px;">
+                    <h4 style="margin: 0 0 10px 0; color: #2c3e50;">Match Breakdown:</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; font-size: 14px;">
+                        <div><strong>Name + Company:</strong> ${matchStats['Name + Company'] || 0}</div>
+                        <div><strong>Name Only:</strong> ${matchStats['Name Only'] || 0}</div>
+                        <div><strong>Company Only:</strong> ${matchStats['Company Only'] || 0}</div>
+                    </div>
+                </div>
+            ` : '';
+
+            results.innerHTML = `
+                <div class="success">✅ ${message}</div>
+                <p style="margin: 15px 0;">
+                    <strong>Found ${matches} matches!</strong>
+                    ${algorithm ? `<br><small>Algorithm: ${algorithm}</small>` : ''}
+                </p>
+                ${statsHtml}
+                <a href="${downloadUrl}" class="download-btn" download>📥 Download Results CSV</a>
+            `;
+            results.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
