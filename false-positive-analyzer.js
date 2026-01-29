@@ -53,6 +53,13 @@ class FalsePositiveDetector {
         const matchMethod = (match.match_method || '').toString().toLowerCase();
         const structuredType = (match.structured_match_type || '').toString();
 
+        // Mention-only text matches: name found but insufficient corroboration
+        const isMentionOnly = match.is_mention_only === true || match.is_mention_only === 'true';
+        if (isMentionOnly) {
+            score += 90;
+            reasons.push(`Mention-only text match (insufficient corroborating signals)`);
+        }
+
         // First+Middle-only is almost always a different person (drops last name)
         if (structuredType === 'first_middle_only') {
             score += 80;

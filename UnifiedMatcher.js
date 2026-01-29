@@ -1,5 +1,5 @@
 /**
- * Unified Matcher — Combines SecFilingMatcher + AdaptiveMatcher
+ * Unified Matcher — Structured parsing + adaptive validation
  *
  * Pipeline per filing:
  *   Parse filing (parsers/index.js)
@@ -10,7 +10,7 @@
  *     -> Build enriched result with confidence score
  *
  * Fixes the Jennifer Wong class of false positives: name-only structured matches
- * now require company cross-checking, and text matches use AdaptiveMatcher's
+ * now require company cross-checking, and text matches use adaptive
  * space-boundary / English-context / encoded-blocking validation.
  */
 
@@ -128,8 +128,179 @@ class UnifiedMatcher {
       companyVerified: 0,
       companyNotVerified: 0,
       uncertainMatches: 0,
+      mentionOnlyCount: 0,
       parseErrors: 0,
     };
+  }
+
+  _escapeRegex(str) {
+    return (str || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  _normalizeNameForCompare(name) {
+    if (!name) return '';
+    return name
+      .toLowerCase()
+      .replace(/,/g, '')
+      .replace(NAME_SUFFIXES_RE, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  _isAttorneyInFactContext(rawContent, matchStart, matchEnd, pattern, structuredNameSet) {
+    if (!rawContent) return false;
+    if (structuredNameSet && pattern) {
+      const normalizedPattern = this._normalizeNameForCompare(pattern);
+      if (structuredNameSet.has(normalizedPattern)) {
+        return false;
+      }
+      // Also allow reversed order if present in structured names
+      const parts = normalizedPattern.split(/\s+/);
+      if (parts.length >= 2) {
+        const reversed = `${parts[parts.length - 1]} ${parts.slice(0, -1).join(' ')}`.trim();
+        if (structuredNameSet.has(reversed)) {
+          return false;
+        }
+      }
+    }
+
+    const WINDOW = 400;
+    const start = Math.max(0, matchStart - WINDOW);
+    const end = Math.min(rawContent.length, matchEnd + WINDOW);
+    const ctx = rawContent.slice(start, end).toLowerCase();
+
+    const attorneyMarkers = [
+      'attorney-in-fact',
+      'attorney in fact',
+      'power of attorney',
+      'p.o.a',
+      'poa',
+      'as attorney-in-fact',
+      'as attorney in fact',
+      'attorney-in-fact for',
+      'attorney in fact for',
+      'on behalf of',
+      'by: /s/',
+      '/s/',
+      'authorized representative',
+      'authorized signatory',
+      'signing on behalf',
+      'duly authorized',
+    ];
+
+    const hasAttorney = attorneyMarkers.some(m => ctx.includes(m));
+    if (!hasAttorney) return false;
+
+    // If the only signal is a generic signature marker, require an explicit attorney context
+    if (ctx.includes('/s/') && !ctx.includes('attorney') && !ctx.includes('on behalf of')) {
+      return false;
+    }
+
+    return true;
+  }
+
+  _hasNegativeEvidence(rawContent, matchStart, matchEnd, namePattern, prospectCompany) {
+    if (!rawContent || !namePattern || !prospectCompany) return false;
+
+    const prospectRoot = stripLegalSuffixes(prospectCompany).toLowerCase().replace(/\s+/g, ' ').trim();
+    if (!prospectRoot || prospectRoot.length < 3) return false;
+
+    // Narrow window: only reject when the filing locally self-identifies the person
+    // with a strong title + org, or a transcript speaker line ("Name - Org").
+    const WINDOW = 500;
+    const start = Math.max(0, matchStart - WINDOW);
+    const end = Math.min(rawContent.length, matchEnd + WINDOW);
+
+    const windowRaw = rawContent.slice(start, end);
+    const window = windowRaw
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    const w = window.toLowerCase();
+
+    // Avoid rejecting based on historical bios ("formerly ... at X").
+    const pastMarkers = ['formerly', 'previously', 'prior to', 'until ', 'from '];
+    if (pastMarkers.some(m => w.includes(m))) return false;
+
+    const nameLower = namePattern.toLowerCase();
+    const nameIdx = w.indexOf(nameLower);
+    if (nameIdx === -1) return false;
+
+    const isBadOrg = (orgRoot) => {
+      if (!orgRoot || orgRoot.length < 3) return true;
+      if (orgRoot === 'the company' || orgRoot === 'company' || orgRoot === 'issuer' || orgRoot === 'board') return true;
+      return false;
+    };
+
+    const isMismatch = (orgText) => {
+      const orgRoot = stripLegalSuffixes(orgText).toLowerCase().replace(/\s+/g, ' ').trim();
+      if (isBadOrg(orgRoot)) return false;
+      // If either contains the other, treat as same org.
+      if (orgRoot.includes(prospectRoot) || prospectRoot.includes(orgRoot)) return false;
+      return true;
+    };
+
+    // 1) Transcript speaker line: "Name - Org"
+    // Only examine immediately after the matched name to stay precise.
+    const after = w.slice(nameIdx + nameLower.length, Math.min(w.length, nameIdx + nameLower.length + 120));
+    const speakerLine = after.match(/^\s*[-–—]\s*([a-z0-9&.,'’()\/\- ]{3,80})/);
+    if (speakerLine) {
+      const org = speakerLine[1].split(/[.;]/)[0].trim();
+      if (isMismatch(org)) return true;
+    }
+
+    // 2) Strong title affiliation patterns near the name.
+    // Keep list small/high precision (covers your verified false positive examples).
+    const titleRe =
+      '(?:co-?ceo|chief executive officer|ceo|chief financial officer|cfo|chairman(?: of the board)?|portfolio manager|analyst|professor(?: of [a-z\\s]+)?|managing director|managing member|managing partner|partner|president|founder|co-?founder|advisor|board nominee|proposed director)';
+    // ASCII-only: include apostrophe as a literal character class member.
+    const orgRe = "([a-z0-9][a-z0-9&.,\\-()\\/ ']{3,80})";
+
+    const patterns = [
+      new RegExp(`${this._escapeRegex(nameLower)}.{0,140}?${titleRe}\\s+(?:of|at|with|for)\\s+${orgRe}`, 'i'),
+      new RegExp(`${titleRe}\\s+(?:of|at|with|for)\\s+${orgRe}.{0,140}?${this._escapeRegex(nameLower)}`, 'i'),
+      new RegExp(`${orgRe}'s\\s+${titleRe}.{0,80}?${this._escapeRegex(nameLower)}`, 'i'),
+    ];
+
+    for (const re of patterns) {
+      const m = w.match(re);
+      if (!m) continue;
+      // Heuristic: pick the last capture group as the org.
+      const org = (m[m.length - 1] || '').split(/[.;]/)[0].trim();
+      if (!org) continue;
+      if (isMismatch(org)) return true;
+    }
+
+    return false;
+  }
+
+  _shouldRejectStructuredUnverifiedMatch(prospect, filingPerson, parsedFiling, rawText, companyCheck) {
+    if (!prospect || !filingPerson || !parsedFiling) return null;
+    if (companyCheck && companyCheck.verified) return null;
+    if (!prospect.company || prospect.company.trim().length === 0) return null;
+
+    const issuerName = parsedFiling.issuer?.name || parsedFiling.filer?.name || parsedFiling.subjectCompany?.name || '';
+    const issuerRoot = issuerName ? stripLegalSuffixes(issuerName).toLowerCase().replace(/\s+/g, ' ').trim() : '';
+    const prospectRoot = stripLegalSuffixes(prospect.company).toLowerCase().replace(/\s+/g, ' ').trim();
+    if (!issuerRoot || issuerRoot.length < 3 || !prospectRoot || prospectRoot.length < 3) return null;
+
+    // If prospect company matches issuer, company check would likely have verified already.
+    if (issuerRoot.includes(prospectRoot) || prospectRoot.includes(issuerRoot)) return null;
+
+    // If the prospect's company is explicitly evidenced in text, don't reject —
+    // UNLESS the prospect company root overlaps with the filing person's name
+    // (e.g., "Gary Lee Enterprises" → root "gary lee" matches person "Gary Lee",
+    //  so finding "gary lee" in text is just the person's name, not company evidence).
+    if (rawText && rawText.toLowerCase().includes(prospectRoot)) {
+      const fpName = (filingPerson.name || '').toLowerCase().replace(NAME_SUFFIXES_RE, '').replace(/\s+/g, ' ').trim();
+      if (fpName && (fpName.includes(prospectRoot) || prospectRoot.includes(fpName))) {
+        // Company root overlaps person name — text match is not genuine company evidence
+      } else {
+        return null; // Genuine company evidence in text — don't reject
+      }
+    }
+
+    return 'company_mismatch_no_evidence';
   }
 
   // ---------------------------------------------------------------------------
@@ -142,11 +313,12 @@ class UnifiedMatcher {
       fs.createReadStream(csvPath)
         .pipe(csv())
         .on('data', (row) => {
-          const name = (row['Name'] || row['name'] || row['prospect_name'] || '').trim();
-          const company = (row['Company Name'] || row['company_name'] || row['Company'] || '').trim();
-          const id = (row['prospect_id'] || row['id'] || '').trim();
+          const name = (row['Name'] || row['name'] || row['prospect_name'] || row['Prospect Name'] || '').trim();
+          const company = (row['Company Name'] || row['Prospect Company'] || row['company_name'] || row['Company'] || '').trim();
+          const id = (row['prospect_id'] || row['id'] || row['Prospect ID'] || '').trim();
+          const teamName = (row['Team Name'] || row['team_name'] || '').trim();
           if (name) {
-            prospects.push({ id, name, company });
+            prospects.push({ id, name, company, teamName });
           }
         })
         .on('end', () => {
@@ -202,6 +374,10 @@ class UnifiedMatcher {
       // --- AC automaton patterns (name + company) ---
       // Build unique first+last pairs from all variants
       const acPairsAdded = new Set();
+      const originalLast = p.name.replace(/,/g, '').replace(/\s+/g, ' ').trim().toLowerCase()
+        .replace(NAME_SUFFIXES_RE, '').replace(/\s+/g, ' ').trim().split(/\s+/).pop();
+      const prospectHasHyphenatedLast = originalLast && originalLast.includes('-');
+
       for (const variant of variants) {
         const parts = variant.toLowerCase().split(/\s+/);
         if (parts.length < 2) continue;
@@ -209,7 +385,15 @@ class UnifiedMatcher {
         const lastName = parts[parts.length - 1];
         if (firstName.length < 2 || lastName.length < 2) continue;
 
-        const namePattern = `${firstName} ${lastName}`;
+        // If prospect has a hyphenated last name and this variant was produced by
+        // dehyphenation (3+ parts where first+last would drop a hyphen component),
+        // use the full variant as AC pattern instead of first+last only.
+        let namePattern;
+        if (prospectHasHyphenatedLast && parts.length >= 3) {
+          namePattern = variant.toLowerCase();
+        } else {
+          namePattern = `${firstName} ${lastName}`;
+        }
         if (acPairsAdded.has(namePattern)) continue;
         acPairsAdded.add(namePattern);
 
@@ -285,19 +469,30 @@ class UnifiedMatcher {
       // Drop middle name(s): 3+ word names → first + last
       const parts = base.split(/\s+/);
       if (parts.length >= 3) {
-        const firstLast = `${parts[0]} ${parts[parts.length - 1]}`;
-        if (firstLast.length >= 4) {
-          variants.add(firstLast);
-          if (firstLast.includes('-')) {
-            variants.add(firstLast.replace(/-/g, ' ').replace(/\s+/g, ' ').trim());
+        // Check if the original last name (from the cleaned form) is hyphenated.
+        // If so, the dehyphenated form expanded it into multiple parts, and
+        // first+last would drop the pre-hyphen component — creating a false
+        // match (e.g. "Brian Carr-Smith" → "Brian Smith").  Skip that variant.
+        const originalLast = cleaned.split(/\s+/).pop();
+        const lastIsHyphenated = originalLast && originalLast.includes('-');
+        if (!lastIsHyphenated) {
+          const firstLast = `${parts[0]} ${parts[parts.length - 1]}`;
+          if (firstLast.length >= 4) {
+            variants.add(firstLast);
+            if (firstLast.includes('-')) {
+              variants.add(firstLast.replace(/-/g, ' ').replace(/\s+/g, ' ').trim());
+            }
           }
         }
       }
 
       // Also produce dehyphenated + middle-dropped combo
+      // Skip if the original last name is hyphenated (same protection as above)
       if (base.includes('-')) {
+        const originalLast = cleaned.split(/\s+/).pop();
+        const lastIsHyphenated = originalLast && originalLast.includes('-');
         const dehypParts = base.replace(/-/g, ' ').replace(/\s+/g, ' ').trim().split(/\s+/);
-        if (dehypParts.length >= 3) {
+        if (dehypParts.length >= 3 && !lastIsHyphenated) {
           const fl = `${dehypParts[0]} ${dehypParts[dehypParts.length - 1]}`;
           if (fl.length >= 4) variants.add(fl);
         }
@@ -336,10 +531,9 @@ class UnifiedMatcher {
     if (!nameFromFiling) return [];
     const matches = [];
     const seen = new Set();
-    // Clean filing name: strip commas, replace hyphens with spaces, collapse whitespace
+    // Clean filing name: strip commas, preserve hyphens, collapse whitespace
     const normalized = nameFromFiling
       .replace(/,/g, '')
-      .replace(/-/g, ' ')
       .replace(/\s+/g, ' ')
       .toLowerCase()
       .trim();
@@ -381,7 +575,10 @@ class UnifiedMatcher {
       }
 
       // Three-word: drop middle
-      if (secParts.length === 3) {
+      // Guard: if the first SEC part (the "last name" in SEC ordering) is hyphenated,
+      // skip drop-middle logic to prevent "Carr-Smith Gary X" → "Gary Carr-Smith" mismatches.
+      const firstPartIsHyphenated = secParts[0].includes('-');
+      if (secParts.length === 3 && !firstPartIsHyphenated) {
         // SAFE: First + Last (drops middle name) - e.g., "Ellis Gary Lee" → "Gary Ellis"
         const firstLast = `${secParts[1]} ${secParts[0]}`.toLowerCase();
         if (this.prospectIndex[firstLast]) {
@@ -487,10 +684,186 @@ class UnifiedMatcher {
   }
 
   // ---------------------------------------------------------------------------
-  // Text search with adaptive validation (from AdaptiveMatcher)
+  // Signal helpers for text match corroboration (Rules 1-3)
   // ---------------------------------------------------------------------------
 
-  _textSearchWithValidation(rawContent) {
+  /**
+   * Find all positions of a substring in text (case-insensitive).
+   */
+  _findAllPositions(text, substring) {
+    const positions = [];
+    const lower = text.toLowerCase();
+    const sub = substring.toLowerCase();
+    let idx = lower.indexOf(sub);
+    while (idx !== -1) {
+      positions.push(idx);
+      idx = lower.indexOf(sub, idx + 1);
+    }
+    return positions;
+  }
+
+  /**
+   * Check whether a role phrase AND issuer name/ticker appear near a name position.
+   * Both must be present in a ±500 char window for this signal to fire.
+   */
+  _hasRoleContext(rawContent, namePosition, parsedFiling) {
+    const WINDOW = 500;
+    const start = Math.max(0, namePosition - WINDOW);
+    const end = Math.min(rawContent.length, namePosition + WINDOW);
+    const ctx = rawContent.slice(start, end).toLowerCase();
+
+    const rolePhrases = [
+      'director', 'officer', 'chief executive', 'chief financial',
+      'chief operating', 'president', 'chairman', 'chairwoman',
+      'ceo', 'cfo', 'coo', 'cto',
+      'appointed', 'resigned', 'terminated', 'elected',
+      'named executive', 'executive vice president', 'senior vice president',
+      'vice president', 'treasurer', 'secretary', 'general counsel',
+      'board of directors', 'board member',
+    ];
+
+    const hasRole = rolePhrases.some(rp => ctx.includes(rp));
+    if (!hasRole) return { hasRole: false };
+
+    // Also require issuer name root or ticker in same window
+    const issuerName = parsedFiling.issuer?.name || parsedFiling.filer?.name || parsedFiling.subjectCompany?.name || '';
+    const issuerTicker = parsedFiling.issuer?.ticker || '';
+    const issuerRoot = issuerName ? stripLegalSuffixes(issuerName).toLowerCase().replace(/\s+/g, ' ').trim() : '';
+
+    let hasIssuer = false;
+    if (issuerRoot && issuerRoot.length >= 3 && ctx.includes(issuerRoot)) hasIssuer = true;
+    if (!hasIssuer && issuerTicker && issuerTicker.length >= 2 && ctx.includes(issuerTicker.toLowerCase())) hasIssuer = true;
+
+    return { hasRole: hasRole && hasIssuer };
+  }
+
+  /**
+   * Detect if the name position falls inside a "strong locus" section of the filing
+   * where identity information is meaningful (not just a passing mention).
+   */
+  _detectStrongLocus(rawContent, namePosition, normalizedType) {
+    if (!normalizedType || !rawContent) return { isStrongLocus: false, locusType: null };
+
+    const type = normalizedType.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    const lower = rawContent.toLowerCase();
+
+    // Form-specific section headers and their search windows
+    let sectionDefs = [];
+
+    if (type === '8K' || type === '8K12B' || type === '8K12G3' || type === '8KA') {
+      sectionDefs = [
+        { header: 'item 5.02', window: 2000 },
+        { header: 'item5.02', window: 2000 },
+        { header: 'departure of directors', window: 2000 },
+        { header: 'election of directors', window: 2000 },
+        { header: 'appointment of certain officers', window: 2000 },
+      ];
+    } else if (['DEF14A', 'DEFA14A', 'DEFC14A', 'DEFM14A', 'PRE14A', 'PREM14A'].includes(type)) {
+      sectionDefs = [
+        { header: 'election of directors', window: 5000 },
+        { header: 'named executive officers', window: 5000 },
+        { header: 'executive compensation', window: 5000 },
+        { header: 'compensation discussion', window: 5000 },
+        { header: 'beneficial ownership', window: 5000 },
+        { header: 'security ownership', window: 5000 },
+        { header: 'nominees for election', window: 5000 },
+        { header: 'director nominees', window: 5000 },
+      ];
+    } else if (type === 'S1' || type === 'S1A' || type === 'F1' || type === 'F1A') {
+      sectionDefs = [
+        { header: 'management', window: 8000 },
+        { header: 'executive officers and directors', window: 8000 },
+        { header: 'directors and executive officers', window: 8000 },
+        { header: 'principal stockholders', window: 8000 },
+      ];
+    } else if (['10K', '10KA', '10KSB', '10Q', '10QA', '10QSB'].includes(type)) {
+      sectionDefs = [
+        { header: 'executive officers', window: 5000 },
+        { header: 'directors and executive officers', window: 5000 },
+        { header: 'directors, executive officers', window: 5000 },
+      ];
+    } else if (type === 'SC13D' || type === 'SC13DA' || type === 'SC13G' || type === 'SC13GA') {
+      sectionDefs = [
+        { header: 'filed by', window: 2000 },
+        { header: 'reporting person', window: 2000 },
+        { header: 'names of reporting persons', window: 2000 },
+        { header: 'name of reporting person', window: 2000 },
+      ];
+    } else {
+      // Unknown form type — strong locus cannot be determined
+      return { isStrongLocus: false, locusType: null };
+    }
+
+    for (const def of sectionDefs) {
+      const headerPositions = this._findAllPositions(lower, def.header);
+      for (const hPos of headerPositions) {
+        // Name must appear within the window AFTER the header
+        if (namePosition >= hPos && namePosition <= hPos + def.window) {
+          return { isStrongLocus: true, locusType: `${type}:${def.header}` };
+        }
+      }
+    }
+
+    return { isStrongLocus: false, locusType: null };
+  }
+
+  /**
+   * Placeholder for unique identifier matching (e.g. CIK).
+   * Prospects don't currently have CIK fields, so this always returns false.
+   */
+  _hasUniqueIdentifier(_rawContent, _prospect, _parsedFiling) {
+    return { hasIdentifier: false };
+  }
+
+  /**
+   * Count corroborating signals for a text match.
+   * Requires ≥2 independent signals for a text match to be considered real.
+   */
+  _countTextMatchSignals(rawContent, hits, prospect, parsedFiling, minDist) {
+    let signalCount = 0;
+    const signals = [];
+
+    // Signal A: Company found within ≤4K chars of name
+    if (hits.companyHit && Number.isFinite(minDist) && minDist <= 4000) {
+      signalCount++;
+      signals.push('company_proximity');
+    }
+
+    // Signal B: Role context (role phrase + issuer near name)
+    const namePos = hits.namePositions[0];
+    if (namePos != null) {
+      const roleCtx = this._hasRoleContext(rawContent, namePos, parsedFiling);
+      if (roleCtx.hasRole) {
+        signalCount++;
+        signals.push('role_context');
+      }
+    }
+
+    // Signal C: Strong locus section
+    if (namePos != null) {
+      const normalizedType = parsedFiling.normalizedType || '';
+      const locus = this._detectStrongLocus(rawContent, namePos, normalizedType);
+      if (locus.isStrongLocus) {
+        signalCount++;
+        signals.push(`strong_locus:${locus.locusType}`);
+      }
+    }
+
+    // Signal D: Unique identifier (CIK — placeholder)
+    const uidResult = this._hasUniqueIdentifier(rawContent, prospect, parsedFiling);
+    if (uidResult.hasIdentifier) {
+      signalCount++;
+      signals.push('unique_identifier');
+    }
+
+    return { signalCount, signals, details: signals.join(', ') };
+  }
+
+  // ---------------------------------------------------------------------------
+  // Text search with adaptive validation
+  // ---------------------------------------------------------------------------
+
+  _textSearchWithValidation(rawContent, parsedFiling) {
     if (!this.ahoCorasick) return [];
 
     const text = rawContent.toLowerCase();
@@ -506,7 +879,7 @@ class UnifiedMatcher {
 
         const startPos = endPos - pattern.length + 1;
 
-        // Word boundary check (same as AdaptiveMatcher)
+        // Word boundary check (same as adaptive matcher logic)
         const beforeChar = startPos > 0 ? text[startPos - 1] : '';
         const afterChar = endPos + 1 < text.length ? text[endPos + 1] : '';
         const boundaryRe = /[\s\.,;:!?\-\(\)\[\]{}"'\/\\|~`@#$%^&*+=<>]/;
@@ -518,6 +891,13 @@ class UnifiedMatcher {
         const matchInfo = { start: startPos, end: endPos + 1, pattern };
         if (!this._validateAdaptive(text, matchInfo, patternInfo)) continue;
 
+        // Attorney-in-fact suppression (text matches only)
+        if (patternInfo.type === 'name') {
+          if (this._isAttorneyInFactContext(rawContent, startPos, endPos + 1, pattern, this._structuredNameSet)) {
+            continue;
+          }
+        }
+
         // Adjacent name token check — prevents "Gary Lee" matching "Ellis Gary Lee"
         // Only applies to name patterns (not company patterns)
         if (patternInfo.type === 'name') {
@@ -527,6 +907,16 @@ class UnifiedMatcher {
         // Record hits per prospect
         for (const variation of patternInfo.variations) {
           const pid = variation.prospectId;
+          const prospect = this.prospectById[pid];
+          if (!prospect) continue;
+
+          // Attorney-in-fact suppression + negative evidence rejection are per-prospect
+          // (same name pattern can map to many prospects with different employers).
+          if (patternInfo.type === 'name') {
+            if (this._isAttorneyInFactContext(rawContent, startPos, endPos + 1, pattern, this._structuredNameSet)) continue;
+            if (this._hasNegativeEvidence(rawContent, startPos, endPos + 1, pattern, prospect.company)) continue;
+          }
+
           let hit = prospectHits.get(pid);
           if (!hit) {
             hit = { nameHit: false, companyHit: false, namePositions: [], companyPositions: [] };
@@ -543,7 +933,7 @@ class UnifiedMatcher {
       }
     }
 
-    // Build matches with distance-based confidence
+    // Build matches with distance-based confidence + two-signal corroboration
     const matches = [];
     for (const [pid, hits] of prospectHits) {
       const prospect = this.prospectById[pid];
@@ -565,24 +955,49 @@ class UnifiedMatcher {
           }
         }
 
-        let confidence, matchType, distanceCategory;
-        if (minDist <= 4000) {
-          confidence = 95;
-          matchType = 'Name+Company';
-          distanceCategory = 'HIGH (≤4K chars)';
-        } else if (minDist <= 8000) {
-          confidence = 85;
-          matchType = 'Name+Company';
-          distanceCategory = 'MEDIUM (4K-8K chars)';
-        } else if (minDist <= 50000) {
-          confidence = 70;
-          matchType = 'Name+Company';
-          distanceCategory = 'LOW (8K-50K chars)';
+        // Count corroborating signals (Rule 2)
+        const signalResult = parsedFiling
+          ? this._countTextMatchSignals(rawContent, hits, prospect, parsedFiling, minDist)
+          : { signalCount: 0, signals: [], details: '' };
+
+        let confidence, matchType, distanceCategory, isMentionOnly;
+
+        if (signalResult.signalCount >= 2) {
+          // Enough corroboration — apply distance-based confidence
+          isMentionOnly = false;
+          if (minDist <= 4000) {
+            confidence = 95;
+            matchType = 'Name+Company';
+            distanceCategory = 'HIGH (≤4K chars)';
+          } else if (minDist <= 8000) {
+            confidence = 85;
+            matchType = 'Name+Company';
+            distanceCategory = 'MEDIUM (4K-8K chars)';
+          } else if (minDist <= 50000) {
+            confidence = 70;
+            matchType = 'Name+Company';
+            distanceCategory = 'LOW (8K-50K chars)';
+          } else {
+            // Too far apart — downgrade to Mention Only (Rule 1)
+            confidence = 0;
+            matchType = 'Mention Only';
+            distanceCategory = 'TOO FAR (>50K chars)';
+            isMentionOnly = true;
+          }
         } else {
-          // Too far apart — downgrade to Name Only
-          confidence = 75;
-          matchType = 'Name Only';
-          distanceCategory = 'TOO FAR (>50K chars)';
+          // Fewer than 2 signals — downgrade to Mention Only (Rules 1+2)
+          confidence = 0;
+          matchType = 'Mention Only';
+          isMentionOnly = true;
+          if (minDist <= 4000) {
+            distanceCategory = 'HIGH (≤4K chars) [insufficient signals]';
+          } else if (minDist <= 8000) {
+            distanceCategory = 'MEDIUM (4K-8K chars) [insufficient signals]';
+          } else if (minDist <= 50000) {
+            distanceCategory = 'LOW (8K-50K chars) [insufficient signals]';
+          } else {
+            distanceCategory = 'TOO FAR (>50K chars)';
+          }
         }
 
         // Extract context snippets around name and company matches
@@ -598,21 +1013,44 @@ class UnifiedMatcher {
           distanceCategory,
           nameContext,
           companyContext,
+          isMentionOnly: isMentionOnly || false,
+          signalCount: signalResult.signalCount,
+          signals: signalResult.details,
         });
       } else if (hits.nameHit) {
+        // Name-only: still count signals (strong locus + role could fire without company)
+        const signalResult = parsedFiling
+          ? this._countTextMatchSignals(rawContent, hits, prospect, parsedFiling, Infinity)
+          : { signalCount: 0, signals: [], details: '' };
+
         const nameContext = hits.namePositions[0] != null
           ? this._extractContext(rawContent, hits.namePositions[0], 60)
           : null;
 
+        let confidence, matchType, isMentionOnly;
+        if (signalResult.signalCount >= 2) {
+          confidence = 70;
+          matchType = 'Name Only';
+          isMentionOnly = false;
+        } else {
+          // Fewer than 2 signals → Mention Only (Rule 1)
+          confidence = 0;
+          matchType = 'Mention Only';
+          isMentionOnly = true;
+        }
+
         matches.push({
           prospect,
           matchMethod: 'text',
-          matchType: 'Name Only',
-          confidence: 75,
+          matchType,
+          confidence,
           distance: null,
           distanceCategory: null,
           nameContext,
           companyContext: null,
+          isMentionOnly,
+          signalCount: signalResult.signalCount,
+          signals: signalResult.details,
         });
       }
       // Company-only matches are intentionally skipped (low value, high noise)
@@ -637,7 +1075,7 @@ class UnifiedMatcher {
   }
 
   /**
-   * Apply AdaptiveMatcher's validation rules:
+   * Apply adaptive validation rules:
    * space boundaries, English context, encoded blocking
    */
   _validateAdaptive(text, matchInfo, patternInfo) {
@@ -819,6 +1257,14 @@ class UnifiedMatcher {
     const fp = result.fp_risk_level || '';
     const confidence = Number.isFinite(result.match_confidence) ? result.match_confidence : 0;
 
+    // Mention-only text matches: name found but insufficient corroboration
+    if (result.is_mention_only) {
+      return {
+        verdict: 'MENTION_ONLY',
+        reason: `Text mention only (${result.signal_count || 0} corroborating signal(s), needs ≥2)`
+      };
+    }
+
     // Hard stop: structured First+Middle-only is almost always the wrong person
     if (result.structured_match_type === 'first_middle_only') {
       return {
@@ -916,6 +1362,13 @@ class UnifiedMatcher {
         const prospectMatches = this._matchName(person.name);
         for (const pm of prospectMatches) {
           const companyCheck = this._crossCheckCompany(pm, parsed, rawText);
+
+          const rejectReason = this._shouldRejectStructuredUnverifiedMatch(pm, person, parsed, rawText, companyCheck);
+          if (rejectReason) {
+            // Drop provably-low-quality structured matches (name collision) instead of surfacing them at 40-60%.
+            continue;
+          }
+
           const confidence = this._computeConfidence(pm.matchMethod, companyCheck);
 
           if (companyCheck.verified) {
@@ -939,8 +1392,16 @@ class UnifiedMatcher {
       }
     }
 
+    // Build structured name set for attorney-in-fact suppression
+    const structuredNameSet = new Set(
+      (parsed.persons || [])
+        .map(p => this._normalizeNameForCompare(p.name))
+        .filter(Boolean)
+    );
+    this._structuredNameSet = structuredNameSet;
+
     // Step 3: Text matching with adaptive validation
-    const textMatches = this._textSearchWithValidation(rawContent);
+    const textMatches = this._textSearchWithValidation(rawContent, parsed);
     const structuredProspectIds = new Set(structuredMatches.map(m => m.prospect.id));
 
     // Merge: structured matches take priority, text matches fill gaps
@@ -959,6 +1420,9 @@ class UnifiedMatcher {
           textDistanceCategory: tm.distanceCategory,
           nameContext: tm.nameContext,
           companyContext: tm.companyContext,
+          isMentionOnly: tm.isMentionOnly || false,
+          signalCount: tm.signalCount || 0,
+          signals: tm.signals || '',
         });
       }
     }
@@ -975,6 +1439,7 @@ class UnifiedMatcher {
         prospect_id: match.prospect.id,
         prospect_name: match.prospect.name,
         prospect_company: match.prospect.company,
+        team_name: match.prospect.teamName || '',
 
         // Match quality
         match_method: match.matchMethod,
@@ -984,6 +1449,11 @@ class UnifiedMatcher {
         company_check_method: match.companyCheckMethod || '',
         uncertain_match: match.uncertainMatch || false,
         uncertain_reason: match.uncertainReason || '',
+
+        // Mention-only fields (text matches with insufficient corroboration)
+        is_mention_only: match.isMentionOnly || false,
+        signal_count: match.signalCount || null,
+        match_signals: match.signals || '',
 
         // Distance info (for text matches with Name+Company)
         distance: match.textDistance || null,
@@ -1044,18 +1514,34 @@ class UnifiedMatcher {
       // Generate match_remarks (human-readable explanation of how match was made)
       const remarks = [];
       if (match.matchMethod === 'text') {
-        if (match.textMatchType === 'Name+Company') {
+        if (match.textMatchType === 'Mention Only') {
+          remarks.push(`Mention only (${result.signal_count || 0} signal(s), needs ≥2)`);
+          if (result.distance != null) {
+            remarks.push(`Name-company distance: ${result.distance.toLocaleString()} chars`);
+          } else {
+            remarks.push('Company not detected');
+          }
+          if (result.match_signals) {
+            remarks.push(`Signals: ${result.match_signals}`);
+          }
+        } else if (match.textMatchType === 'Name+Company') {
           if (result.distance) {
             remarks.push(`Name and company found ${result.distance.toLocaleString()} chars apart`);
             remarks.push(`Distance quality: ${result.distance_category || 'Unknown'}`);
           } else {
             remarks.push('Both name and company found together');
           }
+          if (result.signal_count != null) {
+            remarks.push(`Signals (${result.signal_count}): ${result.match_signals || 'none'}`);
+          }
         } else if (match.textMatchType === 'Name Only') {
           if (result.distance && result.distance > 50000) {
             remarks.push(`Company found but too far (${(result.distance / 1000).toFixed(1)}K chars away)`);
           } else {
             remarks.push('Only prospect name found (company not detected)');
+          }
+          if (result.signal_count != null) {
+            remarks.push(`Signals (${result.signal_count}): ${result.match_signals || 'none'}`);
           }
         }
       } else if (match.matchMethod === 'structured') {
@@ -1082,6 +1568,7 @@ class UnifiedMatcher {
         structured_match_type: result.structured_match_type,
         company_verified: result.company_verified,
         uncertain_match: result.uncertain_match,
+        is_mention_only: result.is_mention_only,
       };
       const fpAnalysis = this.fpDetector.calculateFPRiskScore(fpInput);
       result.fp_risk_score = fpAnalysis.score;
@@ -1107,6 +1594,11 @@ class UnifiedMatcher {
       if (match.uncertainMatch) {
         this.stats.uncertainMatches++;
       }
+
+      // Track mention-only matches
+      if (match.isMentionOnly) {
+        this.stats.mentionOnlyCount++;
+      }
     }
   }
 
@@ -1125,9 +1617,13 @@ class UnifiedMatcher {
         { id: 'prospect_name', title: 'Prospect Name' },
         { id: 'prospect_company', title: 'Prospect Company' },
         { id: 'prospect_id', title: 'Prospect ID' },
+        { id: 'team_name', title: 'Team Name' },
         { id: 'match_confidence', title: 'Confidence' },
         { id: 'uncertain_match', title: 'Uncertain Match' },
         { id: 'uncertain_reason', title: 'Uncertain Reason' },
+        { id: 'is_mention_only', title: 'Mention Only' },
+        { id: 'signal_count', title: 'Signal Count' },
+        { id: 'match_signals', title: 'Match Signals' },
         { id: 'match_verdict', title: 'Match Verdict' },
         { id: 'match_verdict_reason', title: 'Match Verdict Reason' },
         { id: 'company_verified', title: 'Company Verified' },
@@ -1177,6 +1673,102 @@ class UnifiedMatcher {
     return outputPath;
   }
 
+  async exportClientCsv(outputPath) {
+    const createCsvWriter = require('csv-writer').createObjectCsvWriter;
+
+    const writer = createCsvWriter({
+      path: outputPath,
+      header: [
+        { id: 'signal_tier', title: 'Signal Tier' },
+        { id: 'confidence', title: 'Confidence' },
+        { id: 'match_quality', title: 'Match Quality' },
+        { id: 'prospect_name', title: 'Prospect Name' },
+        { id: 'prospect_company', title: 'Prospect Company' },
+        { id: 'team_name', title: 'Team Name' },
+        { id: 'prospect_id', title: 'Prospect ID' },
+        { id: 'form_type', title: 'Form Type' },
+        { id: 'issuer_name', title: 'Issuer/Company' },
+        { id: 'ticker', title: 'Ticker' },
+        { id: 'filed_date', title: 'Filed Date' },
+        { id: 'filer_role', title: 'Filer Role' },
+        { id: 'transaction', title: 'Transaction' },
+        { id: 'value', title: 'Value ($)' },
+        { id: 'action', title: 'Action' },
+        { id: 'accession_number', title: 'Accession Number' },
+      ],
+    });
+
+    // Sort: Tier 1 first, then confidence desc, then value
+    const sorted = [...this.results].sort((a, b) => {
+      if (a.signal_tier !== b.signal_tier) return a.signal_tier - b.signal_tier;
+      if (a.match_confidence !== b.match_confidence) return b.match_confidence - a.match_confidence;
+      return (b.total_value || 0) - (a.total_value || 0);
+    });
+
+    const clientRows = sorted.map(r => {
+      // --- Match Quality: verdict + key reason ---
+      let quality = r.match_verdict || '';
+      if (r.company_verified) {
+        quality += ' — Company Verified';
+      } else if (r.is_mention_only) {
+        // already says MENTION_ONLY
+      } else if (r.uncertain_match) {
+        quality += ' — ' + (r.uncertain_reason || 'Uncertain name match');
+      } else if (!r.prospect_company) {
+        quality += ' — No company on prospect';
+      } else if (r.company_check_method === 'no_company_in_filing') {
+        quality += ' — Company not found in filing';
+      } else {
+        quality += ' — Company not verified';
+      }
+
+      // --- Transaction: summary + flag tags ---
+      let txn = r.transaction_summary || '';
+      const tags = [];
+      if (r.is_10b5_1) tags.push('10b5-1');
+      if (r.has_same_day_sale) tags.push('Same-Day Sale');
+      if (r.has_philanthropy_signal) tags.push('Philanthropy');
+      if (tags.length > 0) txn += (txn ? ' ' : '') + '[' + tags.join('] [') + ']';
+
+      // --- Action: signal category + gift officer action + alerts ---
+      const parts = [];
+      // Extract just the label after "Tier N: " from signal_tier_label
+      const label = (r.signal_tier_label || '').replace(/^Tier \d:\s*/, '');
+      if (label) parts.push(label);
+      if (r.gift_officer_action) parts.push(r.gift_officer_action);
+      if (r.alerts) parts.push(r.alerts);
+      const action = parts.join(' — ');
+
+      // --- Filed Date: format YYYYMMDD → YYYY-MM-DD ---
+      let filedDate = r.filed_date || '';
+      if (filedDate.length === 8) {
+        filedDate = filedDate.slice(0, 4) + '-' + filedDate.slice(4, 6) + '-' + filedDate.slice(6, 8);
+      }
+
+      return {
+        signal_tier: r.signal_tier,
+        confidence: r.match_confidence,
+        match_quality: quality,
+        prospect_name: r.prospect_name,
+        prospect_company: r.prospect_company || '',
+        team_name: r.team_name || '',
+        prospect_id: r.prospect_id,
+        form_type: r.form_type,
+        issuer_name: r.issuer_name || '',
+        ticker: r.issuer_ticker || '',
+        filed_date: filedDate,
+        filer_role: r.filing_person_role || '',
+        transaction: txn,
+        value: r.total_value || '',
+        action: action,
+        accession_number: r.accession_number || '',
+      };
+    });
+
+    await writer.writeRecords(clientRows);
+    return outputPath;
+  }
+
   // ---------------------------------------------------------------------------
   // Stats
   // ---------------------------------------------------------------------------
@@ -1213,6 +1805,7 @@ class UnifiedMatcher {
 
     console.log('Match Quality:');
     console.log(`  Uncertain matches:         ${this.stats.uncertainMatches} (First+Middle only, needs review)`);
+    console.log(`  Mention-only (text):       ${this.stats.mentionOnlyCount}`);
     console.log('');
 
     console.log('Confidence Distribution:');

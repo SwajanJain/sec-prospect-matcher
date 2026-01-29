@@ -4,6 +4,7 @@ matches/
 *.log
 .DS_Store
 .env
+.claude/
 results/
 tmp/
 *.csv

@@ -15,8 +15,8 @@ const path = require('path');
 const fs = require('fs');
 
 // --- Configuration ---
-const PROSPECTS_CSV = '/Users/swajanjain/Downloads/Philips Academy.csv';
-const SEC_FILINGS_FOLDER = '/Users/swajanjain/Downloads/SEC Filings';
+const PROSPECTS_CSV = '/Users/swajanjain/Downloads/Prospect Data.csv';
+const SEC_FILINGS_FOLDER = '/Users/swajanjain/Downloads/Matched SEC Filings';
 const OUTPUT_FOLDER = path.join(__dirname, 'matches');
 // Set to a number to process only first N filings (for testing), or null for all
 const MAX_FILES = process.env.MAX_FILES ? parseInt(process.env.MAX_FILES, 10) : null;
@@ -88,11 +88,14 @@ async function main() {
   // Step 4: Export to CSV
   if (results.length > 0) {
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-    const outputPath = path.join(OUTPUT_FOLDER, `sec_matches_enriched_${timestamp}.csv`);
+    const debugPath = path.join(OUTPUT_FOLDER, `sec_matches_debug_${timestamp}.csv`);
+    const clientPath = path.join(OUTPUT_FOLDER, `sec_matches_client_${timestamp}.csv`);
 
     console.log(`\nExporting ${results.length} results to CSV...`);
-    await matcher.exportToCsv(outputPath);
-    console.log(`Saved to: ${outputPath}`);
+    await matcher.exportToCsv(debugPath);
+    console.log(`Debug CSV (44 fields):  ${debugPath}`);
+    await matcher.exportClientCsv(clientPath);
+    console.log(`Client CSV (16 fields): ${clientPath}`);
 
     // Show top 10 Tier 1 results
     const tier1 = results.filter(r => r.signal_tier === 1).sort((a, b) => (b.total_value || 0) - (a.total_value || 0));

@@ -3,7 +3,7 @@
  *
  * For filing types without a specialized parser (424B, 497, 10-K, S-1, etc.),
  * extract basic metadata from the header. Name matching against these forms
- * is handled by the text-based matcher (existing AdaptiveMatcher).
+ * is handled by the text-based matcher (Aho-Corasick + adaptive rules).
  */
 
 function parseGeneric(rawContent, header) {
