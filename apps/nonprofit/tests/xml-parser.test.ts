@@ -6,9 +6,14 @@ import { parseIrsXml } from "../src/xml-parser";
 
 // __dirname at runtime is dist/tests/, so go up 2 levels to reach apps/nonprofit/
 const SAMPLES_DIR = path.join(__dirname, "..", "..", "samples");
+const DATA_DIR = path.join(__dirname, "..", "..", "data", "2026_01A");
 
 function loadSample(filename: string): string {
   return fs.readFileSync(path.join(SAMPLES_DIR, filename), "utf8");
+}
+
+function loadData(filename: string): string {
+  return fs.readFileSync(path.join(DATA_DIR, filename), "utf8");
 }
 
 describe("parseIrsXml", () => {
@@ -68,6 +73,9 @@ describe("parseIrsXml", () => {
     assert.equal(keith.title, "Executive Dir.");
     assert.equal(keith.amount, 108997);
     assert.equal(keith.role, "officer");
+    assert.equal(keith.city, "");
+    assert.equal(keith.state, "");
+    assert.equal(keith.personLocationSource, "unknown");
 
     // Directors
     const jennifer = records.find((r) => r.personName === "JENNIFER SMITH");
@@ -124,5 +132,15 @@ describe("parseIrsXml", () => {
 
     // Should have grants
     assert.ok(grants.length >= 5, "should have multiple grants");
+  });
+
+  it("collapses duplicate officer rows within a filing", () => {
+    const xml = loadData("202610139349302001_public.xml");
+    const { records, duplicateCollapseCount } = parseIrsXml(xml, "202610139349302001_public");
+
+    const elizabeth = records.filter((r) => r.personNameNormalized === "elizabeth matthews");
+    assert.equal(elizabeth.length, 1, "Elizabeth Matthews should collapse to one record");
+    assert.ok(duplicateCollapseCount >= 1, "duplicate collapse count should be tracked");
+    assert.ok(elizabeth[0].withinFilingDuplicateCount > 1, "collapsed record should retain duplicate count");
   });
 });

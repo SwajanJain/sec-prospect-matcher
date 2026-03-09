@@ -1,6 +1,36 @@
 // Re-export shared types from @pm/core
 export type { ProspectRecord, VariantType, PersonNameParts } from "@pm/core";
 
+export type NonprofitSource = "990-PF-DONOR" | "990-PF-OFFICER" | "990-OFFICER";
+export type NonprofitSourceSection =
+  | "schedule_b_contributor"
+  | "pf_officer_info"
+  | "part_vii_section_a"
+  | "schedule_j_related_org";
+export type TitleBucket =
+  | "board_trustee"
+  | "executive"
+  | "senior_staff"
+  | "professional_staff"
+  | "frontline_or_operational";
+export type PersonLocationSource = "person_address" | "filing_org" | "unknown";
+export type ConfidenceTier = "Verified" | "Likely" | "Risky" | "Review Needed";
+export type RoutingDecision = "accepted" | "review" | "suppressed";
+export type ReviewBucket =
+  | "none"
+  | "duplicate_prospect_name"
+  | "weak_staff_role"
+  | "duplicate_filing_record"
+  | "weak_foundation_link"
+  | "common_name"
+  | "insufficient_corroboration";
+export type LocationSupport =
+  | "strong_person_state"
+  | "weak_org_state"
+  | "mismatch"
+  | "unknown";
+export type FoundationLinkStatus = "verified_foundation_link" | "ambiguous_foundation_link";
+
 /** Filing metadata from XML header */
 export interface FilingHeader {
   ein: string;
@@ -14,7 +44,8 @@ export interface FilingHeader {
 
 /** Person record extracted from a filing (officer or donor) */
 export interface NonprofitRecord {
-  source: "990-PF-DONOR" | "990-PF-OFFICER" | "990-OFFICER";
+  source: NonprofitSource;
+  sourceSection: NonprofitSourceSection;
   filing: FilingHeader;
   personName: string;
   personNameNormalized: string;
@@ -23,11 +54,16 @@ export interface NonprofitRecord {
   middleName: string;
   suffix: string;
   title: string;
+  normalizedTitle: string;
+  titleBucket: TitleBucket;
   role: string;
   amount: number;
   hoursPerWeek: number;
   city: string;
   state: string;
+  personLocationSource: PersonLocationSource;
+  recordFingerprint: string;
+  withinFilingDuplicateCount: number;
 }
 
 /** Grant from 990-PF Part XV */
@@ -43,11 +79,12 @@ export interface GrantRecord {
 /** Match result for CSV output */
 export interface NonprofitMatchResult {
   matchConfidence: number;
-  matchQuality: "Verified" | "Likely Match" | "Review Needed";
+  confidenceTier: ConfidenceTier;
+  routingDecision: RoutingDecision;
   prospectId: string;
   prospectName: string;
   prospectCompany: string;
-  recordType: NonprofitRecord["source"];
+  recordType: NonprofitSource;
   orgName: string;
   orgEin: string;
   personRole: string;
@@ -58,14 +95,27 @@ export interface NonprofitMatchResult {
   orgState: string;
   filingId: string;
   matchReason: string;
+  evidenceSignals: string[];
+  conflictFlags: string[];
+  prospectCollisionCount: number;
+  orgAffinityScore: number;
+  locationSupport: LocationSupport;
+  reviewBucket: ReviewBucket;
+  recordFingerprint: string;
+  personNameNormalized: string;
+  normalizedTitle: string;
+  sourceSection: NonprofitSourceSection;
 }
 
-/** Enriched grant for grants.csv */
+/** Foundation-level grant output row */
 export interface EnrichedGrant {
-  prospectName: string;
-  prospectId: string;
+  matchedProspectNames: string[];
+  matchedProspectIds: string[];
   foundationName: string;
   foundationEin: string;
+  foundationMatchTier: ConfidenceTier;
+  foundationLinkStatus: FoundationLinkStatus;
+  foundationLinkNote: string;
   recipientName: string;
   grantAmount: number;
   grantPurpose: string;

@@ -15,7 +15,6 @@ describe("runNonprofitMatcher integration", () => {
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "nonprofit-test-"));
 
     // Create synthetic prospect CSV with names from sample XMLs
-    // State column is critical: exact_name (40) + same_state (20) = 60 (match threshold)
     const csv = [
       "prospect_id,prospect_name,prospect_alias_name,prospect_company,prospect_other_company,state",
       'P001,Keith Stump,,"ABLE INDUSTRIES",,CA',
@@ -51,8 +50,9 @@ describe("runNonprofitMatcher integration", () => {
     assert.ok(matchLines.length >= 2, "should have header + at least 1 match");
 
     // Verify header
-    assert.ok(matchLines[0].includes("Match Confidence"), "header should contain Match Confidence");
+    assert.ok(matchLines[0].includes("Confidence Tier"), "header should contain Confidence Tier");
     assert.ok(matchLines[0].includes("Organization Name"), "header should contain Organization Name");
+    assert.ok(matchLines[0].includes("Prospect ID"), "header should contain Prospect ID");
 
     // Keith Stump should match (exact name in 990)
     assert.ok(matchesContent.includes("Keith Stump"), "Keith Stump should be in matches");
@@ -60,11 +60,16 @@ describe("runNonprofitMatcher integration", () => {
     // Siohvaughn Funches should match (appears as donor AND officer)
     assert.ok(matchesContent.includes("Siohvaughn Funches"), "Siohvaughn Funches should be in matches");
 
+    // verified_matches.csv should exist
+    const verifiedMatchesPath = path.join(outputDir, "verified_matches.csv");
+    assert.ok(fs.existsSync(verifiedMatchesPath), "verified_matches.csv should exist");
+
     // summary.md should exist
     const summaryPath = path.join(outputDir, "summary.md");
     assert.ok(fs.existsSync(summaryPath), "summary.md should exist");
     const summaryContent = fs.readFileSync(summaryPath, "utf8");
     assert.ok(summaryContent.includes("XML files scanned: 4"), "should report 4 XML files");
+    assert.ok(summaryContent.includes("Confidence Tiers"), "summary should include tier counts");
 
     // Nobody Matcherson should NOT appear in matches
     assert.ok(!matchesContent.includes("Nobody Matcherson"), "Nobody should not match");

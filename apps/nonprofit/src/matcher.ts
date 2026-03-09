@@ -1,11 +1,190 @@
 import fs from "node:fs";
 import path from "node:path";
-import { loadProspectsDetailed, buildProspectIndex, createLogger } from "@pm/core";
-import type { IndexedProspect } from "@pm/core";
+import { buildProspectIndex, createLogger, loadProspectsDetailed } from "@pm/core";
+import type { IndexedProspect, VariantType } from "@pm/core";
 import { parseIrsXml } from "./xml-parser";
-import { scoreNonprofitMatch } from "./scorer";
-import { writeMatchesCsv, writeGrantsCsv, writeSummary } from "./csv-export";
-import type { NonprofitRecord, GrantRecord, NonprofitMatchResult, EnrichedGrant } from "./types";
+import { compareMatchResults, scoreNonprofitMatch } from "./scorer";
+import {
+  writeGrantsCsv,
+  writeMatchesCsv,
+  writeSummary,
+} from "./csv-export";
+import type {
+  ConfidenceTier,
+  EnrichedGrant,
+  GrantRecord,
+  NonprofitMatchResult,
+  NonprofitRecord,
+  ReviewBucket,
+} from "./types";
+
+function variantPriority(variantType: VariantType): number {
+  switch (variantType) {
+    case "exact":
+      return 6;
+    case "suffix_stripped":
+      return 5;
+    case "middle_dropped":
+      return 4;
+    case "initial_variant":
+      return 3;
+    case "dehyphenated":
+      return 2;
+    case "nickname":
+      return 1;
+  }
+}
+
+function dedupeIndexedProspects(hits: IndexedProspect[]): IndexedProspect[] {
+  const byProspectId = new Map<string, IndexedProspect>();
+  for (const hit of hits) {
+    const existing = byProspectId.get(hit.prospect.prospectId);
+    if (!existing || variantPriority(hit.variantType) > variantPriority(existing.variantType)) {
+      byProspectId.set(hit.prospect.prospectId, hit);
+    }
+  }
+  return [...byProspectId.values()];
+}
+
+function dedupeMatchResults(results: NonprofitMatchResult[]): NonprofitMatchResult[] {
+  const deduped = new Map<string, NonprofitMatchResult>();
+  for (const result of results) {
+    const key = [
+      result.prospectId,
+      result.filingId,
+      result.orgEin,
+      result.personNameNormalized,
+      result.normalizedTitle || "-",
+      String(result.amount),
+    ].join("|");
+    const existing = deduped.get(key);
+    if (!existing || compareMatchResults(result, existing) < 0) {
+      deduped.set(key, result);
+    }
+  }
+  return [...deduped.values()];
+}
+
+function resolveAcceptedRecordCollisions(results: NonprofitMatchResult[]): {
+  accepted: NonprofitMatchResult[];
+  movedToReview: NonprofitMatchResult[];
+} {
+  const byFingerprint = new Map<string, NonprofitMatchResult[]>();
+  for (const result of results) {
+    const existing = byFingerprint.get(result.recordFingerprint) ?? [];
+    existing.push(result);
+    byFingerprint.set(result.recordFingerprint, existing);
+  }
+
+  const accepted: NonprofitMatchResult[] = [];
+  const movedToReview: NonprofitMatchResult[] = [];
+
+  for (const group of byFingerprint.values()) {
+    if (group.length === 1) {
+      accepted.push(group[0]);
+      continue;
+    }
+
+    for (const result of group) {
+      movedToReview.push({
+        ...result,
+        confidenceTier: "Review Needed",
+        routingDecision: "review",
+        reviewBucket: "duplicate_prospect_name",
+        conflictFlags: result.conflictFlags.includes("duplicate_prospect_name")
+          ? result.conflictFlags
+          : [...result.conflictFlags, "duplicate_prospect_name"],
+      });
+    }
+  }
+
+  return { accepted, movedToReview };
+}
+
+function tierPriority(tier: ConfidenceTier): number {
+  switch (tier) {
+    case "Verified":
+      return 4;
+    case "Likely":
+      return 3;
+    case "Risky":
+      return 2;
+    case "Review Needed":
+      return 1;
+  }
+}
+
+function incrementCount(map: Map<string, number>, key: string): void {
+  map.set(key, (map.get(key) ?? 0) + 1);
+}
+
+function highestTier(results: NonprofitMatchResult[]): ConfidenceTier {
+  return [...results].sort((a, b) => tierPriority(b.confidenceTier) - tierPriority(a.confidenceTier))[0]?.confidenceTier ?? "Risky";
+}
+
+function buildFoundationGrants(
+  matches: NonprofitMatchResult[],
+  grantsByEin: Map<string, GrantRecord[]>,
+): {
+  grants: EnrichedGrant[];
+  verifiedGrants: EnrichedGrant[];
+  ambiguousFoundationCount: number;
+} {
+  const foundationMatches = new Map<string, NonprofitMatchResult[]>();
+  for (const match of matches) {
+    if (match.recordType !== "990-PF-OFFICER") continue;
+    const existing = foundationMatches.get(match.orgEin) ?? [];
+    existing.push(match);
+    foundationMatches.set(match.orgEin, existing);
+  }
+
+  const grants: EnrichedGrant[] = [];
+  const verifiedGrants: EnrichedGrant[] = [];
+  let ambiguousFoundationCount = 0;
+
+  for (const [foundationEin, foundationRows] of foundationMatches.entries()) {
+    const grantRows = grantsByEin.get(foundationEin);
+    if (!grantRows || grantRows.length === 0) continue;
+
+    const uniqueProspects = new Map<string, NonprofitMatchResult>();
+    for (const row of foundationRows) {
+      const existing = uniqueProspects.get(row.prospectId);
+      if (!existing || compareMatchResults(row, existing) < 0) {
+        uniqueProspects.set(row.prospectId, row);
+      }
+    }
+
+    const uniqueMatches = [...uniqueProspects.values()].sort(compareMatchResults);
+    const foundationMatchTier = highestTier(uniqueMatches);
+    const ambiguous = uniqueMatches.length > 1;
+    if (ambiguous) ambiguousFoundationCount++;
+
+    const foundationLinkStatus = ambiguous ? "ambiguous_foundation_link" : "verified_foundation_link";
+    const foundationLinkNote = ambiguous
+      ? `Multiple matched prospects for foundation EIN ${foundationEin}`
+      : `Single matched prospect for foundation EIN ${foundationEin}`;
+
+    for (const grant of grantRows) {
+      const row: EnrichedGrant = {
+        matchedProspectNames: uniqueMatches.map((match) => match.prospectName),
+        matchedProspectIds: uniqueMatches.map((match) => match.prospectId),
+        foundationName: grant.filing.orgName,
+        foundationEin,
+        foundationMatchTier,
+        foundationLinkStatus,
+        foundationLinkNote,
+        recipientName: grant.recipientName,
+        grantAmount: grant.amount,
+        grantPurpose: grant.purpose,
+        taxPeriod: grant.filing.taxPeriodEnd,
+      };
+      grants.push(row);
+      if (!ambiguous && foundationMatchTier === "Verified") verifiedGrants.push(row);
+    }
+  }
+
+  return { grants, verifiedGrants, ambiguousFoundationCount };
+}
 
 export function runNonprofitMatcher(options: {
   prospectsPath: string;
@@ -15,79 +194,79 @@ export function runNonprofitMatcher(options: {
 }): void {
   const log = createLogger(options.verbose);
 
-  // 1. Load prospects
   log.info(`Loading prospects from ${options.prospectsPath}`);
   const { prospects, summary: loadSummary } = loadProspectsDetailed(options.prospectsPath);
   log.info(`Loaded ${prospects.length} prospects (${loadSummary.skippedRows} skipped)`);
 
-  // 2. Build prospect index
   log.info("Building prospect name index...");
   const { prospectIndex } = buildProspectIndex(prospects);
   log.info(`Index built: ${prospectIndex.size} name variants`);
 
-  // 3. Scan XML files
-  const xmlFiles = fs.readdirSync(options.xmlDir).filter((f) => f.endsWith(".xml"));
+  const xmlFiles = fs.readdirSync(options.xmlDir).filter((file) => file.endsWith(".xml"));
   log.info(`Found ${xmlFiles.length} XML files in ${options.xmlDir}`);
 
   const allRecords: NonprofitRecord[] = [];
   const allGrants: GrantRecord[] = [];
   let parseErrors = 0;
+  let duplicateCollapseCount = 0;
 
   for (const file of xmlFiles) {
     try {
       const content = fs.readFileSync(path.join(options.xmlDir, file), "utf8");
       const objectId = path.basename(file, ".xml");
-      const { records, grants } = parseIrsXml(content, objectId);
+      const { records, grants, duplicateCollapseCount: fileDuplicateCollapseCount } = parseIrsXml(content, objectId);
       allRecords.push(...records);
       allGrants.push(...grants);
+      duplicateCollapseCount += fileDuplicateCollapseCount;
     } catch {
       parseErrors++;
     }
   }
 
-  const donorRecords = allRecords.filter((r) => r.source === "990-PF-DONOR").length;
+  const donorRecords = allRecords.filter((record) => record.source === "990-PF-DONOR").length;
   const officerRecords = allRecords.length - donorRecords;
   log.info(`Extracted ${allRecords.length} records (${officerRecords} officers, ${donorRecords} donors)`);
   log.info(`Extracted ${allGrants.length} grants`);
   if (parseErrors > 0) log.warn(`${parseErrors} files failed to parse`);
 
-  // 4. Build name frequency map
   const nameFreq = new Map<string, number>();
-  for (const r of allRecords) {
-    const key = r.personNameNormalized;
-    nameFreq.set(key, (nameFreq.get(key) ?? 0) + 1);
+  const einPersonHistory = new Map<string, Set<string>>();
+  for (const record of allRecords) {
+    incrementCount(nameFreq, record.personNameNormalized);
+    const key = `${record.filing.ein}|${record.personNameNormalized}`;
+    const existing = einPersonHistory.get(key) ?? new Set<string>();
+    existing.add(record.filing.taxPeriodEnd || record.filing.objectId);
+    einPersonHistory.set(key, existing);
   }
 
-  // 5. Build grants-by-EIN map for enrichment
   const grantsByEin = new Map<string, GrantRecord[]>();
-  for (const g of allGrants) {
-    const ein = g.filing.ein;
-    const existing = grantsByEin.get(ein) ?? [];
-    existing.push(g);
-    grantsByEin.set(ein, existing);
+  for (const grant of allGrants) {
+    const existing = grantsByEin.get(grant.filing.ein) ?? [];
+    existing.push(grant);
+    grantsByEin.set(grant.filing.ein, existing);
   }
 
-  // 6. Match records against prospects
   log.info("Matching records against prospects...");
-  const matches: NonprofitMatchResult[] = [];
+  const accepted: NonprofitMatchResult[] = [];
   const review: NonprofitMatchResult[] = [];
   const matchedProspectIds = new Set<string>();
 
   for (const record of allRecords) {
-    const lookupKey = record.personNameNormalized;
-    const hits: IndexedProspect[] = prospectIndex.get(lookupKey) ?? [];
+    const hits = dedupeIndexedProspects(prospectIndex.get(record.personNameNormalized) ?? []);
     if (hits.length === 0) continue;
 
-    const freq = nameFreq.get(lookupKey) ?? 1;
+    const contextBase = {
+      nameFrequency: nameFreq.get(record.personNameNormalized) ?? 1,
+      prospectCollisionCount: hits.length,
+      repeatedEinPersonCount: einPersonHistory.get(`${record.filing.ein}|${record.personNameNormalized}`)?.size ?? 1,
+    };
 
     for (const hit of hits) {
-      const { matchConfidence, matchQuality, matchReason } = scoreNonprofitMatch(
-        hit.prospect, record, hit.variantType, freq,
-      );
-
+      const score = scoreNonprofitMatch(hit.prospect, record, hit.variantType, contextBase);
       const result: NonprofitMatchResult = {
-        matchConfidence,
-        matchQuality,
+        matchConfidence: score.matchConfidence,
+        confidenceTier: score.confidenceTier,
+        routingDecision: score.routingDecision,
         prospectId: hit.prospect.prospectId,
         prospectName: hit.prospect.nameRaw,
         prospectCompany: hit.prospect.companyRaw,
@@ -101,11 +280,21 @@ export function runNonprofitMatcher(options: {
         personCityState: [record.city, record.state].filter(Boolean).join(", "),
         orgState: record.filing.orgState,
         filingId: record.filing.objectId,
-        matchReason,
+        matchReason: score.matchReason,
+        evidenceSignals: score.evidenceSignals,
+        conflictFlags: score.conflictFlags,
+        prospectCollisionCount: score.prospectCollisionCount,
+        orgAffinityScore: score.orgAffinityScore,
+        locationSupport: score.locationSupport,
+        reviewBucket: score.reviewBucket,
+        recordFingerprint: record.recordFingerprint,
+        personNameNormalized: record.personNameNormalized,
+        normalizedTitle: record.normalizedTitle,
+        sourceSection: record.sourceSection,
       };
 
-      if (matchConfidence >= 60) {
-        matches.push(result);
+      if (result.routingDecision === "accepted") {
+        accepted.push(result);
         matchedProspectIds.add(hit.prospect.prospectId);
       } else {
         review.push(result);
@@ -113,62 +302,52 @@ export function runNonprofitMatcher(options: {
     }
   }
 
-  log.info(`Matches: ${matches.length} (score >= 60), Review: ${review.length}`);
+  const dedupedAccepted = dedupeMatchResults(accepted);
+  const resolvedCollisions = resolveAcceptedRecordCollisions(dedupedAccepted);
+  const dedupedMatches = dedupeMatchResults(resolvedCollisions.accepted).sort(compareMatchResults);
+  const dedupedReview = dedupeMatchResults([...review, ...resolvedCollisions.movedToReview]).sort(compareMatchResults);
+  const verifiedMatches = dedupedMatches.filter((row) => row.confidenceTier === "Verified");
+
+  log.info(`Matches: ${dedupedMatches.length}, Review: ${dedupedReview.length}`);
   log.info(`Unique prospects matched: ${matchedProspectIds.size}`);
 
-  // 7. Grant enrichment: link grants from foundations where matched prospects are officers
-  const enrichedGrants: EnrichedGrant[] = [];
-  const matchedOfficerEins = new Set<string>();
-  const prospectByEin = new Map<string, { name: string; id: string }>();
+  const foundationGrants = buildFoundationGrants(dedupedMatches, grantsByEin);
+  log.info(`Grants linked to matched foundations: ${foundationGrants.grants.length}`);
 
-  for (const m of matches) {
-    if (m.recordType === "990-PF-OFFICER") {
-      matchedOfficerEins.add(m.orgEin);
-      prospectByEin.set(m.orgEin, { name: m.prospectName, id: m.prospectId });
-    }
+  const tierCounts = new Map<string, number>();
+  for (const row of dedupedMatches) incrementCount(tierCounts, row.confidenceTier);
+  for (const row of dedupedReview) incrementCount(tierCounts, row.confidenceTier);
+
+  const reviewBucketCounts = new Map<string, number>();
+  for (const row of [...dedupedMatches, ...dedupedReview]) {
+    if (row.reviewBucket !== "none") incrementCount(reviewBucketCounts, row.reviewBucket);
   }
 
-  for (const ein of matchedOfficerEins) {
-    const grants = grantsByEin.get(ein);
-    if (!grants) continue;
-    const prospect = prospectByEin.get(ein)!;
-    for (const g of grants) {
-      enrichedGrants.push({
-        prospectName: prospect.name,
-        prospectId: prospect.id,
-        foundationName: g.filing.orgName,
-        foundationEin: ein,
-        recipientName: g.recipientName,
-        grantAmount: g.amount,
-        grantPurpose: g.purpose,
-        taxPeriod: g.filing.taxPeriodEnd,
-      });
-    }
-  }
-
-  log.info(`Grants linked to matched prospects: ${enrichedGrants.length}`);
-
-  // 8. Write output
   fs.mkdirSync(options.outputDir, { recursive: true });
 
   const matchesPath = path.join(options.outputDir, "matches.csv");
-  writeMatchesCsv(matchesPath, matches);
-  log.info(`Wrote ${matches.length} matches to ${matchesPath}`);
+  writeMatchesCsv(matchesPath, dedupedMatches);
+  log.info(`Wrote ${dedupedMatches.length} matches to ${matchesPath}`);
 
-  if (review.length > 0) {
+  const verifiedMatchesPath = path.join(options.outputDir, "verified_matches.csv");
+  writeMatchesCsv(verifiedMatchesPath, verifiedMatches);
+  log.info(`Wrote ${verifiedMatches.length} verified matches to ${verifiedMatchesPath}`);
+
+  if (dedupedReview.length > 0) {
     const reviewPath = path.join(options.outputDir, "review.csv");
-    writeMatchesCsv(reviewPath, review);
-    log.info(`Wrote ${review.length} review items to ${reviewPath}`);
+    writeMatchesCsv(reviewPath, dedupedReview);
+    log.info(`Wrote ${dedupedReview.length} review items to ${reviewPath}`);
   }
 
-  if (enrichedGrants.length > 0) {
+  if (foundationGrants.grants.length > 0) {
     const grantsPath = path.join(options.outputDir, "grants.csv");
-    writeGrantsCsv(grantsPath, enrichedGrants);
-    log.info(`Wrote ${enrichedGrants.length} grants to ${grantsPath}`);
-  }
+    writeGrantsCsv(grantsPath, foundationGrants.grants);
+    log.info(`Wrote ${foundationGrants.grants.length} grants to ${grantsPath}`);
 
-  // Sort for top matches preview
-  const sortedMatches = [...matches].sort((a, b) => b.matchConfidence - a.matchConfidence || b.amount - a.amount);
+    const grantsVerifiedPath = path.join(options.outputDir, "grants_verified.csv");
+    writeGrantsCsv(grantsVerifiedPath, foundationGrants.verifiedGrants);
+    log.info(`Wrote ${foundationGrants.verifiedGrants.length} verified grants to ${grantsVerifiedPath}`);
+  }
 
   const summaryPath = path.join(options.outputDir, "summary.md");
   writeSummary(summaryPath, {
@@ -178,11 +357,15 @@ export function runNonprofitMatcher(options: {
     donorRecords,
     officerRecords,
     grantsExtracted: allGrants.length,
-    matchesFound: matches.length,
-    reviewCount: review.length,
+    matchesFound: dedupedMatches.length,
+    reviewCount: dedupedReview.length,
     uniqueProspectsMatched: matchedProspectIds.size,
-    grantsLinked: enrichedGrants.length,
-    topMatches: sortedMatches,
+    grantsLinked: foundationGrants.grants.length,
+    duplicateCollapseCount,
+    ambiguousFoundationCount: foundationGrants.ambiguousFoundationCount,
+    tierCounts,
+    reviewBucketCounts,
+    topMatches: dedupedMatches,
   });
   log.info(`Summary written to ${summaryPath}`);
 }
