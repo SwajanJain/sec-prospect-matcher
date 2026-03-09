@@ -1,0 +1,1257 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Return xmlns="http://www.irs.gov/efile" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" returnVersion="2024v5.0">
+  <ReturnHeader binaryAttachmentCnt="0">
+    <ReturnTs>2026-01-13T16:53:13-05:00</ReturnTs>
+    <TaxPeriodEndDt>2024-12-31</TaxPeriodEndDt>
+    <PreparerFirmGrp>
+      <PreparerFirmEIN>590673514</PreparerFirmEIN>
+      <PreparerFirmName>
+        <BusinessNameLine1Txt>BUNTING TRIPP &amp; INGLEY LLP</BusinessNameLine1Txt>
+      </PreparerFirmName>
+      <PreparerUSAddress>
+        <AddressLine1Txt>230 EAST TILLMAN AVENUE</AddressLine1Txt>
+        <CityNm>LAKE WALES</CityNm>
+        <StateAbbreviationCd>FL</StateAbbreviationCd>
+        <ZIPCd>338533714</ZIPCd>
+      </PreparerUSAddress>
+    </PreparerFirmGrp>
+    <ReturnTypeCd>990PF</ReturnTypeCd>
+    <TaxPeriodBeginDt>2024-01-01</TaxPeriodBeginDt>
+    <Filer>
+      <EIN>396057530</EIN>
+      <BusinessName>
+        <BusinessNameLine1Txt>JOHN OSTER FAMILY FOUNDATION INC</BusinessNameLine1Txt>
+      </BusinessName>
+      <BusinessNameControlTxt>JOHN</BusinessNameControlTxt>
+      <PhoneNum>4146716800</PhoneNum>
+      <USAddress>
+        <AddressLine1Txt>PO BOX 340035</AddressLine1Txt>
+        <CityNm>MILWAUKEE</CityNm>
+        <StateAbbreviationCd>WI</StateAbbreviationCd>
+        <ZIPCd>53234</ZIPCd>
+      </USAddress>
+    </Filer>
+    <BusinessOfficerGrp>
+      <PersonNm>JOSE M FERRER IV</PersonNm>
+      <PersonTitleTxt>TRUSTEE</PersonTitleTxt>
+      <PhoneNum>4142907110</PhoneNum>
+      <SignatureDt>2026-01-13</SignatureDt>
+    </BusinessOfficerGrp>
+    <IRSResponsiblePrtyInfoCurrInd>true</IRSResponsiblePrtyInfoCurrInd>
+    <PreparerPersonGrp>
+      <PreparerPersonNm>MICHELLE G HURST</PreparerPersonNm>
+      <PTIN>P00297526</PTIN>
+      <PhoneNum>8636767981</PhoneNum>
+      <PreparationDt>2026-01-13</PreparationDt>
+    </PreparerPersonGrp>
+    <TaxYr>2024</TaxYr>
+    <BuildTS>2025-03-06 01:10:19Z</BuildTS>
+  </ReturnHeader>
+  <ReturnData documentCnt="6">
+    <IRS990PF documentId="RetDoc7">
+      <Organization501c3ExemptPFInd>X</Organization501c3ExemptPFInd>
+      <FMVAssetsEOYAmt>1019551</FMVAssetsEOYAmt>
+      <MethodOfAccountingAccrualInd>X</MethodOfAccountingAccrualInd>
+      <AnalysisOfRevenueAndExpenses>
+        <ContriRcvdRevAndExpnssAmt>4500</ContriRcvdRevAndExpnssAmt>
+        <ScheduleBNotRequiredInd>X</ScheduleBNotRequiredInd>
+        <DividendsRevAndExpnssAmt>17095</DividendsRevAndExpnssAmt>
+        <DividendsNetInvstIncmAmt>17095</DividendsNetInvstIncmAmt>
+        <NetGainSaleAstRevAndExpnssAmt>34574</NetGainSaleAstRevAndExpnssAmt>
+        <GrossSalesPriceAmt>34574</GrossSalesPriceAmt>
+        <CapGainNetIncmNetInvstIncmAmt>34574</CapGainNetIncmNetInvstIncmAmt>
+        <TotalRevAndExpnssAmt>56169</TotalRevAndExpnssAmt>
+        <TotalNetInvstIncmAmt>51669</TotalNetInvstIncmAmt>
+        <AccountingFeesRevAndExpnssAmt referenceDocumentId="RetDoc2">3500</AccountingFeesRevAndExpnssAmt>
+        <TaxesRevAndExpnssAmt referenceDocumentId="RetDoc6">998</TaxesRevAndExpnssAmt>
+        <TaxesNetInvstIncmAmt>259</TaxesNetInvstIncmAmt>
+        <TotOprExpensesRevAndExpnssAmt>4498</TotOprExpensesRevAndExpnssAmt>
+        <TotOprExpensesNetInvstIncmAmt>259</TotOprExpensesNetInvstIncmAmt>
+        <TotOprExpensesDsbrsChrtblAmt>0</TotOprExpensesDsbrsChrtblAmt>
+        <ContriPaidRevAndExpnssAmt>54000</ContriPaidRevAndExpnssAmt>
+        <ContriPaidDsbrsChrtblAmt>3500</ContriPaidDsbrsChrtblAmt>
+        <TotalExpensesRevAndExpnssAmt>58498</TotalExpensesRevAndExpnssAmt>
+        <TotalExpensesNetInvstIncmAmt>259</TotalExpensesNetInvstIncmAmt>
+        <TotalExpensesDsbrsChrtblAmt>3500</TotalExpensesDsbrsChrtblAmt>
+        <ExcessRevenueOverExpensesAmt>-2329</ExcessRevenueOverExpensesAmt>
+        <NetInvestmentIncomeAmt>51410</NetInvestmentIncomeAmt>
+      </AnalysisOfRevenueAndExpenses>
+      <Form990PFBalanceSheetsGrp>
+        <SavAndTempCashInvstBOYAmt>51530</SavAndTempCashInvstBOYAmt>
+        <SavAndTempCashInvstEOYAmt>5420</SavAndTempCashInvstEOYAmt>
+        <SavAndTempCashInvstEOYFMVAmt>5420</SavAndTempCashInvstEOYFMVAmt>
+        <CorporateStockBOYAmt>928373</CorporateStockBOYAmt>
+        <CorporateStockEOYAmt referenceDocumentId="RetDoc3">1014131</CorporateStockEOYAmt>
+        <CorporateStockEOYFMVAmt>1014131</CorporateStockEOYFMVAmt>
+        <TotalAssetsBOYAmt>979903</TotalAssetsBOYAmt>
+        <TotalAssetsEOYAmt>1019551</TotalAssetsEOYAmt>
+        <TotalAssetsEOYFMVAmt>1019551</TotalAssetsEOYFMVAmt>
+        <GrantsPayableBOYAmt>49000</GrantsPayableBOYAmt>
+        <GrantsPayableEOYAmt>50500</GrantsPayableEOYAmt>
+        <OtherLiabilitiesBOYAmt referenceDocumentId="RetDoc5">3419</OtherLiabilitiesBOYAmt>
+        <OtherLiabilitiesEOYAmt referenceDocumentId="RetDoc5">7239</OtherLiabilitiesEOYAmt>
+        <TotalLiabilitiesBOYAmt>52419</TotalLiabilitiesBOYAmt>
+        <TotalLiabilitiesEOYAmt>57739</TotalLiabilitiesEOYAmt>
+        <OrgDoesNotFollowFASB117Ind>X</OrgDoesNotFollowFASB117Ind>
+        <RetainedEarningBOYAmt>927484</RetainedEarningBOYAmt>
+        <RetainedEarningEOYAmt>961812</RetainedEarningEOYAmt>
+        <TotNetAstOrFundBalancesBOYAmt>927484</TotNetAstOrFundBalancesBOYAmt>
+        <TotNetAstOrFundBalancesEOYAmt>961812</TotNetAstOrFundBalancesEOYAmt>
+        <TotalLiabilitiesNetAstBOYAmt>979903</TotalLiabilitiesNetAstBOYAmt>
+        <TotalLiabilitiesNetAstEOYAmt>1019551</TotalLiabilitiesNetAstEOYAmt>
+      </Form990PFBalanceSheetsGrp>
+      <ChgInNetAssetsFundBalancesGrp>
+        <TotNetAstOrFundBalancesBOYAmt>927484</TotNetAstOrFundBalancesBOYAmt>
+        <ExcessRevenueOverExpensesAmt>-2329</ExcessRevenueOverExpensesAmt>
+        <OtherIncreasesAmt referenceDocumentId="RetDoc4">36657</OtherIncreasesAmt>
+        <SubtotalAmt>961812</SubtotalAmt>
+        <TotNetAstOrFundBalancesEOYAmt>961812</TotNetAstOrFundBalancesEOYAmt>
+      </ChgInNetAssetsFundBalancesGrp>
+      <CapGainsLossTxInvstIncmDetail>
+        <CapitalGainNetIncomeAmt>34574</CapitalGainNetIncomeAmt>
+      </CapGainsLossTxInvstIncmDetail>
+      <ExciseTaxBasedOnInvstIncmGrp>
+        <InvestmentIncomeExciseTaxAmt>715</InvestmentIncomeExciseTaxAmt>
+        <SubtotalAmt>715</SubtotalAmt>
+        <TaxBasedOnInvestmentIncomeAmt>715</TaxBasedOnInvestmentIncomeAmt>
+        <Form2220AttachedInd referenceDocumentId="RetDoc1">X</Form2220AttachedInd>
+        <EsPenaltyAmt>24</EsPenaltyAmt>
+        <TaxDueAmt>739</TaxDueAmt>
+      </ExciseTaxBasedOnInvstIncmGrp>
+      <StatementsRegardingActyGrp>
+        <LegislativePoliticalActyInd>false</LegislativePoliticalActyInd>
+        <MoreThan100SpentInd>false</MoreThan100SpentInd>
+        <Form1120POLFiledInd>false</Form1120POLFiledInd>
+        <ActivitiesNotPreviouslyRptInd>false</ActivitiesNotPreviouslyRptInd>
+        <ChangesToArticlesOrBylawsInd>false</ChangesToArticlesOrBylawsInd>
+        <UnrelatedBusIncmOverLimitInd>false</UnrelatedBusIncmOverLimitInd>
+        <OrganizationDissolvedEtcInd>false</OrganizationDissolvedEtcInd>
+        <Section508eRqrSatisfiedInd>true</Section508eRqrSatisfiedInd>
+        <AtLeast5000InAssetsInd>true</AtLeast5000InAssetsInd>
+        <OrgReportOrRegisterStateCd>WI</OrgReportOrRegisterStateCd>
+        <Form990PFFiledWithAttyGenInd>true</Form990PFFiledWithAttyGenInd>
+        <PrivateOperatingFoundationInd>false</PrivateOperatingFoundationInd>
+        <NewSubstantialContributorsInd>false</NewSubstantialContributorsInd>
+        <OwnControlledEntityInd>false</OwnControlledEntityInd>
+        <DonorAdvisedFundInd>false</DonorAdvisedFundInd>
+        <ComplyWithPublicInspRqrInd>true</ComplyWithPublicInspRqrInd>
+        <WebsiteAddressTxt>NO WEBSITE</WebsiteAddressTxt>
+        <IndividualWithBooksNm>JOSE M FERRER IV</IndividualWithBooksNm>
+        <PhoneNum>4146716800</PhoneNum>
+        <LocationOfBooksUSAddress>
+          <AddressLine1Txt>PO BOX 340035</AddressLine1Txt>
+          <CityNm>MILWAUKEE</CityNm>
+          <StateAbbreviationCd>WI</StateAbbreviationCd>
+          <ZIPCd>53234</ZIPCd>
+        </LocationOfBooksUSAddress>
+        <ForeignAccountsQuestionInd>false</ForeignAccountsQuestionInd>
+      </StatementsRegardingActyGrp>
+      <StatementsRegardingActy4720Grp>
+        <SaleOrExchDisqualifiedPrsnInd>false</SaleOrExchDisqualifiedPrsnInd>
+        <BrrwOrLendDisqualifiedPrsnInd>false</BrrwOrLendDisqualifiedPrsnInd>
+        <FurnGoodsDisqualifiedPrsnInd>false</FurnGoodsDisqualifiedPrsnInd>
+        <PayCompDisqualifiedPrsnInd>false</PayCompDisqualifiedPrsnInd>
+        <TransferAstDisqualifiedPrsnInd>false</TransferAstDisqualifiedPrsnInd>
+        <PaymentToGovernmentOfficialInd>false</PaymentToGovernmentOfficialInd>
+        <UndistributedIncomePYInd>true</UndistributedIncomePYInd>
+        <UndistributedIncomePY1Yr>2023</UndistributedIncomePY1Yr>
+        <UndistrIncmSect4942a2NotAppInd>true</UndistrIncmSect4942a2NotAppInd>
+        <BusinessHoldingsInd>false</BusinessHoldingsInd>
+        <JeopardyInvestmentsInd>false</JeopardyInvestmentsInd>
+        <UncorrectedPYJeopardyInvstInd>false</UncorrectedPYJeopardyInvstInd>
+        <InfluenceLegislationInd>false</InfluenceLegislationInd>
+        <InfluenceElectionInd>false</InfluenceElectionInd>
+        <GrantsToIndividualsInd>false</GrantsToIndividualsInd>
+        <GrantsToOrganizationsInd>false</GrantsToOrganizationsInd>
+        <NoncharitablePurposeInd>false</NoncharitablePurposeInd>
+        <RcvFndsToPayPrsnlBnftCntrctInd>false</RcvFndsToPayPrsnlBnftCntrctInd>
+        <PayPremiumsPrsnlBnftCntrctInd>false</PayPremiumsPrsnlBnftCntrctInd>
+        <ProhibitedTaxShelterTransInd>false</ProhibitedTaxShelterTransInd>
+        <SubjToTaxRmnrtnExPrchtPymtInd>false</SubjToTaxRmnrtnExPrchtPymtInd>
+      </StatementsRegardingActy4720Grp>
+      <OfficerDirTrstKeyEmplInfoGrp>
+        <OfficerDirTrstKeyEmplGrp>
+          <PersonNm>JOSE M FERRER IV</PersonNm>
+          <USAddress>
+            <AddressLine1Txt>PO BOX 340035</AddressLine1Txt>
+            <CityNm>MILWAUKEE</CityNm>
+            <StateAbbreviationCd>WI</StateAbbreviationCd>
+            <ZIPCd>53234</ZIPCd>
+          </USAddress>
+          <TitleTxt>TRUSTEE</TitleTxt>
+          <AverageHrsPerWkDevotedToPosRt>000.00</AverageHrsPerWkDevotedToPosRt>
+          <CompensationAmt>0</CompensationAmt>
+          <EmployeeBenefitProgramAmt>0</EmployeeBenefitProgramAmt>
+          <ExpenseAccountOtherAllwncAmt>0</ExpenseAccountOtherAllwncAmt>
+        </OfficerDirTrstKeyEmplGrp>
+        <OfficerDirTrstKeyEmplGrp>
+          <PersonNm>PENELOPE O FERRER</PersonNm>
+          <USAddress>
+            <AddressLine1Txt>173 RIVERSIDE DR APT 14C</AddressLine1Txt>
+            <CityNm>NEW YORK</CityNm>
+            <StateAbbreviationCd>NY</StateAbbreviationCd>
+            <ZIPCd>10024</ZIPCd>
+          </USAddress>
+          <TitleTxt>TRUSTEE</TitleTxt>
+          <AverageHrsPerWkDevotedToPosRt>000.00</AverageHrsPerWkDevotedToPosRt>
+          <CompensationAmt>0</CompensationAmt>
+          <EmployeeBenefitProgramAmt>0</EmployeeBenefitProgramAmt>
+          <ExpenseAccountOtherAllwncAmt>0</ExpenseAccountOtherAllwncAmt>
+        </OfficerDirTrstKeyEmplGrp>
+        <CompOfHghstPdEmplOrNONETxt>NONE</CompOfHghstPdEmplOrNONETxt>
+        <CompOfHghstPdCntrctOrNONETxt>NONE</CompOfHghstPdCntrctOrNONETxt>
+      </OfficerDirTrstKeyEmplInfoGrp>
+      <SumOfProgramRelatedInvstGrp>
+        <Description1Txt>N/A</Description1Txt>
+      </SumOfProgramRelatedInvstGrp>
+      <MinimumInvestmentReturnGrp>
+        <AverageMonthlyFMVOfSecAmt>1014133</AverageMonthlyFMVOfSecAmt>
+        <AverageMonthlyCashBalancesAmt>5420</AverageMonthlyCashBalancesAmt>
+        <FMVAllOtherNoncharitableAstAmt>0</FMVAllOtherNoncharitableAstAmt>
+        <TotalFMVOfUnusedAssetsAmt>1019553</TotalFMVOfUnusedAssetsAmt>
+        <AdjustedTotalFMVOfUnusedAstAmt>1019553</AdjustedTotalFMVOfUnusedAstAmt>
+        <CashDeemedCharitableAmt>15293</CashDeemedCharitableAmt>
+        <NetVlNoncharitableAssetsAmt>1004260</NetVlNoncharitableAssetsAmt>
+        <MinimumInvestmentReturnAmt>50213</MinimumInvestmentReturnAmt>
+      </MinimumInvestmentReturnGrp>
+      <DistributableAmountGrp>
+        <MinimumInvestmentReturnAmt>50213</MinimumInvestmentReturnAmt>
+        <TaxBasedOnInvestmentIncomeAmt>715</TaxBasedOnInvestmentIncomeAmt>
+        <TotalTaxAmt>715</TotalTaxAmt>
+        <DistributableBeforeAdjAmt>49498</DistributableBeforeAdjAmt>
+        <DistributableBeforeDedAmt>49498</DistributableBeforeDedAmt>
+        <DistributableAsAdjustedAmt>49498</DistributableAsAdjustedAmt>
+      </DistributableAmountGrp>
+      <PFQualifyingDistributionsGrp>
+        <ExpensesAndContributionsAmt>3500</ExpensesAndContributionsAmt>
+        <QualifyingDistributionsAmt>3500</QualifyingDistributionsAmt>
+      </PFQualifyingDistributionsGrp>
+      <UndistributedIncomeGrp>
+        <DistributableAsAdjustedAmt>49498</DistributableAsAdjustedAmt>
+        <UndistributedIncomePYAmt>34474</UndistributedIncomePYAmt>
+        <ExcessDistributionCyovYr5Amt>2755</ExcessDistributionCyovYr5Amt>
+        <ExcessDistributionCyovYr3Amt>2808</ExcessDistributionCyovYr3Amt>
+        <ExcessDistributionCyovYr2Amt>5073</ExcessDistributionCyovYr2Amt>
+        <TotalExcessDistributionCyovAmt>10636</TotalExcessDistributionCyovAmt>
+        <QualifyingDistributionsAmt>3500</QualifyingDistributionsAmt>
+        <AppliedToYear1Amt>3500</AppliedToYear1Amt>
+        <ExcessDistriCyovAppCYCorpusAmt>10636</ExcessDistriCyovAppCYCorpusAmt>
+        <ExcessDistributionCyovAppCYAmt>10636</ExcessDistributionCyovAppCYAmt>
+        <Taxable2Amt>30974</Taxable2Amt>
+        <UndistributedIncomeCYAmt>38862</UndistributedIncomeCYAmt>
+      </UndistributedIncomeGrp>
+      <SupplementaryInformationGrp>
+        <OnlyContriToPreselectedInd>X</OnlyContriToPreselectedInd>
+        <GrantOrContributionPdDurYrGrp>
+          <RecipientBusinessName>
+            <BusinessNameLine1Txt>CITY FORWARD COLLECTIVE</BusinessNameLine1Txt>
+            <BusinessNameLine2Txt>CITY FORWARD COLLECTIVE</BusinessNameLine2Txt>
+          </RecipientBusinessName>
+          <RecipientUSAddress>
+            <AddressLine1Txt>700 W VIRGINIA ST STE 604</AddressLine1Txt>
+            <AddressLine2Txt>700 W VIRGINIA ST STE 604</AddressLine2Txt>
+            <CityNm>MILWAUKEE</CityNm>
+            <StateAbbreviationCd>WI</StateAbbreviationCd>
+            <ZIPCd>53213</ZIPCd>
+          </RecipientUSAddress>
+          <RecipientRelationshipTxt>NONE</RecipientRelationshipTxt>
+          <RecipientFoundationStatusTxt>501(C)3</RecipientFoundationStatusTxt>
+          <GrantOrContributionPurposeTxt>CIVIC ENHANCEMENT</GrantOrContributionPurposeTxt>
+          <Amt>1000</Amt>
+        </GrantOrContributionPdDurYrGrp>
+        <GrantOrContributionPdDurYrGrp>
+          <RecipientBusinessName>
+            <BusinessNameLine1Txt>MILWAUKEE SCHOOL OF ENGINEERING</BusinessNameLine1Txt>
+            <BusinessNameLine2Txt>MILWAUKEE SCHOOL OF ENGINEERING</BusinessNameLine2Txt>
+          </RecipientBusinessName>
+          <RecipientUSAddress>
+            <AddressLine1Txt>1025 N BROADWAY</AddressLine1Txt>
+            <AddressLine2Txt>1025 N BROADWAY</AddressLine2Txt>
+            <CityNm>MILWAUKEE</CityNm>
+            <StateAbbreviationCd>WI</StateAbbreviationCd>
+            <ZIPCd>53202</ZIPCd>
+          </RecipientUSAddress>
+          <RecipientRelationshipTxt>NONE</RecipientRelationshipTxt>
+          <RecipientFoundationStatusTxt>501(C)3</RecipientFoundationStatusTxt>
+          <GrantOrContributionPurposeTxt>CIVIC ENHANCEMENT</GrantOrContributionPurposeTxt>
+          <Amt>1000</Amt>
+        </GrantOrContributionPdDurYrGrp>
+        <GrantOrContributionPdDurYrGrp>
+          <RecipientBusinessName>
+            <BusinessNameLine1Txt>AMERICAN HEART ASSOCIATION</BusinessNameLine1Txt>
+            <BusinessNameLine2Txt>AMERICAN HEART ASSOCIATION</BusinessNameLine2Txt>
+          </RecipientBusinessName>
+          <RecipientUSAddress>
+            <AddressLine1Txt>275 W WISCONSIN AVE</AddressLine1Txt>
+            <AddressLine2Txt>275 W WISCONSIN AVE</AddressLine2Txt>
+            <CityNm>MILWAUKEE</CityNm>
+            <StateAbbreviationCd>WI</StateAbbreviationCd>
+            <ZIPCd>53203</ZIPCd>
+          </RecipientUSAddress>
+          <RecipientRelationshipTxt>NONE</RecipientRelationshipTxt>
+          <RecipientFoundationStatusTxt>501(C)3</RecipientFoundationStatusTxt>
+          <GrantOrContributionPurposeTxt>CIVIC ENHANCEMENT</GrantOrContributionPurposeTxt>
+          <Amt>1500</Amt>
+        </GrantOrContributionPdDurYrGrp>
+        <TotalGrantOrContriPdDurYrAmt>3500</TotalGrantOrContriPdDurYrAmt>
+        <GrantOrContriApprvForFutGrp>
+          <RecipientBusinessName>
+            <BusinessNameLine1Txt>ALL IN MILWAUKEE</BusinessNameLine1Txt>
+            <BusinessNameLine2Txt>ALL IN MILWAUKEE</BusinessNameLine2Txt>
+          </RecipientBusinessName>
+          <RecipientUSAddress>
+            <AddressLine1Txt>135 W WELLS ST</AddressLine1Txt>
+            <AddressLine2Txt>135 W WELLS ST</AddressLine2Txt>
+            <CityNm>MILWAUKEE</CityNm>
+            <StateAbbreviationCd>WI</StateAbbreviationCd>
+            <ZIPCd>53203</ZIPCd>
+          </RecipientUSAddress>
+          <RecipientRelationshipTxt>NONE</RecipientRelationshipTxt>
+          <RecipientFoundationStatusTxt>501(C)(3)</RecipientFoundationStatusTxt>
+          <GrantOrContributionPurposeTxt>CULTURAL ENHANCEMENT</GrantOrContributionPurposeTxt>
+          <Amt>750</Amt>
+        </GrantOrContriApprvForFutGrp>
+        <GrantOrContriApprvForFutGrp>
+          <RecipientBusinessName>
+            <BusinessNameLine1Txt>ALLIANCE FOR THE GREAT LAKES</BusinessNameLine1Txt>
+            <BusinessNameLine2Txt>ALLIANCE FOR THE GREAT LAKES</BusinessNameLine2Txt>
+          </RecipientBusinessName>
+          <RecipientUSAddress>
+            <AddressLine1Txt>150 N MICHIGAN AVE</AddressLine1Txt>
+            <AddressLine2Txt>150 N MICHIGAN AVE</AddressLine2Txt>
+            <CityNm>CHICAGO</CityNm>
+            <StateAbbreviationCd>IL</StateAbbreviationCd>
+            <ZIPCd>60601</ZIPCd>
+          </RecipientUSAddress>
+          <RecipientRelationshipTxt>NONE</RecipientRelationshipTxt>
+          <RecipientFoundationStatusTxt>501(C)(3)</RecipientFoundationStatusTxt>
+          <GrantOrContributionPurposeTxt>SCIENCE &amp; CONSERVATION</GrantOrContributionPurposeTxt>
+          <Amt>750</Amt>
+        </GrantOrContriApprvForFutGrp>
+        <GrantOrContriApprvForFutGrp>
+          <RecipientBusinessName>
+            <BusinessNameLine1Txt>AMERICAN HEART ASSN</BusinessNameLine1Txt>
+            <BusinessNameLine2Txt>AMERICAN HEART ASSN</BusinessNameLine2Txt>
+          </RecipientBusinessName>
+          <RecipientUSAddress>
+            <AddressLine1Txt>275 W WISCONSIN AVE</AddressLine1Txt>
+            <AddressLine2Txt>275 W WISCONSIN AVE</AddressLine2Txt>
+            <CityNm>MILWAUKEE</CityNm>
+            <StateAbbreviationCd>WI</StateAbbreviationCd>
+            <ZIPCd>53203</ZIPCd>
+          </RecipientUSAddress>
+          <RecipientRelationshipTxt>NONE</RecipientRelationshipTxt>
+          <RecipientFoundationStatusTxt>501(C)(3)</RecipientFoundationStatusTxt>
+          <GrantOrContributionPurposeTxt>MAINTENANCE OF HEALTH</GrantOrContributionPurposeTxt>
+          <Amt>1500</Amt>
+        </GrantOrContriApprvForFutGrp>
+        <GrantOrContriApprvForFutGrp>
+          <RecipientBusinessName>
+            <BusinessNameLine1Txt>AMERICAN LUNG ASSN</BusinessNameLine1Txt>
+            <BusinessNameLine2Txt>AMERICAN LUNG ASSN</BusinessNameLine2Txt>
+          </RecipientBusinessName>
+          <RecipientUSAddress>
+            <AddressLine1Txt>13100 W LISBON RDSTE 700</AddressLine1Txt>
+            <AddressLine2Txt>13100 W LISBON RD</AddressLine2Txt>
+            <CityNm>BROOKFIELD</CityNm>
+            <StateAbbreviationCd>WI</StateAbbreviationCd>
+            <ZIPCd>530052508</ZIPCd>
+          </RecipientUSAddress>
+          <RecipientRelationshipTxt>NONE</RecipientRelationshipTxt>
+          <RecipientFoundationStatusTxt>501(C)(3)</RecipientFoundationStatusTxt>
+          <GrantOrContributionPurposeTxt>MAINTENANCE OF HEALTH</GrantOrContributionPurposeTxt>
+          <Amt>500</Amt>
+        </GrantOrContriApprvForFutGrp>
+        <GrantOrContriApprvForFutGrp>
+          <RecipientBusinessName>
+            <BusinessNameLine1Txt>ARTHRITIS FOUNDATION</BusinessNameLine1Txt>
+            <BusinessNameLine2Txt>ARTHRITIS FOUNDATION</BusinessNameLine2Txt>
+          </RecipientBusinessName>
+          <RecipientUSAddress>
+            <AddressLine1Txt>1355 PEACHTREE ST STE 600</AddressLine1Txt>
+            <AddressLine2Txt>1355 PEACHTREE ST STE 600</AddressLine2Txt>
+            <CityNm>ATLANTA</CityNm>
+            <StateAbbreviationCd>GA</StateAbbreviationCd>
+            <ZIPCd>30309</ZIPCd>
+          </RecipientUSAddress>
+          <RecipientRelationshipTxt>NONE</RecipientRelationshipTxt>
+          <RecipientFoundationStatusTxt>501(C)(3)</RecipientFoundationStatusTxt>
+          <GrantOrContributionPurposeTxt>MAINTENANCE OF HEALTH</GrantOrContributionPurposeTxt>
+          <Amt>500</Amt>
+        </GrantOrContriApprvForFutGrp>
+        <GrantOrContriApprvForFutGrp>
+          <RecipientBusinessName>
+            <BusinessNameLine1Txt>ASCENSION COLUMBIA ST MARY'S FOUNDA</BusinessNameLine1Txt>
+            <BusinessNameLine2Txt>ASCENSION COLUMBIA ST MARY'S FOUNDATION</BusinessNameLine2Txt>
+          </RecipientBusinessName>
+          <RecipientUSAddress>
+            <AddressLine1Txt>2301 N LAKE DR</AddressLine1Txt>
+            <AddressLine2Txt>2301 N LAKE DR</AddressLine2Txt>
+            <CityNm>MILWAUKEE</CityNm>
+            <StateAbbreviationCd>WI</StateAbbreviationCd>
+            <ZIPCd>53211</ZIPCd>
+          </RecipientUSAddress>
+          <RecipientRelationshipTxt>NONE</RecipientRelationshipTxt>
+          <RecipientFoundationStatusTxt>501(C)(3)</RecipientFoundationStatusTxt>
+          <GrantOrContributionPurposeTxt>HEALTH</GrantOrContributionPurposeTxt>
+          <Amt>1000</Amt>
+        </GrantOrContriApprvForFutGrp>
+        <GrantOrContriApprvForFutGrp>
+          <RecipientBusinessName>
+            <BusinessNameLine1Txt>ATLANTIC WHITE SHARK CONSERVANCY</BusinessNameLine1Txt>
+            <BusinessNameLine2Txt>ATLANTIC WHITE SHARK CONSERVANCY</BusinessNameLine2Txt>
+          </RecipientBusinessName>
+          <RecipientUSAddress>
+            <AddressLine1Txt>PO BOX 66</AddressLine1Txt>
+            <AddressLine2Txt>PO BOX 66</AddressLine2Txt>
+            <CityNm>CHATHAM</CityNm>
+            <StateAbbreviationCd>MA</StateAbbreviationCd>
+            <ZIPCd>02633</ZIPCd>
+          </RecipientUSAddress>
+          <RecipientRelationshipTxt>NONE</RecipientRelationshipTxt>
+          <RecipientFoundationStatusTxt>501(C)(3)</RecipientFoundationStatusTxt>
+          <GrantOrContributionPurposeTxt>CULTURAL ENHANCEMENT</GrantOrContributionPurposeTxt>
+          <Amt>750</Amt>
+        </GrantOrContriApprvForFutGrp>
+        <GrantOrContriApprvForFutGrp>
+          <RecipientBusinessName>
+            <BusinessNameLine1Txt>BIG BROTHERS BIG SISTERS</BusinessNameLine1Txt>
+            <BusinessNameLine2Txt>BIG BROTHERS BIG SISTERS</BusinessNameLine2Txt>
+          </RecipientBusinessName>
+          <RecipientUSAddress>
+            <AddressLine1Txt>788 N JEFFERSON ST 600</AddressLine1Txt>
+            <AddressLine2Txt>788 N JEFFERSON ST 600</AddressLine2Txt>
+            <CityNm>MILWAUKEE</CityNm>
+            <StateAbbreviationCd>WI</StateAbbreviationCd>
+            <ZIPCd>53202</ZIPCd>
+          </RecipientUSAddress>
+          <RecipientRelationshipTxt>NONE</RecipientRelationshipTxt>
+          <RecipientFoundationStatusTxt>501(C)(3)</RecipientFoundationStatusTxt>
+          <GrantOrContributionPurposeTxt>CIVIC ENHANCEMENT</GrantOrContributionPurposeTxt>
+          <Amt>1000</Amt>
+        </GrantOrContriApprvForFutGrp>
+        <GrantOrContriApprvForFutGrp>
+          <RecipientBusinessName>
+            <BusinessNameLine1Txt>BLOOD CENTER RESEARCH FDN</BusinessNameLine1Txt>
+            <BusinessNameLine2Txt>BLOOD CENTER RESEARCH FDN</BusinessNameLine2Txt>
+          </RecipientBusinessName>
+          <RecipientUSAddress>
+            <AddressLine1Txt>PO BOX 2178</AddressLine1Txt>
+            <AddressLine2Txt>PO BOX 2178</AddressLine2Txt>
+            <CityNm>MILWAUKEE</CityNm>
+            <StateAbbreviationCd>WI</StateAbbreviationCd>
+            <ZIPCd>532012178</ZIPCd>
+          </RecipientUSAddress>
+          <RecipientRelationshipTxt>NONE</RecipientRelationshipTxt>
+          <RecipientFoundationStatusTxt>501(C)(3)</RecipientFoundationStatusTxt>
+          <GrantOrContributionPurposeTxt>MAINTENANCE OF HEALTH</GrantOrContributionPurposeTxt>
+          <Amt>1000</Amt>
+        </GrantOrContriApprvForFutGrp>
+        <GrantOrContriApprvForFutGrp>
+          <RecipientBusinessName>
+            <BusinessNameLine1Txt>BOYS &amp; GIRLS CLUB</BusinessNameLine1Txt>
+            <BusinessNameLine2Txt>BOYS &amp; GIRLS CLUB</BusinessNameLine2Txt>
+          </RecipientBusinessName>
+          <RecipientUSAddress>
+            <AddressLine1Txt>PO BOX 12486</AddressLine1Txt>
+            <AddressLine2Txt>PO BOX 12486</AddressLine2Txt>
+            <CityNm>MILWAUKEE</CityNm>
+            <StateAbbreviationCd>WI</StateAbbreviationCd>
+            <ZIPCd>53212</ZIPCd>
+          </RecipientUSAddress>
+          <RecipientRelationshipTxt>NONE</RecipientRelationshipTxt>
+          <RecipientFoundationStatusTxt>501(C)(3)</RecipientFoundationStatusTxt>
+          <GrantOrContributionPurposeTxt>CIVIC ENHANCEMENT</GrantOrContributionPurposeTxt>
+          <Amt>1000</Amt>
+        </GrantOrContriApprvForFutGrp>
+        <GrantOrContriApprvForFutGrp>
+          <RecipientBusinessName>
+            <BusinessNameLine1Txt>CHILDREN'S HOSPITAL FDN</BusinessNameLine1Txt>
+            <BusinessNameLine2Txt>CHILDREN'S HOSPITAL FDN</BusinessNameLine2Txt>
+          </RecipientBusinessName>
+          <RecipientUSAddress>
+            <AddressLine1Txt>PO BOX 1997</AddressLine1Txt>
+            <AddressLine2Txt>PO BOX 1997</AddressLine2Txt>
+            <CityNm>MILWAUKEE</CityNm>
+            <StateAbbreviationCd>WI</StateAbbreviationCd>
+            <ZIPCd>532011997</ZIPCd>
+          </RecipientUSAddress>
+          <RecipientRelationshipTxt>NONE</RecipientRelationshipTxt>
+          <RecipientFoundationStatusTxt>501(C)(3)</RecipientFoundationStatusTxt>
+          <GrantOrContributionPurposeTxt>MAINTENANCE OF HEALTH</GrantOrContributionPurposeTxt>
+          <Amt>1000</Amt>
+        </GrantOrContriApprvForFutGrp>
+        <GrantOrContriApprvForFutGrp>
+          <RecipientBusinessName>
+            <BusinessNameLine1Txt>CITY FORWARD COLLECTIVE</BusinessNameLine1Txt>
+            <BusinessNameLine2Txt>CITY FORWARD COLLECTIVE</BusinessNameLine2Txt>
+          </RecipientBusinessName>
+          <RecipientUSAddress>
+            <AddressLine1Txt>700 W VIRGINIA ST</AddressLine1Txt>
+            <AddressLine2Txt>STE 604</AddressLine2Txt>
+            <CityNm>MILWAUKEE</CityNm>
+            <StateAbbreviationCd>WI</StateAbbreviationCd>
+            <ZIPCd>53204</ZIPCd>
+          </RecipientUSAddress>
+          <RecipientRelationshipTxt>NONE</RecipientRelationshipTxt>
+          <RecipientFoundationStatusTxt>501(C)(3)</RecipientFoundationStatusTxt>
+          <GrantOrContributionPurposeTxt>EDUCATION</GrantOrContributionPurposeTxt>
+          <Amt>1000</Amt>
+        </GrantOrContriApprvForFutGrp>
+        <GrantOrContriApprvForFutGrp>
+          <RecipientBusinessName>
+            <BusinessNameLine1Txt>CURE ALZHEIMERS FUND</BusinessNameLine1Txt>
+            <BusinessNameLine2Txt>CURE ALZHEIMERS FUND</BusinessNameLine2Txt>
+          </RecipientBusinessName>
+          <RecipientUSAddress>
+            <AddressLine1Txt>34 WASHINGTON ST STE 300</AddressLine1Txt>
+            <AddressLine2Txt>34 WASHINGTON ST</AddressLine2Txt>
+            <CityNm>WELLESLEY HILLS</CityNm>
+            <StateAbbreviationCd>MA</StateAbbreviationCd>
+            <ZIPCd>024811903</ZIPCd>
+          </RecipientUSAddress>
+          <RecipientRelationshipTxt>NONE</RecipientRelationshipTxt>
+          <RecipientFoundationStatusTxt>501(C)(3)</RecipientFoundationStatusTxt>
+          <GrantOrContributionPurposeTxt>MAINTENANCE OF HEALTH</GrantOrContributionPurposeTxt>
+          <Amt>2000</Amt>
+        </GrantOrContriApprvForFutGrp>
+        <GrantOrContriApprvForFutGrp>
+          <RecipientBusinessName>
+            <BusinessNameLine1Txt>DYSAUTONOMIA INTERNATIONAL</BusinessNameLine1Txt>
+            <BusinessNameLine2Txt>DYSAUTONOMIA INTERNATIONAL</BusinessNameLine2Txt>
+          </RecipientBusinessName>
+          <RecipientUSAddress>
+            <AddressLine1Txt>PO BOX 596</AddressLine1Txt>
+            <AddressLine2Txt>PO BOX 596</AddressLine2Txt>
+            <CityNm>EAST MORICHES</CityNm>
+            <StateAbbreviationCd>NY</StateAbbreviationCd>
+            <ZIPCd>11940</ZIPCd>
+          </RecipientUSAddress>
+          <RecipientRelationshipTxt>NONE</RecipientRelationshipTxt>
+          <RecipientFoundationStatusTxt>501(C)(3)</RecipientFoundationStatusTxt>
+          <GrantOrContributionPurposeTxt>ENHANCEMENT OF HEALTH</GrantOrContributionPurposeTxt>
+          <Amt>500</Amt>
+        </GrantOrContriApprvForFutGrp>
+        <GrantOrContriApprvForFutGrp>
+          <RecipientBusinessName>
+            <BusinessNameLine1Txt>EVANS SCHOLARS FOUNDATION</BusinessNameLine1Txt>
+            <BusinessNameLine2Txt>EVANS SCHOLARS FOUNDATION</BusinessNameLine2Txt>
+          </RecipientBusinessName>
+          <RecipientUSAddress>
+            <AddressLine1Txt>1 BRIAR RD</AddressLine1Txt>
+            <AddressLine2Txt>1 BRIAR RD</AddressLine2Txt>
+            <CityNm>GOLF</CityNm>
+            <StateAbbreviationCd>IL</StateAbbreviationCd>
+            <ZIPCd>60029</ZIPCd>
+          </RecipientUSAddress>
+          <RecipientRelationshipTxt>NONE</RecipientRelationshipTxt>
+          <RecipientFoundationStatusTxt>501(C)(3)</RecipientFoundationStatusTxt>
+          <GrantOrContributionPurposeTxt>EDUCATION</GrantOrContributionPurposeTxt>
+          <Amt>1000</Amt>
+        </GrantOrContriApprvForFutGrp>
+        <GrantOrContriApprvForFutGrp>
+          <RecipientBusinessName>
+            <BusinessNameLine1Txt>FROEDTERT HOSPITAL FDN</BusinessNameLine1Txt>
+            <BusinessNameLine2Txt>FROEDTERT HOSPITAL FDN</BusinessNameLine2Txt>
+          </RecipientBusinessName>
+          <RecipientUSAddress>
+            <AddressLine1Txt>9200 W WISCONSIN AVE</AddressLine1Txt>
+            <AddressLine2Txt>9200 W WISCONSIN AVE</AddressLine2Txt>
+            <CityNm>MILWAUKEE</CityNm>
+            <StateAbbreviationCd>WI</StateAbbreviationCd>
+            <ZIPCd>53226</ZIPCd>
+          </RecipientUSAddress>
+          <RecipientRelationshipTxt>NONE</RecipientRelationshipTxt>
+          <RecipientFoundationStatusTxt>501(C)(3)</RecipientFoundationStatusTxt>
+          <GrantOrContributionPurposeTxt>CIVIC ENHANCEMENT</GrantOrContributionPurposeTxt>
+          <Amt>2000</Amt>
+        </GrantOrContriApprvForFutGrp>
+        <GrantOrContriApprvForFutGrp>
+          <RecipientBusinessName>
+            <BusinessNameLine1Txt>GOODWILL INDUSTRIES SE WI</BusinessNameLine1Txt>
+            <BusinessNameLine2Txt>GOODWILL INDUSTRIES SE WISCONSIN</BusinessNameLine2Txt>
+          </RecipientBusinessName>
+          <RecipientUSAddress>
+            <AddressLine1Txt>PO BOX 250973</AddressLine1Txt>
+            <AddressLine2Txt>PO BOX 250973</AddressLine2Txt>
+            <CityNm>MILWAUKEE</CityNm>
+            <StateAbbreviationCd>WI</StateAbbreviationCd>
+            <ZIPCd>532256518</ZIPCd>
+          </RecipientUSAddress>
+          <RecipientRelationshipTxt>NONE</RecipientRelationshipTxt>
+          <RecipientFoundationStatusTxt>501(C)(3)</RecipientFoundationStatusTxt>
+          <GrantOrContributionPurposeTxt>EDUCATION</GrantOrContributionPurposeTxt>
+          <Amt>500</Amt>
+        </GrantOrContriApprvForFutGrp>
+        <GrantOrContriApprvForFutGrp>
+          <RecipientBusinessName>
+            <BusinessNameLine1Txt>HUNGER TASK FORCE MILWAUKEE</BusinessNameLine1Txt>
+            <BusinessNameLine2Txt>HUNGER TASK FORCE MILWAUKEE</BusinessNameLine2Txt>
+          </RecipientBusinessName>
+          <RecipientUSAddress>
+            <AddressLine1Txt>5000 W ELECTRIC AVE</AddressLine1Txt>
+            <AddressLine2Txt>5000 W ELECTRIC AVE</AddressLine2Txt>
+            <CityNm>MILWAUKEE</CityNm>
+            <StateAbbreviationCd>WI</StateAbbreviationCd>
+            <ZIPCd>53219</ZIPCd>
+          </RecipientUSAddress>
+          <RecipientRelationshipTxt>NONE</RecipientRelationshipTxt>
+          <RecipientFoundationStatusTxt>501(C)(3)</RecipientFoundationStatusTxt>
+          <GrantOrContributionPurposeTxt>ENHANCEMENT</GrantOrContributionPurposeTxt>
+          <Amt>750</Amt>
+        </GrantOrContriApprvForFutGrp>
+        <GrantOrContriApprvForFutGrp>
+          <RecipientBusinessName>
+            <BusinessNameLine1Txt>JUNIOR ACHIEVEMENT</BusinessNameLine1Txt>
+            <BusinessNameLine2Txt>JUNIOR ACHEIVEMENT</BusinessNameLine2Txt>
+          </RecipientBusinessName>
+          <RecipientUSAddress>
+            <AddressLine1Txt>6924 N PORT WASHINGTON RD</AddressLine1Txt>
+            <AddressLine2Txt>6924 N PORT WASHINGTON</AddressLine2Txt>
+            <CityNm>MILWAUKEE</CityNm>
+            <StateAbbreviationCd>WI</StateAbbreviationCd>
+            <ZIPCd>532173995</ZIPCd>
+          </RecipientUSAddress>
+          <RecipientRelationshipTxt>NONE</RecipientRelationshipTxt>
+          <RecipientFoundationStatusTxt>501(C)(3)</RecipientFoundationStatusTxt>
+          <GrantOrContributionPurposeTxt>CIVIC ENHANCEMENT</GrantOrContributionPurposeTxt>
+          <Amt>500</Amt>
+        </GrantOrContriApprvForFutGrp>
+        <GrantOrContriApprvForFutGrp>
+          <RecipientBusinessName>
+            <BusinessNameLine1Txt>LAKE WALES CARE CENTER</BusinessNameLine1Txt>
+            <BusinessNameLine2Txt>LAKE WALES CARE CENTER</BusinessNameLine2Txt>
+          </RecipientBusinessName>
+          <RecipientUSAddress>
+            <AddressLine1Txt>140 EAST PARK AVE</AddressLine1Txt>
+            <AddressLine2Txt>140 EAST PARK AVE</AddressLine2Txt>
+            <CityNm>LAKE WALES</CityNm>
+            <StateAbbreviationCd>FL</StateAbbreviationCd>
+            <ZIPCd>338534124</ZIPCd>
+          </RecipientUSAddress>
+          <RecipientRelationshipTxt>NONE</RecipientRelationshipTxt>
+          <RecipientFoundationStatusTxt>501(C)(3)</RecipientFoundationStatusTxt>
+          <GrantOrContributionPurposeTxt>MAINTENANCE OF HEALTH</GrantOrContributionPurposeTxt>
+          <Amt>2000</Amt>
+        </GrantOrContriApprvForFutGrp>
+        <GrantOrContriApprvForFutGrp>
+          <RecipientBusinessName>
+            <BusinessNameLine1Txt>LAKE WALES CHARTER SCHOOLS FOUNDATI</BusinessNameLine1Txt>
+            <BusinessNameLine2Txt>LAKE WALES CHARTER SCHOOLS FOUNDATION</BusinessNameLine2Txt>
+          </RecipientBusinessName>
+          <RecipientUSAddress>
+            <AddressLine1Txt>130 CENTRAL AVE E</AddressLine1Txt>
+            <AddressLine2Txt>130 CENTRAL AVE E</AddressLine2Txt>
+            <CityNm>LAKE WALES</CityNm>
+            <StateAbbreviationCd>FL</StateAbbreviationCd>
+            <ZIPCd>33853</ZIPCd>
+          </RecipientUSAddress>
+          <RecipientRelationshipTxt>NONE</RecipientRelationshipTxt>
+          <RecipientFoundationStatusTxt>501(C)(3)</RecipientFoundationStatusTxt>
+          <GrantOrContributionPurposeTxt>EDUCATION</GrantOrContributionPurposeTxt>
+          <Amt>1000</Amt>
+        </GrantOrContriApprvForFutGrp>
+        <GrantOrContriApprvForFutGrp>
+          <RecipientBusinessName>
+            <BusinessNameLine1Txt>LYNDEN SCULPTURE GARDEN</BusinessNameLine1Txt>
+            <BusinessNameLine2Txt>LYNDEN SCULPTURE GARDEN</BusinessNameLine2Txt>
+          </RecipientBusinessName>
+          <RecipientUSAddress>
+            <AddressLine1Txt>2145 W BROWN DEER RD</AddressLine1Txt>
+            <AddressLine2Txt>2145 W BROWN DEER RD</AddressLine2Txt>
+            <CityNm>MILWAUKEE</CityNm>
+            <StateAbbreviationCd>WI</StateAbbreviationCd>
+            <ZIPCd>53217</ZIPCd>
+          </RecipientUSAddress>
+          <RecipientRelationshipTxt>NONE</RecipientRelationshipTxt>
+          <RecipientFoundationStatusTxt>501(C)(3)</RecipientFoundationStatusTxt>
+          <GrantOrContributionPurposeTxt>ENHANCEMENT</GrantOrContributionPurposeTxt>
+          <Amt>500</Amt>
+        </GrantOrContriApprvForFutGrp>
+        <GrantOrContriApprvForFutGrp>
+          <RecipientBusinessName>
+            <BusinessNameLine1Txt>MARCUS PERFORMING ARTS CTR</BusinessNameLine1Txt>
+            <BusinessNameLine2Txt>MARCUS PERFORMING ARTS CTR</BusinessNameLine2Txt>
+          </RecipientBusinessName>
+          <RecipientUSAddress>
+            <AddressLine1Txt>929 N WATER ST</AddressLine1Txt>
+            <AddressLine2Txt>929 N WATER ST</AddressLine2Txt>
+            <CityNm>MILWAUKEE</CityNm>
+            <StateAbbreviationCd>WI</StateAbbreviationCd>
+            <ZIPCd>53202</ZIPCd>
+          </RecipientUSAddress>
+          <RecipientRelationshipTxt>NONE</RecipientRelationshipTxt>
+          <RecipientFoundationStatusTxt>501(C)(3)</RecipientFoundationStatusTxt>
+          <GrantOrContributionPurposeTxt>CULTURAL ENHANCEMENT</GrantOrContributionPurposeTxt>
+          <Amt>1000</Amt>
+        </GrantOrContriApprvForFutGrp>
+        <GrantOrContriApprvForFutGrp>
+          <RecipientBusinessName>
+            <BusinessNameLine1Txt>MAYO CLINIC</BusinessNameLine1Txt>
+            <BusinessNameLine2Txt>MAYO CLINIC</BusinessNameLine2Txt>
+          </RecipientBusinessName>
+          <RecipientUSAddress>
+            <AddressLine1Txt>200 FIRST ST NW</AddressLine1Txt>
+            <AddressLine2Txt>200 FIRST ST NW</AddressLine2Txt>
+            <CityNm>ROCHESTER</CityNm>
+            <StateAbbreviationCd>MN</StateAbbreviationCd>
+            <ZIPCd>55905</ZIPCd>
+          </RecipientUSAddress>
+          <RecipientRelationshipTxt>NONE</RecipientRelationshipTxt>
+          <RecipientFoundationStatusTxt>501(C)(3)</RecipientFoundationStatusTxt>
+          <GrantOrContributionPurposeTxt>ENHANCEMENT OF HEALTH</GrantOrContributionPurposeTxt>
+          <Amt>1000</Amt>
+        </GrantOrContriApprvForFutGrp>
+        <GrantOrContriApprvForFutGrp>
+          <RecipientBusinessName>
+            <BusinessNameLine1Txt>MEDICAL COLLEGE OF WI</BusinessNameLine1Txt>
+            <BusinessNameLine2Txt>MEDICAL COLLEGE OF WISCONSIN</BusinessNameLine2Txt>
+          </RecipientBusinessName>
+          <RecipientUSAddress>
+            <AddressLine1Txt>PO BOX 26509</AddressLine1Txt>
+            <AddressLine2Txt>PO BOX 26509</AddressLine2Txt>
+            <CityNm>MILWAUKEE</CityNm>
+            <StateAbbreviationCd>WI</StateAbbreviationCd>
+            <ZIPCd>532260509</ZIPCd>
+          </RecipientUSAddress>
+          <RecipientRelationshipTxt>NONE</RecipientRelationshipTxt>
+          <RecipientFoundationStatusTxt>501(C)(3)</RecipientFoundationStatusTxt>
+          <GrantOrContributionPurposeTxt>MAINTENANCE OF HEALTH</GrantOrContributionPurposeTxt>
+          <Amt>2500</Amt>
+        </GrantOrContriApprvForFutGrp>
+        <GrantOrContriApprvForFutGrp>
+          <RecipientBusinessName>
+            <BusinessNameLine1Txt>MEQUON NATURE PRESERVE</BusinessNameLine1Txt>
+            <BusinessNameLine2Txt>MEQUON NATURE PRESERVE</BusinessNameLine2Txt>
+          </RecipientBusinessName>
+          <RecipientUSAddress>
+            <AddressLine1Txt>8200 W COUNTY LINE RD</AddressLine1Txt>
+            <AddressLine2Txt>8200 W COUNTY LINE RD</AddressLine2Txt>
+            <CityNm>MEQUON</CityNm>
+            <StateAbbreviationCd>WI</StateAbbreviationCd>
+            <ZIPCd>53097</ZIPCd>
+          </RecipientUSAddress>
+          <RecipientRelationshipTxt>NONE</RecipientRelationshipTxt>
+          <RecipientFoundationStatusTxt>501(C)(3)</RecipientFoundationStatusTxt>
+          <GrantOrContributionPurposeTxt>CIVIC ENHANCEMENT</GrantOrContributionPurposeTxt>
+          <Amt>750</Amt>
+        </GrantOrContriApprvForFutGrp>
+        <GrantOrContriApprvForFutGrp>
+          <RecipientBusinessName>
+            <BusinessNameLine1Txt>MILWAUKEE ART MUSEUM</BusinessNameLine1Txt>
+            <BusinessNameLine2Txt>MILWAUKEE ART MUSEUM</BusinessNameLine2Txt>
+          </RecipientBusinessName>
+          <RecipientUSAddress>
+            <AddressLine1Txt>700 N ART MUSEUM DR</AddressLine1Txt>
+            <AddressLine2Txt>700 N ART MUSEUM DR</AddressLine2Txt>
+            <CityNm>MILWAUKEE</CityNm>
+            <StateAbbreviationCd>WI</StateAbbreviationCd>
+            <ZIPCd>53202</ZIPCd>
+          </RecipientUSAddress>
+          <RecipientRelationshipTxt>NONE</RecipientRelationshipTxt>
+          <RecipientFoundationStatusTxt>501(C)(3)</RecipientFoundationStatusTxt>
+          <GrantOrContributionPurposeTxt>CIVIC ENHANCEMENT</GrantOrContributionPurposeTxt>
+          <Amt>750</Amt>
+        </GrantOrContriApprvForFutGrp>
+        <GrantOrContriApprvForFutGrp>
+          <RecipientBusinessName>
+            <BusinessNameLine1Txt>MILWAUKEE BALLET</BusinessNameLine1Txt>
+            <BusinessNameLine2Txt>MILWAUKEE BALLET</BusinessNameLine2Txt>
+          </RecipientBusinessName>
+          <RecipientUSAddress>
+            <AddressLine1Txt>128 N JACKSON ST</AddressLine1Txt>
+            <AddressLine2Txt>128 N JACKSON ST</AddressLine2Txt>
+            <CityNm>MILWAUKEE</CityNm>
+            <StateAbbreviationCd>WI</StateAbbreviationCd>
+            <ZIPCd>53202</ZIPCd>
+          </RecipientUSAddress>
+          <RecipientRelationshipTxt>NONE</RecipientRelationshipTxt>
+          <RecipientFoundationStatusTxt>501(C)(3)</RecipientFoundationStatusTxt>
+          <GrantOrContributionPurposeTxt>CIVIC ENHANCEMENT</GrantOrContributionPurposeTxt>
+          <Amt>1000</Amt>
+        </GrantOrContriApprvForFutGrp>
+        <GrantOrContriApprvForFutGrp>
+          <RecipientBusinessName>
+            <BusinessNameLine1Txt>MILWAUKEE CENTER FOR INDEPENDENCE</BusinessNameLine1Txt>
+            <BusinessNameLine2Txt>MILWAUKEE CENTER FOR INDEPENDENCE</BusinessNameLine2Txt>
+          </RecipientBusinessName>
+          <RecipientUSAddress>
+            <AddressLine1Txt>2020 W WELLS ST</AddressLine1Txt>
+            <AddressLine2Txt>2020 W WELLS ST</AddressLine2Txt>
+            <CityNm>MILWAUKEE</CityNm>
+            <StateAbbreviationCd>WI</StateAbbreviationCd>
+            <ZIPCd>53233</ZIPCd>
+          </RecipientUSAddress>
+          <RecipientRelationshipTxt>NONE</RecipientRelationshipTxt>
+          <RecipientFoundationStatusTxt>501(C)(3)</RecipientFoundationStatusTxt>
+          <GrantOrContributionPurposeTxt>CIVIC ENHANCEMENT</GrantOrContributionPurposeTxt>
+          <Amt>1000</Amt>
+        </GrantOrContriApprvForFutGrp>
+        <GrantOrContriApprvForFutGrp>
+          <RecipientBusinessName>
+            <BusinessNameLine1Txt>MILWAUKEE CHAMBER THEATER</BusinessNameLine1Txt>
+            <BusinessNameLine2Txt>MILWAUKEE CHAMBER THEATER</BusinessNameLine2Txt>
+          </RecipientBusinessName>
+          <RecipientUSAddress>
+            <AddressLine1Txt>158 N BROADWAY</AddressLine1Txt>
+            <AddressLine2Txt>158 N BROADWAY</AddressLine2Txt>
+            <CityNm>MILWAUKEE</CityNm>
+            <StateAbbreviationCd>WI</StateAbbreviationCd>
+            <ZIPCd>53202</ZIPCd>
+          </RecipientUSAddress>
+          <RecipientRelationshipTxt>NONE</RecipientRelationshipTxt>
+          <RecipientFoundationStatusTxt>501(C)(3)</RecipientFoundationStatusTxt>
+          <GrantOrContributionPurposeTxt>CULTURAL ENHANCEMENT</GrantOrContributionPurposeTxt>
+          <Amt>750</Amt>
+        </GrantOrContriApprvForFutGrp>
+        <GrantOrContriApprvForFutGrp>
+          <RecipientBusinessName>
+            <BusinessNameLine1Txt>MILWAUKEE COLLEGE PREP SCHOOL</BusinessNameLine1Txt>
+            <BusinessNameLine2Txt>MILWAUKEE COLLEGE PREP SCHOOL</BusinessNameLine2Txt>
+          </RecipientBusinessName>
+          <RecipientUSAddress>
+            <AddressLine1Txt>2449 N 36TH ST</AddressLine1Txt>
+            <AddressLine2Txt>2449 N 36TH ST</AddressLine2Txt>
+            <CityNm>MILWAUKEE</CityNm>
+            <StateAbbreviationCd>WI</StateAbbreviationCd>
+            <ZIPCd>53210</ZIPCd>
+          </RecipientUSAddress>
+          <RecipientRelationshipTxt>NONE</RecipientRelationshipTxt>
+          <RecipientFoundationStatusTxt>501(C)(3)</RecipientFoundationStatusTxt>
+          <GrantOrContributionPurposeTxt>EDUCATION ENHANCEMENT</GrantOrContributionPurposeTxt>
+          <Amt>1000</Amt>
+        </GrantOrContriApprvForFutGrp>
+        <GrantOrContriApprvForFutGrp>
+          <RecipientBusinessName>
+            <BusinessNameLine1Txt>MILWAUKEE PUB LIBRARY FDN</BusinessNameLine1Txt>
+            <BusinessNameLine2Txt>MILWAUKEE PUB LIBRARY FDN</BusinessNameLine2Txt>
+          </RecipientBusinessName>
+          <RecipientUSAddress>
+            <AddressLine1Txt>814 W WISCONSIN AVE</AddressLine1Txt>
+            <AddressLine2Txt>814 W WISCONSIN AVE</AddressLine2Txt>
+            <CityNm>MILWAUKEE</CityNm>
+            <StateAbbreviationCd>WI</StateAbbreviationCd>
+            <ZIPCd>53233</ZIPCd>
+          </RecipientUSAddress>
+          <RecipientRelationshipTxt>NONE</RecipientRelationshipTxt>
+          <RecipientFoundationStatusTxt>501(C)(3)</RecipientFoundationStatusTxt>
+          <GrantOrContributionPurposeTxt>CIVIC ENHANCEMENT</GrantOrContributionPurposeTxt>
+          <Amt>500</Amt>
+        </GrantOrContriApprvForFutGrp>
+        <GrantOrContriApprvForFutGrp>
+          <RecipientBusinessName>
+            <BusinessNameLine1Txt>MILWAUKEE PUB MUSEUM</BusinessNameLine1Txt>
+            <BusinessNameLine2Txt>MILWAUKEE PUB MUSEUM</BusinessNameLine2Txt>
+          </RecipientBusinessName>
+          <RecipientUSAddress>
+            <AddressLine1Txt>800 W WELLS ST</AddressLine1Txt>
+            <AddressLine2Txt>800 W WELLS ST</AddressLine2Txt>
+            <CityNm>MILWAUKEE</CityNm>
+            <StateAbbreviationCd>WI</StateAbbreviationCd>
+            <ZIPCd>53233</ZIPCd>
+          </RecipientUSAddress>
+          <RecipientRelationshipTxt>NONE</RecipientRelationshipTxt>
+          <RecipientFoundationStatusTxt>501(C)(3)</RecipientFoundationStatusTxt>
+          <GrantOrContributionPurposeTxt>CIVIC ENHANCEMENT</GrantOrContributionPurposeTxt>
+          <Amt>1250</Amt>
+        </GrantOrContriApprvForFutGrp>
+        <GrantOrContriApprvForFutGrp>
+          <RecipientBusinessName>
+            <BusinessNameLine1Txt>MILWAUKEE REP THEATER</BusinessNameLine1Txt>
+            <BusinessNameLine2Txt>MILWAUKEE REP THEATER</BusinessNameLine2Txt>
+          </RecipientBusinessName>
+          <RecipientUSAddress>
+            <AddressLine1Txt>108 E WELLS ST</AddressLine1Txt>
+            <AddressLine2Txt>108 E WELLS ST</AddressLine2Txt>
+            <CityNm>MILWAUKEE</CityNm>
+            <StateAbbreviationCd>WI</StateAbbreviationCd>
+            <ZIPCd>53202</ZIPCd>
+          </RecipientUSAddress>
+          <RecipientRelationshipTxt>NONE</RecipientRelationshipTxt>
+          <RecipientFoundationStatusTxt>501(C)(3)</RecipientFoundationStatusTxt>
+          <GrantOrContributionPurposeTxt>CULTURAL ENHANCEMENT</GrantOrContributionPurposeTxt>
+          <Amt>500</Amt>
+        </GrantOrContriApprvForFutGrp>
+        <GrantOrContriApprvForFutGrp>
+          <RecipientBusinessName>
+            <BusinessNameLine1Txt>MILWAUKEE SCH OF ENGINEER</BusinessNameLine1Txt>
+            <BusinessNameLine2Txt>MILWAUKEE SCH OF ENGINEERING</BusinessNameLine2Txt>
+          </RecipientBusinessName>
+          <RecipientUSAddress>
+            <AddressLine1Txt>1025 N BROADWAY</AddressLine1Txt>
+            <AddressLine2Txt>1025 N BROADWAY</AddressLine2Txt>
+            <CityNm>MILWAUKEE</CityNm>
+            <StateAbbreviationCd>WI</StateAbbreviationCd>
+            <ZIPCd>53202</ZIPCd>
+          </RecipientUSAddress>
+          <RecipientRelationshipTxt>NONE</RecipientRelationshipTxt>
+          <RecipientFoundationStatusTxt>501(C)(3)</RecipientFoundationStatusTxt>
+          <GrantOrContributionPurposeTxt>EDUCATION</GrantOrContributionPurposeTxt>
+          <Amt>1000</Amt>
+        </GrantOrContriApprvForFutGrp>
+        <GrantOrContriApprvForFutGrp>
+          <RecipientBusinessName>
+            <BusinessNameLine1Txt>MOUNTAIN LAKE COM SERVICE</BusinessNameLine1Txt>
+            <BusinessNameLine2Txt>MOUNTAIN LAKE COMMUNITY SERVICE</BusinessNameLine2Txt>
+          </RecipientBusinessName>
+          <RecipientUSAddress>
+            <AddressLine1Txt>PO BOX 832</AddressLine1Txt>
+            <AddressLine2Txt>PO BOX 832</AddressLine2Txt>
+            <CityNm>LAKE WALES</CityNm>
+            <StateAbbreviationCd>FL</StateAbbreviationCd>
+            <ZIPCd>338590832</ZIPCd>
+          </RecipientUSAddress>
+          <RecipientRelationshipTxt>NONE</RecipientRelationshipTxt>
+          <RecipientFoundationStatusTxt>501(C)(3)</RecipientFoundationStatusTxt>
+          <GrantOrContributionPurposeTxt>CIVIC ENHANCEMENT</GrantOrContributionPurposeTxt>
+          <Amt>1000</Amt>
+        </GrantOrContriApprvForFutGrp>
+        <GrantOrContriApprvForFutGrp>
+          <RecipientBusinessName>
+            <BusinessNameLine1Txt>NATL RIGHT WORK LEGAL DEF</BusinessNameLine1Txt>
+            <BusinessNameLine2Txt>NATL RIGHT WORK LEGAL</BusinessNameLine2Txt>
+          </RecipientBusinessName>
+          <RecipientUSAddress>
+            <AddressLine1Txt>8001 BRADDOCK RD STE 600</AddressLine1Txt>
+            <AddressLine2Txt>8001 BRADDOCK RD</AddressLine2Txt>
+            <CityNm>SPRINGFIELD</CityNm>
+            <StateAbbreviationCd>VA</StateAbbreviationCd>
+            <ZIPCd>22160</ZIPCd>
+          </RecipientUSAddress>
+          <RecipientRelationshipTxt>NONE</RecipientRelationshipTxt>
+          <RecipientFoundationStatusTxt>501(C)(3)</RecipientFoundationStatusTxt>
+          <GrantOrContributionPurposeTxt>CIVIC ENHANCEMENT</GrantOrContributionPurposeTxt>
+          <Amt>500</Amt>
+        </GrantOrContriApprvForFutGrp>
+        <GrantOrContriApprvForFutGrp>
+          <RecipientBusinessName>
+            <BusinessNameLine1Txt>PLANNED PARENTHOOD</BusinessNameLine1Txt>
+            <BusinessNameLine2Txt>PLANNED PARENTHOOD</BusinessNameLine2Txt>
+          </RecipientBusinessName>
+          <RecipientUSAddress>
+            <AddressLine1Txt>302 N JACKSON ST</AddressLine1Txt>
+            <AddressLine2Txt>302 N JACKSON ST</AddressLine2Txt>
+            <CityNm>MILWAUKEE</CityNm>
+            <StateAbbreviationCd>WI</StateAbbreviationCd>
+            <ZIPCd>53202</ZIPCd>
+          </RecipientUSAddress>
+          <RecipientRelationshipTxt>NONE</RecipientRelationshipTxt>
+          <RecipientFoundationStatusTxt>501(C)(3)</RecipientFoundationStatusTxt>
+          <GrantOrContributionPurposeTxt>CIVIC ENHANCEMENT</GrantOrContributionPurposeTxt>
+          <Amt>750</Amt>
+        </GrantOrContriApprvForFutGrp>
+        <GrantOrContriApprvForFutGrp>
+          <RecipientBusinessName>
+            <BusinessNameLine1Txt>RAWHIDE YOUTH SERVICES</BusinessNameLine1Txt>
+            <BusinessNameLine2Txt>RAWHIDE YOUTH SERVICES</BusinessNameLine2Txt>
+          </RecipientBusinessName>
+          <RecipientUSAddress>
+            <AddressLine1Txt>E7475 RAWHIDE RD</AddressLine1Txt>
+            <AddressLine2Txt>E7475 RAWHIDE RD</AddressLine2Txt>
+            <CityNm>NEW LONDON</CityNm>
+            <StateAbbreviationCd>WI</StateAbbreviationCd>
+            <ZIPCd>54961</ZIPCd>
+          </RecipientUSAddress>
+          <RecipientRelationshipTxt>NONE</RecipientRelationshipTxt>
+          <RecipientFoundationStatusTxt>501(C)(3)</RecipientFoundationStatusTxt>
+          <GrantOrContributionPurposeTxt>CIVIC ENHANCEMENT</GrantOrContributionPurposeTxt>
+          <Amt>750</Amt>
+        </GrantOrContriApprvForFutGrp>
+        <GrantOrContriApprvForFutGrp>
+          <RecipientBusinessName>
+            <BusinessNameLine1Txt>ROGERS BEHAVIORAL HEALTH FOUNDATION</BusinessNameLine1Txt>
+            <BusinessNameLine2Txt>ROGERS BEHAVIORAL HEALTH FOUNDATION</BusinessNameLine2Txt>
+          </RecipientBusinessName>
+          <RecipientUSAddress>
+            <AddressLine1Txt>34700 VALLEY RD</AddressLine1Txt>
+            <AddressLine2Txt>34700 VALLEY RD</AddressLine2Txt>
+            <CityNm>OCONOMOWOC</CityNm>
+            <StateAbbreviationCd>WI</StateAbbreviationCd>
+            <ZIPCd>53066</ZIPCd>
+          </RecipientUSAddress>
+          <RecipientRelationshipTxt>NONE</RecipientRelationshipTxt>
+          <RecipientFoundationStatusTxt>501(C)(3)</RecipientFoundationStatusTxt>
+          <GrantOrContributionPurposeTxt>HEALTH ENHANCEMENT</GrantOrContributionPurposeTxt>
+          <Amt>500</Amt>
+        </GrantOrContriApprvForFutGrp>
+        <GrantOrContriApprvForFutGrp>
+          <RecipientBusinessName>
+            <BusinessNameLine1Txt>SCHLITZ AUDUBON NATURE CENTER</BusinessNameLine1Txt>
+            <BusinessNameLine2Txt>SCHLITZ AUDUBON NATURE CENTER</BusinessNameLine2Txt>
+          </RecipientBusinessName>
+          <RecipientUSAddress>
+            <AddressLine1Txt>1111 E BROWN DEER RD</AddressLine1Txt>
+            <AddressLine2Txt>1111 E BROWN DEER RD</AddressLine2Txt>
+            <CityNm>BAYSIDE</CityNm>
+            <StateAbbreviationCd>WI</StateAbbreviationCd>
+            <ZIPCd>53217</ZIPCd>
+          </RecipientUSAddress>
+          <RecipientRelationshipTxt>NONE</RecipientRelationshipTxt>
+          <RecipientFoundationStatusTxt>501(C)(3)</RecipientFoundationStatusTxt>
+          <GrantOrContributionPurposeTxt>ENHANCEMENT</GrantOrContributionPurposeTxt>
+          <Amt>500</Amt>
+        </GrantOrContriApprvForFutGrp>
+        <GrantOrContriApprvForFutGrp>
+          <RecipientBusinessName>
+            <BusinessNameLine1Txt>THE SALVATION ARMY</BusinessNameLine1Txt>
+            <BusinessNameLine2Txt>THE SALVATION ARMY</BusinessNameLine2Txt>
+          </RecipientBusinessName>
+          <RecipientUSAddress>
+            <AddressLine1Txt>PO BOX 26019</AddressLine1Txt>
+            <AddressLine2Txt>PO BOX 26019</AddressLine2Txt>
+            <CityNm>WAWAUTOSA</CityNm>
+            <StateAbbreviationCd>WI</StateAbbreviationCd>
+            <ZIPCd>53226</ZIPCd>
+          </RecipientUSAddress>
+          <RecipientRelationshipTxt>NONE</RecipientRelationshipTxt>
+          <RecipientFoundationStatusTxt>501(C)(3)</RecipientFoundationStatusTxt>
+          <GrantOrContributionPurposeTxt>CIVIC ENHANCEMNT</GrantOrContributionPurposeTxt>
+          <Amt>1000</Amt>
+        </GrantOrContriApprvForFutGrp>
+        <GrantOrContriApprvForFutGrp>
+          <RecipientBusinessName>
+            <BusinessNameLine1Txt>UNITED PERFORMING ARTS FUND</BusinessNameLine1Txt>
+            <BusinessNameLine2Txt>UNITED PERFORMING ART FUND</BusinessNameLine2Txt>
+          </RecipientBusinessName>
+          <RecipientUSAddress>
+            <AddressLine1Txt>301 W WISCONSIN AVE</AddressLine1Txt>
+            <AddressLine2Txt>301 W WISCONSIN AVE</AddressLine2Txt>
+            <CityNm>MILWAUKEE</CityNm>
+            <StateAbbreviationCd>WI</StateAbbreviationCd>
+            <ZIPCd>53203</ZIPCd>
+          </RecipientUSAddress>
+          <RecipientRelationshipTxt>NONE</RecipientRelationshipTxt>
+          <RecipientFoundationStatusTxt>501(C)(3)</RecipientFoundationStatusTxt>
+          <GrantOrContributionPurposeTxt>EDUCATION</GrantOrContributionPurposeTxt>
+          <Amt>2000</Amt>
+        </GrantOrContriApprvForFutGrp>
+        <GrantOrContriApprvForFutGrp>
+          <RecipientBusinessName>
+            <BusinessNameLine1Txt>UNITED WAY OF GREATER MIL</BusinessNameLine1Txt>
+            <BusinessNameLine2Txt>UNITED WAY OF GREATER MILWAUKEE</BusinessNameLine2Txt>
+          </RecipientBusinessName>
+          <RecipientUSAddress>
+            <AddressLine1Txt>225 W VINE ST</AddressLine1Txt>
+            <AddressLine2Txt>225 W VINE ST</AddressLine2Txt>
+            <CityNm>MILWAUKEE</CityNm>
+            <StateAbbreviationCd>WI</StateAbbreviationCd>
+            <ZIPCd>53212</ZIPCd>
+          </RecipientUSAddress>
+          <RecipientRelationshipTxt>NONE</RecipientRelationshipTxt>
+          <RecipientFoundationStatusTxt>501(C)(3)</RecipientFoundationStatusTxt>
+          <GrantOrContributionPurposeTxt>CIVIC ENHANCEMENT</GrantOrContributionPurposeTxt>
+          <Amt>2000</Amt>
+        </GrantOrContriApprvForFutGrp>
+        <GrantOrContriApprvForFutGrp>
+          <RecipientBusinessName>
+            <BusinessNameLine1Txt>UNIVERSITY SCHOOL OF MILWAUKEE</BusinessNameLine1Txt>
+            <BusinessNameLine2Txt>UNIVERSITY SCHOOL OF MILWAUKEE</BusinessNameLine2Txt>
+          </RecipientBusinessName>
+          <RecipientUSAddress>
+            <AddressLine1Txt>2100 W FAIRY CHASM RD</AddressLine1Txt>
+            <AddressLine2Txt>2100 W FAIRY CHASM RD</AddressLine2Txt>
+            <CityNm>MILWAUKEE</CityNm>
+            <StateAbbreviationCd>WI</StateAbbreviationCd>
+            <ZIPCd>53217</ZIPCd>
+          </RecipientUSAddress>
+          <RecipientRelationshipTxt>NONE</RecipientRelationshipTxt>
+          <RecipientFoundationStatusTxt>501(C)(3)</RecipientFoundationStatusTxt>
+          <GrantOrContributionPurposeTxt>EDUCATION</GrantOrContributionPurposeTxt>
+          <Amt>1000</Amt>
+        </GrantOrContriApprvForFutGrp>
+        <GrantOrContriApprvForFutGrp>
+          <RecipientBusinessName>
+            <BusinessNameLine1Txt>WI COUNCIL ON ECON EDU</BusinessNameLine1Txt>
+            <BusinessNameLine2Txt>WI COUNCIL ON ECON EDU</BusinessNameLine2Txt>
+          </RecipientBusinessName>
+          <RecipientUSAddress>
+            <AddressLine1Txt>7635W BLUEMOUND RDSTE106</AddressLine1Txt>
+            <AddressLine2Txt>7635 W BLUEMOUND RD</AddressLine2Txt>
+            <CityNm>MILWAUKEE</CityNm>
+            <StateAbbreviationCd>WI</StateAbbreviationCd>
+            <ZIPCd>53213</ZIPCd>
+          </RecipientUSAddress>
+          <RecipientRelationshipTxt>NONE</RecipientRelationshipTxt>
+          <RecipientFoundationStatusTxt>501(C)(3)</RecipientFoundationStatusTxt>
+          <GrantOrContributionPurposeTxt>EDUCATION</GrantOrContributionPurposeTxt>
+          <Amt>500</Amt>
+        </GrantOrContriApprvForFutGrp>
+        <GrantOrContriApprvForFutGrp>
+          <RecipientBusinessName>
+            <BusinessNameLine1Txt>WINTER HAVEN HOSPITAL FOUNDATION</BusinessNameLine1Txt>
+            <BusinessNameLine2Txt>WINTER HAVEN HOSPITAL FOUNDATION</BusinessNameLine2Txt>
+          </RecipientBusinessName>
+          <RecipientUSAddress>
+            <AddressLine1Txt>200 AVE F NE</AddressLine1Txt>
+            <AddressLine2Txt>200 AVE F NE</AddressLine2Txt>
+            <CityNm>WINTER HAVEN</CityNm>
+            <StateAbbreviationCd>FL</StateAbbreviationCd>
+            <ZIPCd>33881</ZIPCd>
+          </RecipientUSAddress>
+          <RecipientRelationshipTxt>NONE</RecipientRelationshipTxt>
+          <RecipientFoundationStatusTxt>501(C)(3)</RecipientFoundationStatusTxt>
+          <GrantOrContributionPurposeTxt>MAINTENANCE OF HEALTH</GrantOrContributionPurposeTxt>
+          <Amt>2000</Amt>
+        </GrantOrContriApprvForFutGrp>
+        <GrantOrContriApprvForFutGrp>
+          <RecipientBusinessName>
+            <BusinessNameLine1Txt>WISCONSIN 4-H FOUNDATION</BusinessNameLine1Txt>
+            <BusinessNameLine2Txt>WISCONSIN 4-H FOUNDATION</BusinessNameLine2Txt>
+          </RecipientBusinessName>
+          <RecipientUSAddress>
+            <AddressLine1Txt>610 LANGDON ST</AddressLine1Txt>
+            <AddressLine2Txt>610 LANGDON ST</AddressLine2Txt>
+            <CityNm>MADISON</CityNm>
+            <StateAbbreviationCd>WI</StateAbbreviationCd>
+            <ZIPCd>537031195</ZIPCd>
+          </RecipientUSAddress>
+          <RecipientRelationshipTxt>NONE</RecipientRelationshipTxt>
+          <RecipientFoundationStatusTxt>501(C)(3)</RecipientFoundationStatusTxt>
+          <GrantOrContributionPurposeTxt>CIVIC ENHANCEMENT</GrantOrContributionPurposeTxt>
+          <Amt>500</Amt>
+        </GrantOrContriApprvForFutGrp>
+        <GrantOrContriApprvForFutGrp>
+          <RecipientBusinessName>
+            <BusinessNameLine1Txt>WMC FOUNDATION</BusinessNameLine1Txt>
+            <BusinessNameLine2Txt>WMC FOUNDATION</BusinessNameLine2Txt>
+          </RecipientBusinessName>
+          <RecipientUSAddress>
+            <AddressLine1Txt>501 E WASHINGTON AVE</AddressLine1Txt>
+            <AddressLine2Txt>501 E WASHINGTON AVE</AddressLine2Txt>
+            <CityNm>MADISON</CityNm>
+            <StateAbbreviationCd>WI</StateAbbreviationCd>
+            <ZIPCd>537032914</ZIPCd>
+          </RecipientUSAddress>
+          <RecipientRelationshipTxt>NONE</RecipientRelationshipTxt>
+          <RecipientFoundationStatusTxt>501(C)(3)</RecipientFoundationStatusTxt>
+          <GrantOrContributionPurposeTxt>CIVIC ENHANCEMENT</GrantOrContributionPurposeTxt>
+          <Amt>500</Amt>
+        </GrantOrContriApprvForFutGrp>
+        <GrantOrContriApprvForFutGrp>
+          <RecipientBusinessName>
+            <BusinessNameLine1Txt>WUWM 897 FM</BusinessNameLine1Txt>
+            <BusinessNameLine2Txt>WUWM 897 FM</BusinessNameLine2Txt>
+          </RecipientBusinessName>
+          <RecipientUSAddress>
+            <AddressLine1Txt>111 EAST WISCONSIN AVE</AddressLine1Txt>
+            <AddressLine2Txt>111 EAST WISCONSIN AVE</AddressLine2Txt>
+            <CityNm>MILWAUKEE</CityNm>
+            <StateAbbreviationCd>WI</StateAbbreviationCd>
+            <ZIPCd>53202</ZIPCd>
+          </RecipientUSAddress>
+          <RecipientRelationshipTxt>NONE</RecipientRelationshipTxt>
+          <RecipientFoundationStatusTxt>501(C)(3)</RecipientFoundationStatusTxt>
+          <GrantOrContributionPurposeTxt>EDUCATION</GrantOrContributionPurposeTxt>
+          <Amt>1000</Amt>
+        </GrantOrContriApprvForFutGrp>
+        <GrantOrContriApprvForFutGrp>
+          <RecipientBusinessName>
+            <BusinessNameLine1Txt>YMCA OF METRO MILWAUKEE</BusinessNameLine1Txt>
+            <BusinessNameLine2Txt>YMCA OF METRO MILWAUKEE</BusinessNameLine2Txt>
+          </RecipientBusinessName>
+          <RecipientUSAddress>
+            <AddressLine1Txt>161 W WISCONSIN AVE</AddressLine1Txt>
+            <AddressLine2Txt>161 W WISCONSIN AVE</AddressLine2Txt>
+            <CityNm>MILWAUKEE</CityNm>
+            <StateAbbreviationCd>WI</StateAbbreviationCd>
+            <ZIPCd>532032601</ZIPCd>
+          </RecipientUSAddress>
+          <RecipientRelationshipTxt>NONE</RecipientRelationshipTxt>
+          <RecipientFoundationStatusTxt>501(C)(3)</RecipientFoundationStatusTxt>
+          <GrantOrContributionPurposeTxt>CIVIC ENHANCEMENT</GrantOrContributionPurposeTxt>
+          <Amt>500</Amt>
+        </GrantOrContriApprvForFutGrp>
+        <GrantOrContriApprvForFutGrp>
+          <RecipientBusinessName>
+            <BusinessNameLine1Txt>ZOOLOGICAL SOCIETY OF MIL</BusinessNameLine1Txt>
+            <BusinessNameLine2Txt>ZOOLOGICAL SOCIETY OF MILWAUKEE</BusinessNameLine2Txt>
+          </RecipientBusinessName>
+          <RecipientUSAddress>
+            <AddressLine1Txt>10005 W BLUEMOUND RD</AddressLine1Txt>
+            <AddressLine2Txt>10005 W BLUEMOUND RD</AddressLine2Txt>
+            <CityNm>MILWAUKEE</CityNm>
+            <StateAbbreviationCd>WI</StateAbbreviationCd>
+            <ZIPCd>53226</ZIPCd>
+          </RecipientUSAddress>
+          <RecipientRelationshipTxt>NONE</RecipientRelationshipTxt>
+          <RecipientFoundationStatusTxt>501(C)(3)</RecipientFoundationStatusTxt>
+          <GrantOrContributionPurposeTxt>CIVIC ENHANCEMENT</GrantOrContributionPurposeTxt>
+          <Amt>1000</Amt>
+        </GrantOrContriApprvForFutGrp>
+        <TotalGrantOrContriApprvFutAmt>50500</TotalGrantOrContriApprvFutAmt>
+      </SupplementaryInformationGrp>
+      <AnalysisIncomeProducingActyGrp>
+        <DividendsAndInterestFromSecDtl>
+          <ExclusionCd>14</ExclusionCd>
+          <ExclusionAmt>17095</ExclusionAmt>
+        </DividendsAndInterestFromSecDtl>
+        <GainSalesAstOthThanInvntryGrp>
+          <ExclusionCd>14</ExclusionCd>
+          <ExclusionAmt>34574</ExclusionAmt>
+        </GainSalesAstOthThanInvntryGrp>
+        <SubtotalsIncmProducingActyGrp>
+          <ExclusionAmt>51669</ExclusionAmt>
+        </SubtotalsIncmProducingActyGrp>
+        <TotalIncomeProducingActyAmt>51669</TotalIncomeProducingActyAmt>
+      </AnalysisIncomeProducingActyGrp>
+      <TrnsfrTransRlnNonchrtblEOGrp>
+        <TrnsfrOfCashToNonchrtblEOInd>false</TrnsfrOfCashToNonchrtblEOInd>
+        <TrnsfrOtherAssetNonchrtblEOInd>false</TrnsfrOtherAssetNonchrtblEOInd>
+        <SalesOrExchangesOfAssetsInd>false</SalesOrExchangesOfAssetsInd>
+        <PurchaseOfAssetsNonchrtblEOInd>false</PurchaseOfAssetsNonchrtblEOInd>
+        <RentalOfFacilitiesOthAssetsInd>false</RentalOfFacilitiesOthAssetsInd>
+        <ReimbursementArrangementsInd>false</ReimbursementArrangementsInd>
+        <LoansOrLoanGuaranteesInd>false</LoansOrLoanGuaranteesInd>
+        <PerformanceOfServicesEtcInd>false</PerformanceOfServicesEtcInd>
+        <SharingOfFacilitiesEtcInd>false</SharingOfFacilitiesEtcInd>
+        <RelationshipsNonchrtblEOInd>false</RelationshipsNonchrtblEOInd>
+      </TrnsfrTransRlnNonchrtblEOGrp>
+    </IRS990PF>
+    <AccountingFeesSchedule documentId="RetDoc2">
+      <AccountingFeesDetail>
+        <CategoryTxt>ACCOUNTING FEES</CategoryTxt>
+        <Amt>3500</Amt>
+      </AccountingFeesDetail>
+    </AccountingFeesSchedule>
+    <InvestmentsCorpStockSchedule documentId="RetDoc3">
+      <InvestmentsCorporateStockGrp>
+        <StockNm>US EQUITIES - FIDELITY ACCOUNT</StockNm>
+        <EOYBookValueAmt>817911</EOYBookValueAmt>
+        <EOYFMVAmt>1014131</EOYFMVAmt>
+      </InvestmentsCorporateStockGrp>
+      <InvestmentsCorporateStockGrp>
+        <StockNm>UNREALIZED GAINS</StockNm>
+        <EOYBookValueAmt>196220</EOYBookValueAmt>
+      </InvestmentsCorporateStockGrp>
+    </InvestmentsCorpStockSchedule>
+    <OtherIncreasesSchedule documentId="RetDoc4">
+      <OtherIncreasesDetail>
+        <Desc>UNREALIZED GAINS</Desc>
+        <Amt>36657</Amt>
+      </OtherIncreasesDetail>
+    </OtherIncreasesSchedule>
+    <OtherLiabilitiesSchedule documentId="RetDoc5">
+      <OtherLiabilitiesDetail>
+        <Desc>EXCISE TAX PAYABLE</Desc>
+        <BOYBookValueAmt>419</BOYBookValueAmt>
+        <EOYBookValueAmt>739</EOYBookValueAmt>
+      </OtherLiabilitiesDetail>
+      <OtherLiabilitiesDetail>
+        <Desc>ACCOUNTING FEES PAYABLE</Desc>
+        <BOYBookValueAmt>3000</BOYBookValueAmt>
+        <EOYBookValueAmt>6500</EOYBookValueAmt>
+      </OtherLiabilitiesDetail>
+    </OtherLiabilitiesSchedule>
+    <TaxesSchedule documentId="RetDoc6">
+      <TaxesDetail>
+        <CategoryTxt>EXCISE TAX</CategoryTxt>
+        <Amt>739</Amt>
+      </TaxesDetail>
+      <TaxesDetail>
+        <CategoryTxt>FOREIGN TAX</CategoryTxt>
+        <Amt>259</Amt>
+        <NetInvestmentIncomeAmt>259</NetInvestmentIncomeAmt>
+      </TaxesDetail>
+    </TaxesSchedule>
+  </ReturnData>
+</Return>

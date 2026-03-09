@@ -1,0 +1,149 @@
+{
+  "batch": "2026_TEOS_XML_01A",
+  "filesProcessed": 12245,
+  "filesFailed": 0,
+  "totalRecords": 83020,
+  "donors": 218,
+  "officers": 82802,
+  "uniqueNames": 75915,
+  "uniqueDonorNames": 213,
+  "uniqueOfficerNames": 75762,
+  "uniqueFirstLastNames": 75139,
+  "nameFrequency": {
+    "once": 71467,
+    "twice": 3561,
+    "three_to_five": 712,
+    "six_plus": 175
+  },
+  "top20Names": [
+    [
+      "tingting li",
+      47
+    ],
+    [
+      "greg comfort",
+      47
+    ],
+    [
+      "robert maloney",
+      47
+    ],
+    [
+      "matthew d rule",
+      47
+    ],
+    [
+      "julie m woolley",
+      47
+    ],
+    [
+      "sonya brown",
+      47
+    ],
+    [
+      "jill kolb",
+      47
+    ],
+    [
+      "eric walker",
+      47
+    ],
+    [
+      "sean alexander",
+      47
+    ],
+    [
+      "robert s walter",
+      44
+    ],
+    [
+      "brianna mettler",
+      28
+    ],
+    [
+      "donna walker",
+      28
+    ],
+    [
+      "larry bellman",
+      28
+    ],
+    [
+      "sean defour",
+      28
+    ],
+    [
+      "sandra brummitt",
+      28
+    ],
+    [
+      "joseph kasberg",
+      28
+    ],
+    [
+      "kathy mcdonnell",
+      27
+    ],
+    [
+      "vacant",
+      20
+    ],
+    [
+      "yolanda morris",
+      18
+    ],
+    [
+      "tona braun",
+      18
+    ]
+  ],
+  "donorAmountStats": {
+    "count": 216,
+    "total": 153606810,
+    "median": 26000,
+    "min": 20,
+    "max": 48552351
+  },
+  "topStates": [
+    [
+      "CA",
+      7488
+    ],
+    [
+      "NY",
+      5576
+    ],
+    [
+      "IL",
+      4714
+    ],
+    [
+      "TX",
+      4347
+    ],
+    [
+      "PA",
+      4163
+    ],
+    [
+      "FL",
+      3858
+    ],
+    [
+      "MA",
+      3318
+    ],
+    [
+      "NC",
+      3266
+    ],
+    [
+      "MI",
+      2794
+    ],
+    [
+      "VA",
+      2723
+    ]
+  ]
+}

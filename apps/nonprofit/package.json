@@ -1,0 +1,20 @@
+{
+  "name": "@pm/nonprofit",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Nonprofit IRS 990 matcher — board, donor, and grant matching.",
+  "type": "commonjs",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf dist",
+    "test": "npm run build && node --test dist/tests/**/*.test.js"
+  },
+  "dependencies": {
+    "@pm/core": "*",
+    "fast-xml-parser": "^4.5.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.10",
+    "typescript": "^5.8.2"
+  }
+}

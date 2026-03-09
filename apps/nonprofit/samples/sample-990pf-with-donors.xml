@@ -1,0 +1,455 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Return xmlns="http://www.irs.gov/efile" returnVersion="2024v5.2">
+  <ReturnHeader binaryAttachmentCnt="0">
+    <ReturnTs>2025-12-18T17:41:57-05:00</ReturnTs>
+    <TaxPeriodEndDt>2024-12-31</TaxPeriodEndDt>
+    <PreparerFirmGrp>
+      <PreparerFirmEIN>260150164</PreparerFirmEIN>
+      <PreparerFirmName>
+        <BusinessNameLine1Txt>The Accounting Firm LLC</BusinessNameLine1Txt>
+      </PreparerFirmName>
+      <PreparerUSAddress>
+        <AddressLine1Txt>55 Jonesboro Street</AddressLine1Txt>
+        <CityNm>McDonough</CityNm>
+        <StateAbbreviationCd>GA</StateAbbreviationCd>
+        <ZIPCd>30253</ZIPCd>
+      </PreparerUSAddress>
+    </PreparerFirmGrp>
+    <ReturnTypeCd>990PF</ReturnTypeCd>
+    <TaxPeriodBeginDt>2024-01-01</TaxPeriodBeginDt>
+    <Filer>
+      <EIN>208765349</EIN>
+      <BusinessName>
+        <BusinessNameLine1Txt>A WOMANS WORTH FOUNDATION INC</BusinessNameLine1Txt>
+      </BusinessName>
+      <InCareOfNm>% SIOHVAUGHN FUNCHES</InCareOfNm>
+      <BusinessNameControlTxt>AWOM</BusinessNameControlTxt>
+      <PhoneNum>4049406202</PhoneNum>
+      <USAddress>
+        <AddressLine1Txt>2015 JONESBORO RD STE 149</AddressLine1Txt>
+        <CityNm>MCDONOUGH</CityNm>
+        <StateAbbreviationCd>GA</StateAbbreviationCd>
+        <ZIPCd>30253</ZIPCd>
+      </USAddress>
+    </Filer>
+    <BusinessOfficerGrp>
+      <PersonNm>SIOHVAUGHN FUNCHES</PersonNm>
+      <PersonTitleTxt>DIRECTOR</PersonTitleTxt>
+      <PhoneNum>4049406202</PhoneNum>
+      <SignatureDt>2025-11-15</SignatureDt>
+      <DiscussWithPaidPreparerInd>true</DiscussWithPaidPreparerInd>
+    </BusinessOfficerGrp>
+    <IRSResponsiblePrtyInfoCurrInd>true</IRSResponsiblePrtyInfoCurrInd>
+    <PreparerPersonGrp>
+      <PreparerPersonNm>KIMBERLY L MAXWELL CPA</PreparerPersonNm>
+      <PTIN>P00744155</PTIN>
+      <PhoneNum>7709577169</PhoneNum>
+      <PreparationDt>2025-12-18</PreparationDt>
+    </PreparerPersonGrp>
+    <TaxYr>2024</TaxYr>
+    <BuildTS>2025-03-06 01:10:19Z</BuildTS>
+  </ReturnHeader>
+  <ReturnData documentCnt="6">
+    <IRS990PF documentId="IRS990PF">
+      <AmendedReturnInd>X</AmendedReturnInd>
+      <AddressChangeInd>X</AddressChangeInd>
+      <Organization501c3ExemptPFInd>X</Organization501c3ExemptPFInd>
+      <FMVAssetsEOYAmt>0</FMVAssetsEOYAmt>
+      <MethodOfAccountingCashInd>X</MethodOfAccountingCashInd>
+      <AnalysisOfRevenueAndExpenses>
+        <ContriRcvdRevAndExpnssAmt>162618</ContriRcvdRevAndExpnssAmt>
+        <InterestOnSavRevAndExpnssAmt>16</InterestOnSavRevAndExpnssAmt>
+        <GrossRentsRevAndExpnssAmt>1831</GrossRentsRevAndExpnssAmt>
+        <NetRentalIncomeOrLossAmt>-12453</NetRentalIncomeOrLossAmt>
+        <TotalRevAndExpnssAmt>164465</TotalRevAndExpnssAmt>
+        <TotalNetInvstIncmAmt>0</TotalNetInvstIncmAmt>
+        <DeprecAndDpltnRevAndExpnssAmt referenceDocumentId="DepreciationSchedule-47-Copy1">21401</DeprecAndDpltnRevAndExpnssAmt>
+        <TravConfMeetingRevAndExpnssAmt>978</TravConfMeetingRevAndExpnssAmt>
+        <OtherExpensesRevAndExpnssAmt referenceDocumentId="OtherExpensesSchedul-133-Copy1">25089</OtherExpensesRevAndExpnssAmt>
+        <TotOprExpensesRevAndExpnssAmt>47468</TotOprExpensesRevAndExpnssAmt>
+        <TotOprExpensesNetInvstIncmAmt>0</TotOprExpensesNetInvstIncmAmt>
+        <TotOprExpensesDsbrsChrtblAmt>0</TotOprExpensesDsbrsChrtblAmt>
+        <ContriPaidRevAndExpnssAmt>13294</ContriPaidRevAndExpnssAmt>
+        <ContriPaidDsbrsChrtblAmt>0</ContriPaidDsbrsChrtblAmt>
+        <TotalExpensesRevAndExpnssAmt>60762</TotalExpensesRevAndExpnssAmt>
+        <TotalExpensesNetInvstIncmAmt>0</TotalExpensesNetInvstIncmAmt>
+        <TotalExpensesDsbrsChrtblAmt>0</TotalExpensesDsbrsChrtblAmt>
+        <ExcessRevenueOverExpensesAmt>103703</ExcessRevenueOverExpensesAmt>
+        <NetInvestmentIncomeAmt>0</NetInvestmentIncomeAmt>
+        <AdjustedNetIncomeAmt>0</AdjustedNetIncomeAmt>
+      </AnalysisOfRevenueAndExpenses>
+      <Form990PFBalanceSheetsGrp>
+        <CashBOYAmt>1940</CashBOYAmt>
+        <CashEOYAmt>2044</CashEOYAmt>
+        <LandBldgEquipCostOrOtherBssAmt>263587</LandBldgEquipCostOrOtherBssAmt>
+        <LandBldgEquipAccumDeprecAmt>44855</LandBldgEquipAccumDeprecAmt>
+        <LandBOYAmt>115133</LandBOYAmt>
+        <LandEOYAmt referenceDocumentId="LandEtcSchedule2">218732</LandEOYAmt>
+        <TotalAssetsBOYAmt>117073</TotalAssetsBOYAmt>
+        <TotalAssetsEOYAmt>220776</TotalAssetsEOYAmt>
+        <TotalAssetsEOYFMVAmt>0</TotalAssetsEOYFMVAmt>
+        <TotalLiabilitiesBOYAmt>0</TotalLiabilitiesBOYAmt>
+        <TotalLiabilitiesEOYAmt>0</TotalLiabilitiesEOYAmt>
+        <OrganizationFollowsFASB117Ind>X</OrganizationFollowsFASB117Ind>
+        <NoDonorRstrNetAssestsBOYAmt>117073</NoDonorRstrNetAssestsBOYAmt>
+        <NoDonorRstrNetAssestsEOYAmt>220776</NoDonorRstrNetAssestsEOYAmt>
+        <TotNetAstOrFundBalancesBOYAmt>117073</TotNetAstOrFundBalancesBOYAmt>
+        <TotNetAstOrFundBalancesEOYAmt>220776</TotNetAstOrFundBalancesEOYAmt>
+        <TotalLiabilitiesNetAstBOYAmt>117073</TotalLiabilitiesNetAstBOYAmt>
+        <TotalLiabilitiesNetAstEOYAmt>220776</TotalLiabilitiesNetAstEOYAmt>
+      </Form990PFBalanceSheetsGrp>
+      <ChgInNetAssetsFundBalancesGrp>
+        <TotNetAstOrFundBalancesBOYAmt>117073</TotNetAstOrFundBalancesBOYAmt>
+        <ExcessRevenueOverExpensesAmt>103703</ExcessRevenueOverExpensesAmt>
+        <SubtotalAmt>220776</SubtotalAmt>
+        <TotNetAstOrFundBalancesEOYAmt>220776</TotNetAstOrFundBalancesEOYAmt>
+      </ChgInNetAssetsFundBalancesGrp>
+      <ExciseTaxBasedOnInvstIncmGrp>
+        <InvestmentIncomeExciseTaxAmt>0</InvestmentIncomeExciseTaxAmt>
+        <TaxUnderSection511Amt>0</TaxUnderSection511Amt>
+        <SubtitleATaxAmt>0</SubtitleATaxAmt>
+        <TaxBasedOnInvestmentIncomeAmt>0</TaxBasedOnInvestmentIncomeAmt>
+      </ExciseTaxBasedOnInvstIncmGrp>
+      <StatementsRegardingActyGrp>
+        <LegislativePoliticalActyInd>false</LegislativePoliticalActyInd>
+        <MoreThan100SpentInd>false</MoreThan100SpentInd>
+        <Form1120POLFiledInd>false</Form1120POLFiledInd>
+        <ActivitiesNotPreviouslyRptInd>false</ActivitiesNotPreviouslyRptInd>
+        <ChangesToArticlesOrBylawsInd>false</ChangesToArticlesOrBylawsInd>
+        <UnrelatedBusIncmOverLimitInd>false</UnrelatedBusIncmOverLimitInd>
+        <OrganizationDissolvedEtcInd>false</OrganizationDissolvedEtcInd>
+        <Section508eRqrSatisfiedInd>false</Section508eRqrSatisfiedInd>
+        <AtLeast5000InAssetsInd>true</AtLeast5000InAssetsInd>
+        <OrgReportOrRegisterStateCd>GA</OrgReportOrRegisterStateCd>
+        <Form990PFFiledWithAttyGenInd referenceDocumentId="ExplnOfNonFilingWith-144-Copy1">false</Form990PFFiledWithAttyGenInd>
+        <PrivateOperatingFoundationInd>false</PrivateOperatingFoundationInd>
+        <NewSubstantialContributorsInd referenceDocumentId="SubstantialContribut-144-Copy1">true</NewSubstantialContributorsInd>
+        <OwnControlledEntityInd>false</OwnControlledEntityInd>
+        <DonorAdvisedFundInd>false</DonorAdvisedFundInd>
+        <ComplyWithPublicInspRqrInd>true</ComplyWithPublicInspRqrInd>
+        <IndividualWithBooksNm>SIOHVAUGHN FUNCHES</IndividualWithBooksNm>
+        <PhoneNum>4049406202</PhoneNum>
+        <LocationOfBooksUSAddress>
+          <AddressLine1Txt>289 JONESBORO RD STE 149</AddressLine1Txt>
+          <CityNm>MCDONOUGH</CityNm>
+          <StateAbbreviationCd>GA</StateAbbreviationCd>
+          <ZIPCd>30253</ZIPCd>
+        </LocationOfBooksUSAddress>
+        <ForeignAccountsQuestionInd>false</ForeignAccountsQuestionInd>
+      </StatementsRegardingActyGrp>
+      <StatementsRegardingActy4720Grp>
+        <SaleOrExchDisqualifiedPrsnInd>false</SaleOrExchDisqualifiedPrsnInd>
+        <BrrwOrLendDisqualifiedPrsnInd>false</BrrwOrLendDisqualifiedPrsnInd>
+        <FurnGoodsDisqualifiedPrsnInd>false</FurnGoodsDisqualifiedPrsnInd>
+        <PayCompDisqualifiedPrsnInd>false</PayCompDisqualifiedPrsnInd>
+        <TransferAstDisqualifiedPrsnInd>false</TransferAstDisqualifiedPrsnInd>
+        <PaymentToGovernmentOfficialInd>false</PaymentToGovernmentOfficialInd>
+        <UncorrectedPriorActsInd>false</UncorrectedPriorActsInd>
+        <UndistributedIncomePYInd>false</UndistributedIncomePYInd>
+        <UndistrIncmSect4942a2NotAppInd>false</UndistrIncmSect4942a2NotAppInd>
+        <BusinessHoldingsInd>false</BusinessHoldingsInd>
+        <JeopardyInvestmentsInd>false</JeopardyInvestmentsInd>
+        <UncorrectedPYJeopardyInvstInd>false</UncorrectedPYJeopardyInvstInd>
+        <InfluenceLegislationInd>false</InfluenceLegislationInd>
+        <InfluenceElectionInd>false</InfluenceElectionInd>
+        <GrantsToIndividualsInd>false</GrantsToIndividualsInd>
+        <GrantsToOrganizationsInd>false</GrantsToOrganizationsInd>
+        <NoncharitablePurposeInd>false</NoncharitablePurposeInd>
+        <RcvFndsToPayPrsnlBnftCntrctInd>false</RcvFndsToPayPrsnlBnftCntrctInd>
+        <PayPremiumsPrsnlBnftCntrctInd>false</PayPremiumsPrsnlBnftCntrctInd>
+        <ProhibitedTaxShelterTransInd>false</ProhibitedTaxShelterTransInd>
+        <SubjToTaxRmnrtnExPrchtPymtInd>false</SubjToTaxRmnrtnExPrchtPymtInd>
+      </StatementsRegardingActy4720Grp>
+      <OfficerDirTrstKeyEmplInfoGrp>
+        <OfficerDirTrstKeyEmplGrp>
+          <PersonNm>SIOHVAUGHN FUNCHES</PersonNm>
+          <USAddress>
+            <AddressLine1Txt>289 JONESBORO RD STE 149</AddressLine1Txt>
+            <CityNm>MCDONOUGH</CityNm>
+            <StateAbbreviationCd>GA</StateAbbreviationCd>
+            <ZIPCd>30253</ZIPCd>
+          </USAddress>
+          <TitleTxt>DIRECTOR</TitleTxt>
+          <AverageHrsPerWkDevotedToPosRt>10.00</AverageHrsPerWkDevotedToPosRt>
+          <CompensationAmt>0</CompensationAmt>
+          <EmployeeBenefitProgramAmt>0</EmployeeBenefitProgramAmt>
+          <ExpenseAccountOtherAllwncAmt>0</ExpenseAccountOtherAllwncAmt>
+        </OfficerDirTrstKeyEmplGrp>
+        <CompOfHghstPdEmplOrNONETxt>NONE</CompOfHghstPdEmplOrNONETxt>
+        <OtherEmployeePaidOver50kCnt>0</OtherEmployeePaidOver50kCnt>
+        <CompOfHghstPdCntrctOrNONETxt>NONE</CompOfHghstPdCntrctOrNONETxt>
+      </OfficerDirTrstKeyEmplInfoGrp>
+      <SummaryOfDirectChrtblActyGrp>
+        <Description1Txt>VICTIM AND FAMILY SUPPORT</Description1Txt>
+        <Expenses1Amt>13294</Expenses1Amt>
+      </SummaryOfDirectChrtblActyGrp>
+      <SumOfProgramRelatedInvstGrp>
+        <TotalAmt>0</TotalAmt>
+      </SumOfProgramRelatedInvstGrp>
+      <MinimumInvestmentReturnGrp>
+        <AverageMonthlyFMVOfSecAmt>0</AverageMonthlyFMVOfSecAmt>
+        <AverageMonthlyCashBalancesAmt>0</AverageMonthlyCashBalancesAmt>
+        <FMVAllOtherNoncharitableAstAmt>0</FMVAllOtherNoncharitableAstAmt>
+        <TotalFMVOfUnusedAssetsAmt>0</TotalFMVOfUnusedAssetsAmt>
+        <ReductionClaimedAmt>0</ReductionClaimedAmt>
+        <AcquisitionIndebtednessAmt>0</AcquisitionIndebtednessAmt>
+        <AdjustedTotalFMVOfUnusedAstAmt>0</AdjustedTotalFMVOfUnusedAstAmt>
+        <CashDeemedCharitableAmt>0</CashDeemedCharitableAmt>
+        <NetVlNoncharitableAssetsAmt>0</NetVlNoncharitableAssetsAmt>
+        <MinimumInvestmentReturnAmt>0</MinimumInvestmentReturnAmt>
+      </MinimumInvestmentReturnGrp>
+      <DistributableAmountGrp>
+        <DistributableAsAdjustedAmt>0</DistributableAsAdjustedAmt>
+      </DistributableAmountGrp>
+      <PFQualifyingDistributionsGrp>
+        <ExpensesAndContributionsAmt>0</ExpensesAndContributionsAmt>
+      </PFQualifyingDistributionsGrp>
+      <UndistributedIncomeGrp>
+        <DistributableAsAdjustedAmt>0</DistributableAsAdjustedAmt>
+        <UndistributedIncomeCYAmt>0</UndistributedIncomeCYAmt>
+      </UndistributedIncomeGrp>
+      <SupplementaryInformationGrp>
+        <OnlyContriToPreselectedInd>X</OnlyContriToPreselectedInd>
+        <GrantOrContributionPdDurYrGrp>
+          <RecipientPersonNm>MISC RECIPIENTS</RecipientPersonNm>
+          <RecipientUSAddress>
+            <AddressLine1Txt>289 JONESBORO RD STE 149</AddressLine1Txt>
+            <CityNm>MCDONOUGH</CityNm>
+            <StateAbbreviationCd>GA</StateAbbreviationCd>
+            <ZIPCd>30253</ZIPCd>
+          </RecipientUSAddress>
+          <RecipientRelationshipTxt>NONE</RecipientRelationshipTxt>
+          <RecipientFoundationStatusTxt>I</RecipientFoundationStatusTxt>
+          <GrantOrContributionPurposeTxt>VICTIM AND FAMILY ASSISTANCE</GrantOrContributionPurposeTxt>
+          <Amt>13294</Amt>
+        </GrantOrContributionPdDurYrGrp>
+        <TotalGrantOrContriPdDurYrAmt>13294</TotalGrantOrContriPdDurYrAmt>
+        <TotalGrantOrContriApprvFutAmt>0</TotalGrantOrContriApprvFutAmt>
+      </SupplementaryInformationGrp>
+      <AnalysisIncomeProducingActyGrp>
+        <IntOnSavAndTempCashInvstGrp>
+          <RelatedOrExemptFunctionIncmAmt>16</RelatedOrExemptFunctionIncmAmt>
+        </IntOnSavAndTempCashInvstGrp>
+        <SubtotalsIncmProducingActyGrp>
+          <RelatedOrExemptFunctionIncmAmt>16</RelatedOrExemptFunctionIncmAmt>
+        </SubtotalsIncmProducingActyGrp>
+        <TotalIncomeProducingActyAmt>16</TotalIncomeProducingActyAmt>
+      </AnalysisIncomeProducingActyGrp>
+      <RlnOfActyToAccomOfExmptPrpsGrp>
+        <RlnOfActyToAccomOfExmptPrpsGrp>
+          <LineNumberTxt>3</LineNumberTxt>
+          <RelationshipStatementTxt>INTEREST EARNED ON BANK ACCOUNTS</RelationshipStatementTxt>
+        </RlnOfActyToAccomOfExmptPrpsGrp>
+      </RlnOfActyToAccomOfExmptPrpsGrp>
+      <TrnsfrTransRlnNonchrtblEOGrp>
+        <TrnsfrOfCashToNonchrtblEOInd>false</TrnsfrOfCashToNonchrtblEOInd>
+        <TrnsfrOtherAssetNonchrtblEOInd>false</TrnsfrOtherAssetNonchrtblEOInd>
+        <SalesOrExchangesOfAssetsInd>false</SalesOrExchangesOfAssetsInd>
+        <PurchaseOfAssetsNonchrtblEOInd>false</PurchaseOfAssetsNonchrtblEOInd>
+        <RentalOfFacilitiesOthAssetsInd>false</RentalOfFacilitiesOthAssetsInd>
+        <ReimbursementArrangementsInd>false</ReimbursementArrangementsInd>
+        <LoansOrLoanGuaranteesInd>false</LoansOrLoanGuaranteesInd>
+        <PerformanceOfServicesEtcInd>false</PerformanceOfServicesEtcInd>
+        <SharingOfFacilitiesEtcInd>false</SharingOfFacilitiesEtcInd>
+        <RelationshipsNonchrtblEOInd>false</RelationshipsNonchrtblEOInd>
+      </TrnsfrTransRlnNonchrtblEOGrp>
+    </IRS990PF>
+    <IRS990ScheduleB documentId="IRS990ScheduleB">
+      <Organization501c3ExemptPFInd>X</Organization501c3ExemptPFInd>
+      <GeneralRuleInd>X</GeneralRuleInd>
+      <ContributorInformationGrp>
+        <ContributorNum>1</ContributorNum>
+        <ContributorPersonNm>DARLENE FUNCHES</ContributorPersonNm>
+        <ContributorUSAddress>
+          <AddressLine1Txt>217 GRAFTON PLACE</AddressLine1Txt>
+          <CityNm>MATTESON</CityNm>
+          <StateAbbreviationCd>IL</StateAbbreviationCd>
+          <ZIPCd>60443</ZIPCd>
+        </ContributorUSAddress>
+        <TotalContributionsAmt>9518</TotalContributionsAmt>
+        <PersonContributionInd>X</PersonContributionInd>
+      </ContributorInformationGrp>
+      <ContributorInformationGrp>
+        <ContributorNum>2</ContributorNum>
+        <ContributorPersonNm>SIOHVAUGHN FUNCHES</ContributorPersonNm>
+        <ContributorUSAddress>
+          <AddressLine1Txt>289 JONESBORO ROAD STE 149</AddressLine1Txt>
+          <CityNm>MCDONOUGH</CityNm>
+          <StateAbbreviationCd>GA</StateAbbreviationCd>
+          <ZIPCd>30253</ZIPCd>
+        </ContributorUSAddress>
+        <TotalContributionsAmt>23400</TotalContributionsAmt>
+        <PersonContributionInd>X</PersonContributionInd>
+      </ContributorInformationGrp>
+    </IRS990ScheduleB>
+    <DepreciationSchedule documentId="DepreciationSchedule">
+      <DepreciationPropertyGrp>
+        <PropertyDesc>2015 CHEVY</PropertyDesc>
+        <AcquiredDt>2017-11-30</AcquiredDt>
+        <CostOrOtherBasisAmt>48306</CostOrOtherBasisAmt>
+        <PriorYearDepreciationAmt>21197</PriorYearDepreciationAmt>
+        <ComputationMethodTxt>SL</ComputationMethodTxt>
+        <LifeRt>5</LifeRt>
+        <CurrentYearExpenseAmt>1875</CurrentYearExpenseAmt>
+        <NetInvestmentIncomeAmt>0</NetInvestmentIncomeAmt>
+        <AdjustedNetIncomeAmt>0</AdjustedNetIncomeAmt>
+      </DepreciationPropertyGrp>
+      <DepreciationPropertyGrp>
+        <PropertyDesc>2019 JEEP</PropertyDesc>
+        <AcquiredDt>2023-11-13</AcquiredDt>
+        <CostOrOtherBasisAmt>43128</CostOrOtherBasisAmt>
+        <PriorYearDepreciationAmt>1078</PriorYearDepreciationAmt>
+        <ComputationMethodTxt>SL</ComputationMethodTxt>
+        <LifeRt>5</LifeRt>
+        <CurrentYearExpenseAmt>8626</CurrentYearExpenseAmt>
+        <NetInvestmentIncomeAmt>0</NetInvestmentIncomeAmt>
+        <AdjustedNetIncomeAmt>0</AdjustedNetIncomeAmt>
+      </DepreciationPropertyGrp>
+      <DepreciationPropertyGrp>
+        <PropertyDesc>2018 TESLA MODEL X</PropertyDesc>
+        <AcquiredDt>2023-12-22</AcquiredDt>
+        <CostOrOtherBasisAmt>47153</CostOrOtherBasisAmt>
+        <PriorYearDepreciationAmt>1179</PriorYearDepreciationAmt>
+        <ComputationMethodTxt>SL</ComputationMethodTxt>
+        <LifeRt>5</LifeRt>
+        <CurrentYearExpenseAmt>9431</CurrentYearExpenseAmt>
+        <NetInvestmentIncomeAmt>0</NetInvestmentIncomeAmt>
+        <AdjustedNetIncomeAmt>0</AdjustedNetIncomeAmt>
+      </DepreciationPropertyGrp>
+      <DepreciationPropertyGrp>
+        <PropertyDesc>2301 S ATLANTIC AVE UNIT 429</PropertyDesc>
+        <AcquiredDt>2024-07-30</AcquiredDt>
+        <CostOrOtherBasisAmt>125000</CostOrOtherBasisAmt>
+        <ComputationMethodTxt>ARP</ComputationMethodTxt>
+        <LifeRt>39</LifeRt>
+        <CurrentYearExpenseAmt>1469</CurrentYearExpenseAmt>
+        <NetInvestmentIncomeAmt>0</NetInvestmentIncomeAmt>
+        <AdjustedNetIncomeAmt>0</AdjustedNetIncomeAmt>
+      </DepreciationPropertyGrp>
+    </DepreciationSchedule>
+    <LandEtcSchedule2 documentId="LandEtcSchedule2">
+      <LandEtcGrp>
+        <CategoryOrItemTxt>2015 CHEVY</CategoryOrItemTxt>
+        <CostOrOtherBasisAmt>48306</CostOrOtherBasisAmt>
+        <AccumulatedDepreciationAmt>23072</AccumulatedDepreciationAmt>
+        <BookValueAmt>25234</BookValueAmt>
+        <EOYFMVAmt>0</EOYFMVAmt>
+      </LandEtcGrp>
+      <LandEtcGrp>
+        <CategoryOrItemTxt>2019 JEEP</CategoryOrItemTxt>
+        <CostOrOtherBasisAmt>43128</CostOrOtherBasisAmt>
+        <AccumulatedDepreciationAmt>9704</AccumulatedDepreciationAmt>
+        <BookValueAmt>33424</BookValueAmt>
+        <EOYFMVAmt>0</EOYFMVAmt>
+      </LandEtcGrp>
+      <LandEtcGrp>
+        <CategoryOrItemTxt>2018 TESLA</CategoryOrItemTxt>
+        <CostOrOtherBasisAmt>47153</CostOrOtherBasisAmt>
+        <AccumulatedDepreciationAmt>10610</AccumulatedDepreciationAmt>
+        <BookValueAmt>36543</BookValueAmt>
+        <EOYFMVAmt>0</EOYFMVAmt>
+      </LandEtcGrp>
+      <LandEtcGrp>
+        <CategoryOrItemTxt>BEACH CONDO</CategoryOrItemTxt>
+        <CostOrOtherBasisAmt>125000</CostOrOtherBasisAmt>
+        <AccumulatedDepreciationAmt>1469</AccumulatedDepreciationAmt>
+        <BookValueAmt>123531</BookValueAmt>
+        <EOYFMVAmt>0</EOYFMVAmt>
+      </LandEtcGrp>
+    </LandEtcSchedule2>
+    <OtherExpensesSchedule documentId="OtherExpensesSchedule">
+      <OtherExpensesScheduleGrp>
+        <Desc>REGISTRATION FEES</Desc>
+        <RevenueAndExpensesPerBooksAmt>727</RevenueAndExpensesPerBooksAmt>
+        <NetInvestmentIncomeAmt>0</NetInvestmentIncomeAmt>
+        <AdjustedNetIncomeAmt>0</AdjustedNetIncomeAmt>
+        <DisbursementsCharitablePrpsAmt>0</DisbursementsCharitablePrpsAmt>
+      </OtherExpensesScheduleGrp>
+      <OtherExpensesScheduleGrp>
+        <Desc>DOMAIN AND HOSTING</Desc>
+        <RevenueAndExpensesPerBooksAmt>350</RevenueAndExpensesPerBooksAmt>
+        <NetInvestmentIncomeAmt>0</NetInvestmentIncomeAmt>
+        <AdjustedNetIncomeAmt>0</AdjustedNetIncomeAmt>
+        <DisbursementsCharitablePrpsAmt>0</DisbursementsCharitablePrpsAmt>
+      </OtherExpensesScheduleGrp>
+      <OtherExpensesScheduleGrp>
+        <Desc>DUES AND SUBSCRIPTIONS</Desc>
+        <RevenueAndExpensesPerBooksAmt>880</RevenueAndExpensesPerBooksAmt>
+        <NetInvestmentIncomeAmt>0</NetInvestmentIncomeAmt>
+        <AdjustedNetIncomeAmt>0</AdjustedNetIncomeAmt>
+        <DisbursementsCharitablePrpsAmt>0</DisbursementsCharitablePrpsAmt>
+      </OtherExpensesScheduleGrp>
+      <OtherExpensesScheduleGrp>
+        <Desc>POSTAGE AND PO BOX</Desc>
+        <RevenueAndExpensesPerBooksAmt>963</RevenueAndExpensesPerBooksAmt>
+        <NetInvestmentIncomeAmt>0</NetInvestmentIncomeAmt>
+        <AdjustedNetIncomeAmt>0</AdjustedNetIncomeAmt>
+        <DisbursementsCharitablePrpsAmt>0</DisbursementsCharitablePrpsAmt>
+      </OtherExpensesScheduleGrp>
+      <OtherExpensesScheduleGrp>
+        <Desc>OFFICE EXPENSES</Desc>
+        <RevenueAndExpensesPerBooksAmt>160</RevenueAndExpensesPerBooksAmt>
+        <NetInvestmentIncomeAmt>0</NetInvestmentIncomeAmt>
+        <AdjustedNetIncomeAmt>0</AdjustedNetIncomeAmt>
+        <DisbursementsCharitablePrpsAmt>0</DisbursementsCharitablePrpsAmt>
+      </OtherExpensesScheduleGrp>
+      <OtherExpensesScheduleGrp>
+        <Desc>TELEPHONE</Desc>
+        <RevenueAndExpensesPerBooksAmt>636</RevenueAndExpensesPerBooksAmt>
+        <NetInvestmentIncomeAmt>0</NetInvestmentIncomeAmt>
+        <AdjustedNetIncomeAmt>0</AdjustedNetIncomeAmt>
+        <DisbursementsCharitablePrpsAmt>0</DisbursementsCharitablePrpsAmt>
+      </OtherExpensesScheduleGrp>
+      <OtherExpensesScheduleGrp>
+        <Desc>VEHICLE EXPENSES</Desc>
+        <RevenueAndExpensesPerBooksAmt>4942</RevenueAndExpensesPerBooksAmt>
+        <NetInvestmentIncomeAmt>0</NetInvestmentIncomeAmt>
+        <AdjustedNetIncomeAmt>0</AdjustedNetIncomeAmt>
+        <DisbursementsCharitablePrpsAmt>0</DisbursementsCharitablePrpsAmt>
+      </OtherExpensesScheduleGrp>
+      <OtherExpensesScheduleGrp>
+        <Desc>PODCAST PRODUCTION</Desc>
+        <RevenueAndExpensesPerBooksAmt>3616</RevenueAndExpensesPerBooksAmt>
+        <NetInvestmentIncomeAmt>0</NetInvestmentIncomeAmt>
+        <AdjustedNetIncomeAmt>0</AdjustedNetIncomeAmt>
+        <DisbursementsCharitablePrpsAmt>0</DisbursementsCharitablePrpsAmt>
+      </OtherExpensesScheduleGrp>
+      <OtherExpensesScheduleGrp>
+        <Desc>RENTAL EXPENSES</Desc>
+        <RevenueAndExpensesPerBooksAmt>12815</RevenueAndExpensesPerBooksAmt>
+        <NetInvestmentIncomeAmt>0</NetInvestmentIncomeAmt>
+        <AdjustedNetIncomeAmt>0</AdjustedNetIncomeAmt>
+        <DisbursementsCharitablePrpsAmt>0</DisbursementsCharitablePrpsAmt>
+      </OtherExpensesScheduleGrp>
+    </OtherExpensesSchedule>
+    <SubstantialContributorsSch documentId="SubstantialContributorsSch">
+      <SubstantialContributorDetail>
+        <PersonNm>DARLENE FUNCHES</PersonNm>
+        <USAddress>
+          <AddressLine1Txt>217 GRAFTON PLACE</AddressLine1Txt>
+          <CityNm>MATTESON</CityNm>
+          <StateAbbreviationCd>IL</StateAbbreviationCd>
+          <ZIPCd>60443</ZIPCd>
+        </USAddress>
+      </SubstantialContributorDetail>
+      <SubstantialContributorDetail>
+        <PersonNm>ZAIRE B WADE</PersonNm>
+        <USAddress>
+          <AddressLine1Txt>6263 TOPANGA CANYON BLVD APT 722</AddressLine1Txt>
+          <CityNm>WOODLAND HILLS</CityNm>
+          <StateAbbreviationCd>CA</StateAbbreviationCd>
+          <ZIPCd>91367</ZIPCd>
+        </USAddress>
+      </SubstantialContributorDetail>
+      <SubstantialContributorDetail>
+        <PersonNm>SIOHVAUGH FUNCHES</PersonNm>
+        <USAddress>
+          <AddressLine1Txt>289 JONEBORO ROAD STE 149</AddressLine1Txt>
+          <CityNm>MCDONOUGH</CityNm>
+          <StateAbbreviationCd>GA</StateAbbreviationCd>
+          <ZIPCd>30253</ZIPCd>
+        </USAddress>
+      </SubstantialContributorDetail>
+    </SubstantialContributorsSch>
+  </ReturnData>
+</Return>
