@@ -1,4 +1,5 @@
 node_modules/
+dist/
 uploads/
 matches/
 *.log
@@ -7,5 +8,7 @@ matches/
 .claude/
 results/
 tmp/
-*.csv
-*.txt
+.pfund/
+apps/nonprofit/data/
+apps/nonprofit/output/
+apps/nonprofit/output-fresh/

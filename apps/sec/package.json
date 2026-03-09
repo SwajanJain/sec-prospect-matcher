@@ -1,0 +1,15 @@
+{
+  "name": "@pm/sec",
+  "version": "1.0.0",
+  "private": true,
+  "description": "SEC EDGAR filing matcher — document intelligence for prospect identification.",
+  "main": "UnifiedMatcher.js",
+  "scripts": {
+    "start": "node run-sec-matcher.js"
+  },
+  "dependencies": {
+    "ahocorasick": "^1.0.2",
+    "csv-parser": "^3.0.0",
+    "csv-writer": "^1.6.0"
+  }
+}

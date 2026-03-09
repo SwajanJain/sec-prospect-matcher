@@ -1,0 +1,22 @@
+{
+  "name": "@pm/political",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Political funding matcher — contribution record matching and enrichment.",
+  "type": "commonjs",
+  "bin": {
+    "pfund": "./dist/src/cli/index.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf dist",
+    "test": "npm run build && node --test dist/tests/**/*.test.js"
+  },
+  "dependencies": {
+    "@pm/core": "*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.10",
+    "typescript": "^5.8.2"
+  }
+}
