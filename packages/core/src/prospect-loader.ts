@@ -11,8 +11,9 @@ const COLUMN_ALIASES: Record<string, string[]> = {
   aliasName: ["prospect_alias_name", "alias_name", "alias_names", "aliases"],
   company: ["company", "employer", "organization", "org", "prospect_company"],
   otherCompany: ["prospect_other_company", "other_company", "other_companies", "custom_companies"],
-  city: ["city"],
+  city: ["city", "location"],
   state: ["state"],
+  country: ["country"],
   externalId: ["external_id", "externalid", "crm_id"],
 };
 
@@ -47,6 +48,7 @@ export function loadProspectsDetailed(csvPath: string): {
   const otherCompanyIndex = findColumn(headers, COLUMN_ALIASES.otherCompany);
   const cityIndex = findColumn(headers, COLUMN_ALIASES.city);
   const stateIndex = findColumn(headers, COLUMN_ALIASES.state);
+  const countryIndex = findColumn(headers, COLUMN_ALIASES.country);
   const externalIdIndex = findColumn(headers, COLUMN_ALIASES.externalId);
 
   if (nameIndex === -1) {
@@ -93,6 +95,7 @@ export function loadProspectsDetailed(csvPath: string): {
       allCompaniesNormalized: allCompanies.map((c) => stripLegalSuffixes(c)),
       city: cityIndex >= 0 ? columns[cityIndex] ?? "" : "",
       state: stateIndex >= 0 ? columns[stateIndex] ?? "" : "",
+      country: countryIndex >= 0 ? columns[countryIndex] ?? "" : "",
       externalId: externalIdIndex >= 0 ? columns[externalIdIndex] ?? "" : "",
     });
   }

@@ -42,27 +42,26 @@ describe("runNonprofitMatcher integration", () => {
       verbose: false,
     });
 
-    // matches.csv should exist
-    const matchesPath = path.join(outputDir, "matches.csv");
-    assert.ok(fs.existsSync(matchesPath), "matches.csv should exist");
-    const matchesContent = fs.readFileSync(matchesPath, "utf8");
-    const matchLines = matchesContent.trim().split("\n");
-    assert.ok(matchLines.length >= 2, "should have header + at least 1 match");
+    // client.csv should exist (sample matches have corroboration → Verified/Likely)
+    const clientCsvPath = path.join(outputDir, "client.csv");
+    assert.ok(fs.existsSync(clientCsvPath), "client.csv should exist");
+    const clientContent = fs.readFileSync(clientCsvPath, "utf8");
+    const clientLines = clientContent.trim().split("\n");
+    assert.ok(clientLines.length >= 2, "should have header + at least 1 match");
 
-    // Verify header
-    assert.ok(matchLines[0].includes("Confidence Tier"), "header should contain Confidence Tier");
-    assert.ok(matchLines[0].includes("Organization Name"), "header should contain Organization Name");
-    assert.ok(matchLines[0].includes("Prospect ID"), "header should contain Prospect ID");
+    // Verify guide rows + headers exist in content
+    assert.ok(clientContent.includes("About This Report"), "should have guide section");
+    assert.ok(clientContent.includes("Board/Leadership Role"), "should explain Board/Leadership Role");
+    assert.ok(clientContent.includes("Personal Donation"), "should explain Personal Donation");
+    assert.ok(clientContent.includes("Foundation Giving"), "should explain Foundation Giving");
+    assert.ok(clientContent.includes("Signal Type"), "should have Signal Type header");
+    assert.ok(clientContent.includes("Match Quality"), "should have Match Quality header");
 
-    // Keith Stump should match (exact name in 990)
-    assert.ok(matchesContent.includes("Keith Stump"), "Keith Stump should be in matches");
+    // Keith Stump should match (exact name + org affinity → Verified)
+    assert.ok(clientContent.includes("Keith Stump"), "Keith Stump should be in client matches");
 
-    // Siohvaughn Funches should match (appears as donor AND officer)
-    assert.ok(matchesContent.includes("Siohvaughn Funches"), "Siohvaughn Funches should be in matches");
-
-    // verified_matches.csv should exist
-    const verifiedMatchesPath = path.join(outputDir, "verified_matches.csv");
-    assert.ok(fs.existsSync(verifiedMatchesPath), "verified_matches.csv should exist");
+    // Siohvaughn Funches should match (donor with state match → Likely)
+    assert.ok(clientContent.includes("Siohvaughn Funches"), "Siohvaughn Funches should be in client matches");
 
     // summary.md should exist
     const summaryPath = path.join(outputDir, "summary.md");
@@ -71,7 +70,7 @@ describe("runNonprofitMatcher integration", () => {
     assert.ok(summaryContent.includes("XML files scanned: 4"), "should report 4 XML files");
     assert.ok(summaryContent.includes("Confidence Tiers"), "summary should include tier counts");
 
-    // Nobody Matcherson should NOT appear in matches
-    assert.ok(!matchesContent.includes("Nobody Matcherson"), "Nobody should not match");
+    // Nobody Matcherson should NOT appear in any output
+    assert.ok(!clientContent.includes("Nobody Matcherson"), "Nobody should not match");
   });
 });

@@ -21,6 +21,7 @@ function makeProspect(overrides: Partial<ProspectRecord> = {}): ProspectRecord {
     allCompaniesNormalized: ["acme health"],
     city: "",
     state: "CA",
+    country: "",
     externalId: "",
     ...overrides,
   };

@@ -34,6 +34,7 @@ export interface ProspectRecord {
   allCompaniesNormalized: string[];
   city: string;
   state: string;
+  country: string;
   externalId: string;
 }
 

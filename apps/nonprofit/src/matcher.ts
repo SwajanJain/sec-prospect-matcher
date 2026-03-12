@@ -5,6 +5,7 @@ import type { IndexedProspect, VariantType } from "@pm/core";
 import { parseIrsXml } from "./xml-parser";
 import { compareMatchResults, scoreNonprofitMatch } from "./scorer";
 import {
+  writeClientCsv,
   writeGrantsCsv,
   writeMatchesCsv,
   writeSummary,
@@ -127,7 +128,8 @@ function buildFoundationGrants(
   grantsByEin: Map<string, GrantRecord[]>,
 ): {
   grants: EnrichedGrant[];
-  verifiedGrants: EnrichedGrant[];
+  clientGrants: EnrichedGrant[];
+  riskyGrants: EnrichedGrant[];
   ambiguousFoundationCount: number;
 } {
   const foundationMatches = new Map<string, NonprofitMatchResult[]>();
@@ -139,7 +141,8 @@ function buildFoundationGrants(
   }
 
   const grants: EnrichedGrant[] = [];
-  const verifiedGrants: EnrichedGrant[] = [];
+  const clientGrants: EnrichedGrant[] = [];
+  const riskyGrants: EnrichedGrant[] = [];
   let ambiguousFoundationCount = 0;
 
   for (const [foundationEin, foundationRows] of foundationMatches.entries()) {
@@ -179,11 +182,15 @@ function buildFoundationGrants(
         taxPeriod: grant.filing.taxPeriodEnd,
       };
       grants.push(row);
-      if (!ambiguous && foundationMatchTier === "Verified") verifiedGrants.push(row);
+      if (!ambiguous && (foundationMatchTier === "Verified" || foundationMatchTier === "Likely")) {
+        clientGrants.push(row);
+      } else {
+        riskyGrants.push(row);
+      }
     }
   }
 
-  return { grants, verifiedGrants, ambiguousFoundationCount };
+  return { grants, clientGrants, riskyGrants, ambiguousFoundationCount };
 }
 
 export function runNonprofitMatcher(options: {
@@ -307,6 +314,8 @@ export function runNonprofitMatcher(options: {
   const dedupedMatches = dedupeMatchResults(resolvedCollisions.accepted).sort(compareMatchResults);
   const dedupedReview = dedupeMatchResults([...review, ...resolvedCollisions.movedToReview]).sort(compareMatchResults);
   const verifiedMatches = dedupedMatches.filter((row) => row.confidenceTier === "Verified");
+  const clientMatches = dedupedMatches.filter((row) => row.confidenceTier === "Verified" || row.confidenceTier === "Likely");
+  const riskyMatches = dedupedMatches.filter((row) => row.confidenceTier === "Risky");
 
   log.info(`Matches: ${dedupedMatches.length}, Review: ${dedupedReview.length}`);
   log.info(`Unique prospects matched: ${matchedProspectIds.size}`);
@@ -325,28 +334,32 @@ export function runNonprofitMatcher(options: {
 
   fs.mkdirSync(options.outputDir, { recursive: true });
 
-  const matchesPath = path.join(options.outputDir, "matches.csv");
-  writeMatchesCsv(matchesPath, dedupedMatches);
-  log.info(`Wrote ${dedupedMatches.length} matches to ${matchesPath}`);
+  // Client-ready CSV — unified format with Signal Type column (Verified + Likely + their grants)
+  const clientCsvPath = path.join(options.outputDir, "client.csv");
+  writeClientCsv(clientCsvPath, clientMatches, foundationGrants.clientGrants);
+  log.info(`Wrote client.csv: ${clientMatches.length} matches + ${foundationGrants.clientGrants.length} grants`);
 
-  const verifiedMatchesPath = path.join(options.outputDir, "verified_matches.csv");
-  writeMatchesCsv(verifiedMatchesPath, verifiedMatches);
-  log.info(`Wrote ${verifiedMatches.length} verified matches to ${verifiedMatchesPath}`);
+  // Risky CSV — same unified format (name-only matches + risky/ambiguous grants)
+  const riskyCsvPath = path.join(options.outputDir, "risky.csv");
+  writeClientCsv(riskyCsvPath, riskyMatches, foundationGrants.riskyGrants);
+  log.info(`Wrote risky.csv: ${riskyMatches.length} matches + ${foundationGrants.riskyGrants.length} grants`);
 
+  // Review CSV — same unified format (collisions, weak roles, common names)
   if (dedupedReview.length > 0) {
-    const reviewPath = path.join(options.outputDir, "review.csv");
-    writeMatchesCsv(reviewPath, dedupedReview);
-    log.info(`Wrote ${dedupedReview.length} review items to ${reviewPath}`);
+    const reviewCsvPath = path.join(options.outputDir, "review.csv");
+    writeClientCsv(reviewCsvPath, dedupedReview, []);
+    log.info(`Wrote review.csv: ${dedupedReview.length} items`);
   }
 
-  if (foundationGrants.grants.length > 0) {
-    const grantsPath = path.join(options.outputDir, "grants.csv");
-    writeGrantsCsv(grantsPath, foundationGrants.grants);
-    log.info(`Wrote ${foundationGrants.grants.length} grants to ${grantsPath}`);
+  // Debug CSV — full diagnostic columns (internal use only)
+  const debugMatchesPath = path.join(options.outputDir, "debug_matches.csv");
+  writeMatchesCsv(debugMatchesPath, dedupedMatches);
+  log.info(`Wrote ${dedupedMatches.length} debug matches to ${debugMatchesPath}`);
 
-    const grantsVerifiedPath = path.join(options.outputDir, "grants_verified.csv");
-    writeGrantsCsv(grantsVerifiedPath, foundationGrants.verifiedGrants);
-    log.info(`Wrote ${foundationGrants.verifiedGrants.length} verified grants to ${grantsVerifiedPath}`);
+  if (foundationGrants.grants.length > 0) {
+    const debugGrantsPath = path.join(options.outputDir, "debug_grants.csv");
+    writeGrantsCsv(debugGrantsPath, foundationGrants.grants);
+    log.info(`Wrote ${foundationGrants.grants.length} debug grants to ${debugGrantsPath}`);
   }
 
   const summaryPath = path.join(options.outputDir, "summary.md");

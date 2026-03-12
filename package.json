@@ -12,9 +12,11 @@
     "test": "npm test --workspaces",
     "build:core": "npm run build -w @pm/core",
     "build:political": "npm run build -w @pm/political",
+    "build:real-estate": "npm run build -w @pm/real-estate",
     "test:core": "npm test -w @pm/core",
     "test:political": "npm test -w @pm/political",
     "build:nonprofit": "npm run build -w @pm/nonprofit",
-    "test:nonprofit": "npm test -w @pm/nonprofit"
+    "test:nonprofit": "npm test -w @pm/nonprofit",
+    "test:real-estate": "npm test -w @pm/real-estate"
   }
 }
