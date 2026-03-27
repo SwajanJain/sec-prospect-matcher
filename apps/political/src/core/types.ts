@@ -67,6 +67,9 @@ export interface MatchFeatures {
   exactFullName: boolean;
   exactNormalizedName: boolean;
   nicknameMatch: boolean;
+  aliasExactNameMatch: boolean;
+  aliasFirstLastMatch: boolean;
+  aliasNicknameMatch: boolean;
   middleNameAgrees: boolean;
   middleNameConflicts: boolean;
   suffixAgrees: boolean;

@@ -1,5 +1,5 @@
 import { EmployerMatchResult, MatchFeatures, NormalizedContribution, ProspectRecord, VariantType } from "../core/types";
-import { matchEmployer, matchLocation } from "@pm/core";
+import { matchEmployer, matchLocation, parsePersonName, NICKNAME_LOOKUP } from "@pm/core";
 import { matchOccupation } from "./occupation-matcher";
 
 export interface NameStats {
@@ -28,6 +28,14 @@ function bestEmployerMatch(prospect: ProspectRecord, donorEmployer: string): Emp
   return best!;
 }
 
+function isNicknameOf(name: string, otherName: string): boolean {
+  const a = name.toLowerCase();
+  const b = otherName.toLowerCase();
+  if (a === b) return true;
+  const nicknames = NICKNAME_LOOKUP[a];
+  return nicknames ? nicknames.includes(b) : false;
+}
+
 export function buildMatchFeatures(
   prospect: ProspectRecord,
   record: NormalizedContribution,
@@ -46,6 +54,44 @@ export function buildMatchFeatures(
   const middleNameAgrees = Boolean(prospect.middleName && record.middleName && prospect.middleInitial === record.middleInitial);
   const suffixAgrees = Boolean(prospect.suffix && record.suffix && prospect.suffix === record.suffix);
 
+  // --- Name match hierarchy ---
+  const exactFullName = prospect.nameNormalizedFull === record.donorNameNormalizedFull;
+  const exactNormalizedName = prospect.nameNormalized === record.donorNameNormalized;
+
+  // If main name didn't match, check aliases
+  let aliasExactNameMatch = false;
+  let aliasFirstLastMatch = false;
+  let aliasNicknameMatch = false;
+  let nicknameMatch = false;
+
+  if (!exactFullName && !exactNormalizedName && prospect.aliasNames.length > 0) {
+    for (const alias of prospect.aliasNames) {
+      const parsed = parsePersonName(alias);
+      if (!parsed) continue;
+      if (parsed.normalizedFull === record.donorNameNormalizedFull) {
+        aliasExactNameMatch = true;
+        break;
+      }
+      if (!aliasFirstLastMatch && parsed.normalized === record.donorNameNormalized) {
+        aliasFirstLastMatch = true;
+      }
+    }
+  }
+
+  // Nickname detection: is it main name nickname or alias nickname?
+  if (!exactFullName && !exactNormalizedName && !aliasExactNameMatch && !aliasFirstLastMatch) {
+    if (variantType === "nickname") {
+      if (isNicknameOf(prospect.firstName, record.firstName)) {
+        nicknameMatch = true;
+      } else {
+        aliasNicknameMatch = true;
+      }
+    } else if (variantType !== "exact") {
+      // suffix_stripped, middle_dropped, dehyphenated, initial_variant
+      nicknameMatch = true;
+    }
+  }
+
   const identitySignalCount = [
     employerResult.status === "confirmed" || employerResult.status === "likely",
     locationMatch.status === "zip_match" || locationMatch.status === "city_state_match",
@@ -55,9 +101,12 @@ export function buildMatchFeatures(
   ].filter(Boolean).length;
 
   return {
-    exactFullName: prospect.nameNormalizedFull === record.donorNameNormalizedFull,
-    exactNormalizedName: prospect.nameNormalized === record.donorNameNormalized,
-    nicknameMatch: variantType === "nickname",
+    exactFullName,
+    exactNormalizedName,
+    nicknameMatch,
+    aliasExactNameMatch,
+    aliasFirstLastMatch,
+    aliasNicknameMatch,
     middleNameAgrees,
     middleNameConflicts:
       Boolean(prospect.middleInitial && record.middleInitial) && prospect.middleInitial !== record.middleInitial,

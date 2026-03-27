@@ -1,6 +1,5 @@
 import type { ProspectRecord } from "@pm/core";
 import type { MatchFeatures, NormalizedContribution } from "../core/types";
-import { parsePersonName } from "@pm/core";
 import { classifyOccupation } from "./occupation-matcher";
 
 export function generateMatchTags(
@@ -10,26 +9,19 @@ export function generateMatchTags(
 ): string[] {
   const tags: string[] = [];
 
-  // --- Name tags ---
+  // --- Name tags (hierarchy) ---
   if (features.exactFullName) {
     tags.push("exact_name");
   } else if (features.exactNormalizedName) {
     tags.push("first_last_name_match");
+  } else if (features.aliasExactNameMatch) {
+    tags.push("alias_exact_name_match");
+  } else if (features.aliasFirstLastMatch) {
+    tags.push("alias_first_last_name_match");
   } else if (features.nicknameMatch) {
     tags.push("partial_name_match");
-  } else if (features.variantType !== "exact") {
-    tags.push("partial_name_match");
-  }
-
-  // Alias detection — if main name didn't match, check if an alias did
-  if (!features.exactNormalizedName && !features.exactFullName && prospect.aliasNames.length > 0) {
-    for (const alias of prospect.aliasNames) {
-      const parsed = parsePersonName(alias);
-      if (parsed && parsed.normalized === record.donorNameNormalized) {
-        tags.push("alias_name_match");
-        break;
-      }
-    }
+  } else if (features.aliasNicknameMatch) {
+    tags.push("alias_partial_name_match");
   }
 
   // --- Company tags ---

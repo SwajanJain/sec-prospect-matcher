@@ -10,6 +10,9 @@ function makeFeatures(overrides: Partial<MatchFeatures> = {}): MatchFeatures {
     exactFullName: false,
     exactNormalizedName: true,
     nicknameMatch: false,
+    aliasExactNameMatch: false,
+    aliasFirstLastMatch: false,
+    aliasNicknameMatch: false,
     middleNameAgrees: false,
     middleNameConflicts: false,
     suffixAgrees: false,
@@ -205,4 +208,48 @@ test("no negative scoring: non_informative employer adds 0", () => {
   });
   const score = scoreMatch(features);
   assert.equal(score.matchConfidence, 40);
+});
+
+test("alias exact name match scores 40", () => {
+  const features = makeFeatures({
+    exactNormalizedName: false,
+    aliasExactNameMatch: true,
+    identitySignalCount: 0,
+  });
+  const score = scoreMatch(features);
+  assert.equal(score.matchConfidence, 40);
+});
+
+test("alias first+last match scores 35", () => {
+  const features = makeFeatures({
+    exactNormalizedName: false,
+    aliasFirstLastMatch: true,
+    identitySignalCount: 0,
+  });
+  const score = scoreMatch(features);
+  assert.equal(score.matchConfidence, 35);
+});
+
+test("alias nickname match scores 15", () => {
+  const features = makeFeatures({
+    exactNormalizedName: false,
+    aliasNicknameMatch: true,
+    identitySignalCount: 0,
+  });
+  const score = scoreMatch(features);
+  assert.equal(score.matchConfidence, 15);
+});
+
+test("alias exact + city_state + employer confirmed = Verified", () => {
+  const features = makeFeatures({
+    exactNormalizedName: false,
+    aliasExactNameMatch: true,
+    employerResult: { status: "confirmed", note: "match", scoreImpact: 35 },
+    locationMatch: { status: "city_state_match", detail: "" },
+    identitySignalCount: 2,
+  });
+  const score = scoreMatch(features);
+  // 40 + 35 + 15 + 5 (convergence) = 95
+  assert.equal(score.matchConfidence, 95);
+  assert.equal(score.matchQuality, "Verified");
 });

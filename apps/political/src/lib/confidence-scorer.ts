@@ -10,10 +10,19 @@ export function scoreMatch(features: MatchFeatures): MatchScore {
     reasons.push("exact_name");
   } else if (features.exactNormalizedName) {
     score += 40;
-    reasons.push("normalized_name");
+    reasons.push("first_last");
+  } else if (features.aliasExactNameMatch) {
+    score += 40;
+    reasons.push("alias_exact");
+  } else if (features.aliasFirstLastMatch) {
+    score += 35;
+    reasons.push("alias_first_last");
   } else if (features.nicknameMatch) {
     score += 20;
     reasons.push("nickname");
+  } else if (features.aliasNicknameMatch) {
+    score += 15;
+    reasons.push("alias_nickname");
   }
 
   // Middle name / suffix (positive only)
