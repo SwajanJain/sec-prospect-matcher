@@ -46,22 +46,27 @@ function amountLabel(recordType: string): string {
 function buildMatchQuality(match: NonprofitMatchResult): string {
   const tier = match.confidenceTier;
   const signals = match.evidenceSignals;
+  const hasAddressMatch = signals.some((s) => s.startsWith("person_"));
 
   if (tier === "Verified") {
+    if (hasAddressMatch && signals.includes("direct_org_affinity")) return "Verified — Address and company confirmed";
+    if (hasAddressMatch && signals.includes("family_foundation_affinity")) return "Verified — Address match + family foundation";
     if (signals.includes("direct_org_affinity")) return "Verified — Company confirmed as officer";
-    if (signals.includes("family_foundation_affinity")) return "Verified — Family foundation match";
-    if (signals.includes("direct_named_donor")) return "Verified — Named donor with corroboration";
-    return "Verified — Multiple corroborating signals";
+    if (signals.includes("family_foundation_affinity") && hasAddressMatch) return "Verified — Family foundation + address match";
+    if (signals.includes("family_foundation_affinity")) return "Verified — Family foundation + identity corroborated";
+    if (signals.includes("direct_named_donor")) return "Verified — Named donor with identity confirmed";
+    return "Verified — Multiple identity signals confirmed";
   }
   if (tier === "Likely") {
+    if (hasAddressMatch) return "Likely — Address corroborates identity";
     if (signals.includes("strong_org_affinity")) return "Likely — Strong org name match";
     if (signals.includes("family_foundation_affinity")) return "Likely — Family foundation match";
     if (signals.includes("direct_named_donor")) return "Likely — Named donor";
-    return "Likely — Corroborated match";
+    return "Likely — One corroborating signal";
   }
   if (tier === "Risky") {
-    if (signals.includes("direct_named_donor")) return "Risky — Donor, no corroboration";
-    return "Risky — Name match only, verify manually";
+    if (signals.includes("direct_named_donor")) return "Risky — Donor found but identity not verified";
+    return "Risky — Name match only, identity not verified";
   }
   // Review Needed
   if (match.reviewBucket === "duplicate_prospect_name") return "Review — Multiple prospects share this name";
@@ -101,6 +106,9 @@ export interface ClientRow {
   prospectId: string;
   prospectName: string;
   prospectCompany: string;
+  prospectCityState: string;
+  irsPersonName: string;
+  irsPersonAddress: string;
   confidenceTier: string;
   matchConfidence: number;
   matchQuality: string;
@@ -121,10 +129,14 @@ export interface ClientRow {
 const CLIENT_HEADERS = [
   // What kind of finding is this?
   "Signal Type",
-  // Who is this prospect?
+  // Who is this prospect? (Our data)
   "Prospect ID",
   "Prospect Name",
   "Prospect Company",
+  "Prospect City/State",
+  // What IRS filing says (Their data)
+  "IRS Person Name",
+  "IRS Person Address",
   // How confident are we?
   "Confidence Tier",
   "Match Confidence",
@@ -153,6 +165,9 @@ function matchToClientRow(match: NonprofitMatchResult): ClientRow {
     prospectId: match.prospectId,
     prospectName: match.prospectName,
     prospectCompany: match.prospectCompany,
+    prospectCityState: match.prospectCityState,
+    irsPersonName: match.irsPersonName,
+    irsPersonAddress: match.irsPersonAddress,
     confidenceTier: match.confidenceTier,
     matchConfidence: match.matchConfidence,
     matchQuality: buildMatchQuality(match),
@@ -176,7 +191,10 @@ function grantToClientRow(grant: EnrichedGrant): ClientRow {
     signalType: "Foundation Giving",
     prospectId: grant.matchedProspectIds.join("; "),
     prospectName: grant.matchedProspectNames.join("; "),
-    prospectCompany: "",
+    prospectCompany: grant.matchedProspectCompanies.join("; "),
+    prospectCityState: grant.matchedProspectCityStates.join("; "),
+    irsPersonName: grant.matchedIrsPersonNames.join("; "),
+    irsPersonAddress: grant.matchedIrsPersonAddresses.join("; "),
     confidenceTier: grant.foundationMatchTier,
     matchConfidence: 0,
     matchQuality: grant.foundationLinkStatus === "verified_foundation_link"
@@ -203,6 +221,9 @@ function clientRowToValues(row: ClientRow): string[] {
     row.prospectId,
     row.prospectName,
     row.prospectCompany,
+    row.prospectCityState,
+    row.irsPersonName,
+    row.irsPersonAddress,
     row.confidenceTier,
     String(row.matchConfidence),
     row.matchQuality,

@@ -29,6 +29,7 @@ function normalizeRecord(record: Record<string, unknown>): NormalizedContributio
 
   return {
     source: "FEC",
+    signalType: "contribution",
     sourceRecordId: String(record.sub_id || record.transaction_id || ""),
     sourceCycle: String(record.two_year_transaction_period || ""),
     sourceEntityType: String(record.entity_type || "IND"),

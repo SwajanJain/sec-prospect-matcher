@@ -25,8 +25,12 @@ export type ReviewBucket =
   | "common_name"
   | "insufficient_corroboration";
 export type LocationSupport =
-  | "strong_person_state"
-  | "weak_org_state"
+  | "person_full_address"
+  | "person_city_state_zip"
+  | "person_city_state"
+  | "person_state"
+  | "org_city_state"
+  | "org_state"
   | "mismatch"
   | "unknown";
 export type FoundationLinkStatus = "verified_foundation_link" | "ambiguous_foundation_link";
@@ -59,8 +63,10 @@ export interface NonprofitRecord {
   role: string;
   amount: number;
   hoursPerWeek: number;
+  street: string;
   city: string;
   state: string;
+  zip: string;
   personLocationSource: PersonLocationSource;
   recordFingerprint: string;
   withinFilingDuplicateCount: number;
@@ -84,6 +90,9 @@ export interface NonprofitMatchResult {
   prospectId: string;
   prospectName: string;
   prospectCompany: string;
+  prospectCityState: string;
+  irsPersonName: string;
+  irsPersonAddress: string;
   recordType: NonprofitSource;
   orgName: string;
   orgEin: string;
@@ -111,6 +120,10 @@ export interface NonprofitMatchResult {
 export interface EnrichedGrant {
   matchedProspectNames: string[];
   matchedProspectIds: string[];
+  matchedProspectCompanies: string[];
+  matchedProspectCityStates: string[];
+  matchedIrsPersonNames: string[];
+  matchedIrsPersonAddresses: string[];
   foundationName: string;
   foundationEin: string;
   foundationMatchTier: ConfidenceTier;

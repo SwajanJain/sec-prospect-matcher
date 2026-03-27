@@ -26,6 +26,10 @@ function buildFecLink(row: MatchResult): string {
   return `https://www.fec.gov/data/receipts/individual-contributions/?${params.toString()}`;
 }
 
+function formatSignalType(value: MatchResult["signalType"]): string {
+  return value === "registration" ? "Registration" : "Contribution";
+}
+
 function formatCurrency(amount: number): string {
   const sign = amount < 0 ? "-" : "";
   const abs = Math.abs(amount).toFixed(2);
@@ -34,33 +38,26 @@ function formatCurrency(amount: number): string {
   return `${sign}$${withCommas}.${decimal}`;
 }
 
-function formatSignalType(value: MatchResult["signalType"]): string {
-  return value === "registration" ? "Registration" : "Contribution";
-}
-
 const HEADERS = [
   "Prospect ID",
   "Prospect Name",
+  "Donor Name (FEC)",
   "Prospect Company",
-  "Signal Type",
+  "Donor Employer",
+  "Prospect Title",
+  "Donor Occupation",
+  "Prospect City/State",
+  "Donor City/State",
   "Donation Amount",
   "Donation Date",
   "Recipient",
+  "Party",
   "Candidate Name",
   "Candidate Office",
-  "Party",
   "Data Source",
   "Match Confidence",
-  "Match Quality",
-  "Donor Name (FEC)",
-  "Donor Employer (FEC)",
-  "Donor Occupation (FEC)",
-  "Donor City/State (FEC)",
-  "Prospect City/State",
-  "Employer Match",
-  "Location Match",
-  "Match Reason",
-  "Signal Tier",
+  "Match Tags",
+  "Signal Type",
   "Partisan Lean",
   "Flags",
   "Action",
@@ -74,26 +71,23 @@ export function writeMatchCsv(filePath: string, rows: MatchResult[]): void {
     lines.push([
       row.prospectId,
       row.prospectName,
+      row.donorNameFec,
       row.prospectCompany,
-      formatSignalType(row.signalType),
+      row.donorEmployer,
+      row.prospectTitle,
+      row.donorOccupation,
+      row.prospectCityState,
+      row.donorCityState,
       formatCurrency(row.donationAmount),
       row.donationDate,
       row.recipient,
+      row.party,
       row.candidateName,
       row.candidateOffice,
-      row.party,
       row.dataSource,
       row.matchConfidence,
-      row.matchQuality,
-      row.donorNameFec,
-      row.donorEmployer,
-      row.donorOccupation,
-      row.donorCityState,
-      row.prospectCityState,
-      row.employerMatchStatus,
-      row.locationMatchStatus,
-      row.matchReason,
-      row.signalTier,
+      row.matchTags.join(", "),
+      formatSignalType(row.signalType),
       row.partisanLean,
       row.flags.join("; "),
       row.action,

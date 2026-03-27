@@ -60,8 +60,12 @@ describe("runNonprofitMatcher integration", () => {
     // Keith Stump should match (exact name + org affinity → Verified)
     assert.ok(clientContent.includes("Keith Stump"), "Keith Stump should be in client matches");
 
-    // Siohvaughn Funches should match (donor with state match → Likely)
-    assert.ok(clientContent.includes("Siohvaughn Funches"), "Siohvaughn Funches should be in client matches");
+    // Siohvaughn Funches — has state match (1 identity signal) but no org/foundation affinity
+    // Under identity-first model, she's correctly "Risky" (name + state only)
+    const riskyCsvPath = path.join(outputDir, "risky.csv");
+    assert.ok(fs.existsSync(riskyCsvPath), "risky.csv should exist");
+    const riskyContent = fs.readFileSync(riskyCsvPath, "utf8");
+    assert.ok(riskyContent.includes("Siohvaughn Funches"), "Siohvaughn Funches should be in risky matches (identity not verified)");
 
     // summary.md should exist
     const summaryPath = path.join(outputDir, "summary.md");

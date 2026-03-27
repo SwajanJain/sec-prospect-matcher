@@ -172,8 +172,12 @@ export function scoreNonprofitMatch(
 
   const locationSupport = deriveLocationSupport(prospect, record);
   score += locationSupportScore(locationSupport);
-  if (locationSupport === "strong_person_state") evidenceSignals.push("same_person_state");
-  else if (locationSupport === "weak_org_state") evidenceSignals.push("same_org_state");
+  if (locationSupport === "person_full_address") evidenceSignals.push("person_full_address_match");
+  else if (locationSupport === "person_city_state_zip") evidenceSignals.push("person_city_state_zip_match");
+  else if (locationSupport === "person_city_state") evidenceSignals.push("person_city_state_match");
+  else if (locationSupport === "person_state") evidenceSignals.push("person_state_match");
+  else if (locationSupport === "org_city_state") evidenceSignals.push("org_city_state_match");
+  else if (locationSupport === "org_state") evidenceSignals.push("org_state_match");
   else if (locationSupport === "mismatch") conflictFlags.push("location_mismatch");
 
   score += repeatedHistoryScore(context, evidenceSignals);
@@ -196,10 +200,31 @@ export function scoreNonprofitMatch(
     score -= 22;
   }
 
-  const corroboratorCount = [
+  // Identity signals: independent data points beyond name that confirm
+  // the 990 record is about THIS prospect, not a different person with the same name.
+  const hasLocationIdentity = [
+    "person_full_address", "person_city_state_zip", "person_city_state", "person_state",
+  ].includes(locationSupport);
+  const hasStrongLocation = [
+    "person_full_address", "person_city_state_zip",
+  ].includes(locationSupport);
+
+  const identitySignalCount = [
+    hasLocationIdentity,
     orgAffinityScore >= 60,
     foundationAffinity >= 80,
-    locationSupport === "strong_person_state",
+  ].filter(Boolean).length;
+
+  // Full address match counts double — it's near-certain identity
+  const effectiveIdentityCount = hasStrongLocation
+    ? identitySignalCount + 1
+    : identitySignalCount;
+
+  // Match quality signals (not identity, but relevant for scoring)
+  const corroboratorCount = [
+    hasLocationIdentity,
+    orgAffinityScore >= 60,
+    foundationAffinity >= 80,
     context.repeatedEinPersonCount >= 2,
     record.source === "990-PF-DONOR",
   ].filter(Boolean).length;
@@ -211,32 +236,32 @@ export function scoreNonprofitMatch(
 
   const unresolvedCollision = context.prospectCollisionCount > 1 && orgAffinityScore < 80 && foundationAffinity < 80;
   const unresolvedFoundationLink = record.source === "990-PF-OFFICER" && foundationAffinity < 80 && orgAffinityScore < 80;
-  const insufficientCorroboration = corroboratorCount === 0;
+  const insufficientCorroboration = effectiveIdentityCount === 0;
 
+  // Tier assignment: identity verification is a PREREQUISITE, not a bonus.
+  // "Verified" = we are confident this is the right person AND the signal is strong.
+  // "Likely"   = we have at least one identity corroborator beyond name.
+  // "Risky"    = name matched but no identity verification — DO NOT trust donation data.
   let confidenceTier: ConfidenceTier = "Review Needed";
   if (
-    score >= 88 &&
+    score >= 85 &&
+    effectiveIdentityCount >= 2 &&
     !unresolvedCollision &&
-    !weakStaffRole &&
-    (corroboratorCount >= 2 || orgAffinityScore >= 100 || foundationAffinity >= 80 || record.source === "990-PF-DONOR")
+    !weakStaffRole
   ) {
     confidenceTier = "Verified";
   } else if (
-    score >= 72 &&
+    score >= 70 &&
+    effectiveIdentityCount >= 1 &&
     !unresolvedCollision &&
-    (!weakStaffRole || corroboratorCount >= 2) &&
-    corroboratorCount >= 1
+    (!weakStaffRole || effectiveIdentityCount >= 2)
   ) {
     confidenceTier = "Likely";
-  } else if (score >= 55 && (!weakStaffRole || corroboratorCount >= 1)) {
+  } else if (score >= 50 && (!weakStaffRole || effectiveIdentityCount >= 1)) {
     confidenceTier = "Risky";
   }
 
-  if (
-    weakStaffRole &&
-    corroboratorCount === 0 &&
-    record.source !== "990-PF-DONOR"
-  ) {
+  if (weakStaffRole && effectiveIdentityCount === 0 && record.source !== "990-PF-DONOR") {
     confidenceTier = "Review Needed";
   }
 

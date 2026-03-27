@@ -18,6 +18,8 @@ export function normalizeTitle(title: string): string {
 }
 
 export function classifyTitleBucket(title: string, role: string): TitleBucket {
+  if (role === "donor") return "board_trustee";
+
   const normalized = normalizeTitle(title);
   const haystack = `${normalized} ${normalizeFreeText(role)}`.trim();
 
@@ -98,27 +100,95 @@ export function scoreFamilyFoundationAffinity(prospect: ProspectRecord, record: 
   return 0;
 }
 
-export function deriveLocationSupport(prospect: ProspectRecord, record: NonprofitRecord): LocationSupport {
-  const prospectState = prospect.state.trim().toUpperCase();
-  const personState = record.state.trim().toUpperCase();
-  const orgState = record.filing.orgState.trim().toUpperCase();
+const STATE_NAME_TO_ABBREV: Record<string, string> = {
+  ALABAMA: "AL", ALASKA: "AK", ARIZONA: "AZ", ARKANSAS: "AR", CALIFORNIA: "CA",
+  COLORADO: "CO", CONNECTICUT: "CT", DELAWARE: "DE", FLORIDA: "FL", GEORGIA: "GA",
+  HAWAII: "HI", IDAHO: "ID", ILLINOIS: "IL", INDIANA: "IN", IOWA: "IA",
+  KANSAS: "KS", KENTUCKY: "KY", LOUISIANA: "LA", MAINE: "ME", MARYLAND: "MD",
+  MASSACHUSETTS: "MA", MICHIGAN: "MI", MINNESOTA: "MN", MISSISSIPPI: "MS", MISSOURI: "MO",
+  MONTANA: "MT", NEBRASKA: "NE", NEVADA: "NV", "NEW HAMPSHIRE": "NH", "NEW JERSEY": "NJ",
+  "NEW MEXICO": "NM", "NEW YORK": "NY", "NORTH CAROLINA": "NC", "NORTH DAKOTA": "ND",
+  OHIO: "OH", OKLAHOMA: "OK", OREGON: "OR", PENNSYLVANIA: "PA", "RHODE ISLAND": "RI",
+  "SOUTH CAROLINA": "SC", "SOUTH DAKOTA": "SD", TENNESSEE: "TN", TEXAS: "TX", UTAH: "UT",
+  VERMONT: "VT", VIRGINIA: "VA", WASHINGTON: "WA", "WEST VIRGINIA": "WV",
+  WISCONSIN: "WI", WYOMING: "WY", "DISTRICT OF COLUMBIA": "DC",
+  "PUERTO RICO": "PR", GUAM: "GU", "VIRGIN ISLANDS": "VI",
+  "AMERICAN SAMOA": "AS", "NORTHERN MARIANA ISLANDS": "MP",
+};
+const VALID_ABBREVS = new Set(Object.values(STATE_NAME_TO_ABBREV));
 
-  if (!prospectState) return "unknown";
-  if (personState) return prospectState === personState ? "strong_person_state" : "mismatch";
-  if (orgState) return prospectState === orgState ? "weak_org_state" : "mismatch";
+export function normalizeState(raw: string): string {
+  const trimmed = raw.trim().toUpperCase();
+  if (!trimmed) return "";
+  if (VALID_ABBREVS.has(trimmed)) return trimmed;
+  return STATE_NAME_TO_ABBREV[trimmed] ?? trimmed;
+}
+
+function normalizeCity(raw: string): string {
+  return raw.trim().toUpperCase().replace(/[^A-Z\s]/g, "").replace(/\s+/g, " ");
+}
+
+function normalizeStreet(raw: string): string {
+  return raw.trim().toUpperCase().replace(/[^A-Z0-9\s]/g, "").replace(/\s+/g, " ");
+}
+
+function normalizeZip5(raw: string): string {
+  const digits = raw.replace(/\D/g, "");
+  return digits.slice(0, 5);
+}
+
+export function deriveLocationSupport(prospect: ProspectRecord, record: NonprofitRecord): LocationSupport {
+  const pState = normalizeState(prospect.state);
+  if (!pState) return "unknown";
+
+  const rState = normalizeState(record.state);
+  const rCity = normalizeCity(record.city);
+  const rStreet = normalizeStreet(record.street ?? "");
+  const rZip = normalizeZip5(record.zip ?? "");
+
+  // Person address available on the 990 record
+  if (rState) {
+    if (pState !== rState) return "mismatch";
+
+    const pCity = normalizeCity(prospect.city);
+    const pStreet = normalizeStreet(prospect.address ?? "");
+    const pZip = normalizeZip5(prospect.zip ?? "");
+
+    if (pStreet && rStreet && pStreet === rStreet && pCity && rCity && pCity === rCity) {
+      return "person_full_address";
+    }
+    if (pZip && rZip && pZip === rZip && pCity && rCity && pCity === rCity) {
+      return "person_city_state_zip";
+    }
+    if (pCity && rCity && pCity === rCity) {
+      return "person_city_state";
+    }
+    return "person_state";
+  }
+
+  // Fall back to org address
+  const orgState = normalizeState(record.filing.orgState);
+  const orgCity = normalizeCity(record.filing.orgCity);
+  if (orgState) {
+    if (pState !== orgState) return "mismatch";
+    const pCity = normalizeCity(prospect.city);
+    if (pCity && orgCity && pCity === orgCity) return "org_city_state";
+    return "org_state";
+  }
+
   return "unknown";
 }
 
 export function locationSupportScore(locationSupport: LocationSupport): number {
   switch (locationSupport) {
-    case "strong_person_state":
-      return 15;
-    case "weak_org_state":
-      return 8;
-    case "mismatch":
-      return -8;
-    default:
-      return 0;
+    case "person_full_address":   return 30;
+    case "person_city_state_zip": return 25;
+    case "person_city_state":     return 18;
+    case "person_state":          return 12;
+    case "org_city_state":        return 10;
+    case "org_state":             return 5;
+    case "mismatch":              return -10;
+    default:                      return 0;
   }
 }
 

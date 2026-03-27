@@ -45,6 +45,7 @@ test("parseFecIndividualRecord parses valid IND record", () => {
   assert.equal(record.lastName, "smith");
   assert.equal(record.amount, 2700);
   assert.equal(record.source, "FEC");
+  assert.equal(record.signalType, "contribution");
 });
 
 test("parseFecIndividualRecord accepts empty entity type", () => {

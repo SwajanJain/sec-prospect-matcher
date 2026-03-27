@@ -7,6 +7,7 @@ import type { IndexedProspect, Logger, ProspectLoadSummary } from "@pm/core";
 import { buildMatchFeatures, NameStats } from "../lib/match-features";
 import { scoreMatch } from "../lib/confidence-scorer";
 import { routeMatch } from "../lib/review-router";
+import { generateMatchTags } from "../lib/match-tags";
 import { classifyDonation, classifyProspectAggregate, classifyRegistration } from "../lib/signal-classifier";
 import { writeMatchCsv, writeOperatorReport } from "../io/csv-export";
 import { createEmptyManifest } from "./run-manifest";
@@ -22,7 +23,7 @@ import {
 } from "./types";
 import { loadCandidates } from "../parsers/fec-candidate-parser";
 import { loadCommittees } from "../parsers/fec-committee-parser";
-import { parseFecIndividualFile } from "../parsers/fec-individual-parser";
+import { parseFecIndividualFile, FecParseOptions } from "../parsers/fec-individual-parser";
 import { loadLinkages } from "../parsers/fec-ccl-parser";
 import { parse527File } from "../parsers/irs527-parser";
 
@@ -64,7 +65,8 @@ export class PoliticalMatcher {
     const { prospects, summary: prospectLoad } = this.loadProspectsOrThrow(prospectsPath);
     manifest.prospectLoad = prospectLoad;
     const { prospectIndex } = buildProspectIndex(prospects);
-    const { contributions, freshness, warnings } = this.loadCurrentContributions();
+    const prospectLastNames = new Set(prospects.map((p) => p.lastName.toUpperCase()));
+    const { contributions, freshness, warnings } = this.loadCurrentContributions(prospectLastNames);
     const dedupedContributions = this.deduplicateContributions(contributions);
     const enrichment = this.loadEnrichment();
     const stats = this.createStats(warnings);
@@ -72,7 +74,7 @@ export class PoliticalMatcher {
 
     const candidateMatches = this.matchContributions(dedupedContributions, prospectIndex, nameStats, stats, enrichment);
     const finalizedMatches = this.applyProspectAggregation(candidateMatches);
-    const accepted = finalizedMatches.filter((row) => row.guardrailStatus === "pass" && row.matchConfidence >= 75);
+    const accepted = finalizedMatches.filter((row) => row.guardrailStatus === "pass" && row.matchConfidence >= 70);
     const review = finalizedMatches.filter((row) => !accepted.includes(row));
 
     accepted.sort(compareResults);
@@ -139,7 +141,7 @@ export class PoliticalMatcher {
     };
   }
 
-  private loadCurrentContributions(): {
+  private loadCurrentContributions(prospectLastNames?: Set<string>): {
     contributions: NormalizedContribution[];
     freshness: SourceFreshness[];
     warnings: string[];
@@ -151,8 +153,17 @@ export class PoliticalMatcher {
     const fecFile = path.join(this.stateStore.paths.recent, "fec-individual.txt");
     if (fs.existsSync(fecFile)) {
       this.logger.info(`Loading FEC contributions from ${fecFile}`);
-      const rows = parseFecIndividualFile(fecFile);
-      contributions.push(...rows);
+      const fecSize = fs.statSync(fecFile).size;
+      const fecOpts: FecParseOptions = {};
+      if (fecSize > 500_000_000) {
+        fecOpts.minAmount = 1000;
+        fecOpts.minDate = "2025-12-01";
+        fecOpts.maxDate = "2026-03-26";
+        if (prospectLastNames) fecOpts.lastNameFilter = prospectLastNames;
+      }
+      const rows = parseFecIndividualFile(fecFile, fecOpts);
+      this.logger.info(`Loaded ${rows.length} FEC records${fecOpts.minAmount ? ` (>=$${fecOpts.minAmount})` : ""}`);
+      for (const row of rows) contributions.push(row);
       freshness.push({
         source: "FEC",
         fetchedAt: new Date(fs.statSync(fecFile).mtimeMs).toISOString(),
@@ -180,7 +191,7 @@ export class PoliticalMatcher {
       const details = metadata
         ? `Loaded recent OpenFEC API records (${metadata.status}${metadata.mode ? `, ${metadata.mode}` : ""})`
         : "Loaded recent OpenFEC API records (metadata missing)";
-      contributions.push(...rows);
+      for (const row of rows) contributions.push(row);
       if (!metadata) {
         warnings.push(`Missing FEC API metadata file: ${metaPath}`);
       } else if (metadata.status !== "complete") {
@@ -242,7 +253,7 @@ export class PoliticalMatcher {
     const legacy527Path = path.join(this.stateStore.paths.recent, "irs527.txt");
     if (!fs.existsSync(path.join(this.stateStore.paths.recent, "irs527.json")) && fs.existsSync(legacy527Path)) {
       const rows = parse527File(legacy527Path);
-      contributions.push(...rows);
+      for (const row of rows) contributions.push(row);
       freshness.push({
         source: "527",
         fetchedAt: new Date(fs.statSync(legacy527Path).mtimeMs).toISOString(),
@@ -273,7 +284,7 @@ export class PoliticalMatcher {
     }
 
     const rows = config.loader(config.filePath);
-    contributions.push(...rows);
+    for (const row of rows) contributions.push(row);
     const metadata = config.metaPath ? this.readFetchMetadata(config.metaPath) : null;
     const degraded = metadata?.status ? metadata.status !== "complete" : false;
     const details = metadata
@@ -437,20 +448,18 @@ export class PoliticalMatcher {
         const classification = record.signalType === "registration"
           ? classifyRegistration(recipient.recipient)
           : classifyDonation(record.amount, recipient.recipient, recipient.recipientType);
+        const matchTags = generateMatchTags(features, candidate.prospect, record);
         rows.push({
           runId: this.runId,
           prospectId: candidate.prospect.prospectId,
           prospectName: candidate.prospect.nameRaw,
           prospectCompany: candidate.prospect.companyRaw,
-          signalType: record.signalType,
-          matchConfidence: score.matchConfidence,
-          matchQuality: score.matchQuality,
-          guardrailStatus: route.guardrailStatus,
-          matchReason: score.matchReason,
-          employerMatchStatus: features.employerResult.status,
-          locationMatchStatus: features.locationMatch.status,
+          prospectTitle: candidate.prospect.title,
           prospectCityState: [candidate.prospect.city, candidate.prospect.state].filter(Boolean).join(", "),
-          dataSource: record.source,
+          donorNameFec: record.donorNameRaw,
+          donorEmployer: record.employerRaw,
+          donorOccupation: record.occupationRaw,
+          donorCityState: [record.city, record.state].filter(Boolean).join(", "),
           donationAmount: record.amount,
           donationDate: record.donationDate || record.loadDate,
           recipient: recipient.recipient,
@@ -458,13 +467,14 @@ export class PoliticalMatcher {
           party: recipient.party,
           candidateName: recipient.candidateName,
           candidateOffice: recipient.candidateOffice,
-          donorNameFec: record.donorNameRaw,
-          donorEmployer: record.employerRaw,
-          donorOccupation: record.occupationRaw,
-          donorCityState: [record.city, record.state].filter(Boolean).join(", "),
+          dataSource: record.source,
+          matchConfidence: score.matchConfidence,
+          matchTags,
           partisanLean: "Unknown",
-          signalTier: classification.tier,
           action: classification.action,
+          signalType: record.signalType,
+          guardrailStatus: route.guardrailStatus,
+          signalTier: classification.tier,
           flags: record.signalType === "registration" ? ["Registered Lobbyist"] : [],
           contribution: {
             ...record,

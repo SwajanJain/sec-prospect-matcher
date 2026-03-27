@@ -5,6 +5,7 @@ export function computePartisanLean(rows: MatchResult[]): string {
   let rep = 0;
 
   for (const row of rows) {
+    if (row.signalType !== "contribution") continue;
     if (row.party === "DEM") dem += row.donationAmount;
     if (row.party === "REP") rep += row.donationAmount;
   }

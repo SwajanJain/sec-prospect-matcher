@@ -23,6 +23,27 @@ import { parsePersonName, stripLegalSuffixes } from "@pm/core";
 // 15: Aggregate contribution YTD
 // 16: Contribution date
 
+export function normalize527Date(value: string): string {
+  const trimmed = (value || "").trim();
+  if (!trimmed) return "";
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+    return trimmed;
+  }
+
+  if (/^\d{8}$/.test(trimmed)) {
+    return `${trimmed.slice(0, 4)}-${trimmed.slice(4, 6)}-${trimmed.slice(6, 8)}`;
+  }
+
+  const mmddyyyy = trimmed.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/);
+  if (mmddyyyy) {
+    const [, month, day, year] = mmddyyyy;
+    return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+  }
+
+  return trimmed;
+}
+
 export function parse527Record(line: string, rawRef = ""): NormalizedContribution | null {
   const columns = line.split("|");
   if (columns.length < 17) return null;
@@ -35,10 +56,13 @@ export function parse527Record(line: string, rawRef = ""): NormalizedContributio
   const amount = Number.parseFloat(columns[13] || "0");
   const recipientName = (columns[3] || "").trim();
   const employerRaw = (columns[12] || "").trim();
+  const scheduleAId = (columns[2] || "").trim();
+  const formId = (columns[1] || "").trim();
 
   return {
     source: "527",
-    sourceRecordId: columns[2] || `${columns[1]}-${columns[2]}`,
+    signalType: "contribution",
+    sourceRecordId: scheduleAId || `${formId}:${donorNameRaw}:${columns[13] || ""}:${columns[16] || ""}`,
     sourceCycle: "",
     sourceEntityType: "IND",
     donorNameRaw,
@@ -55,7 +79,7 @@ export function parse527Record(line: string, rawRef = ""): NormalizedContributio
     city: (columns[8] || "").trim(),
     state: (columns[9] || "").trim(),
     zip: (columns[10] || "").trim(),
-    donationDate: (columns[16] || "").trim(),
+    donationDate: normalize527Date(columns[16] || ""),
     loadDate: "",
     amount,
     currency: "USD",
@@ -74,7 +98,8 @@ export function parse527Record(line: string, rawRef = ""): NormalizedContributio
     officeDistrict: "",
     rawRef,
     metadata: {
-      formId: columns[1] || "",
+      formId,
+      scheduleAId,
     },
   };
 }

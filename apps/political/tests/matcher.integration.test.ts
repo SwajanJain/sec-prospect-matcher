@@ -184,15 +184,13 @@ test("PoliticalMatcher emits mixed FEC, 527, and lobbying rows with signal types
   const reviewCsv = fs.readFileSync(manifest.outputs.reviewCsv, "utf8");
   const combinedCsv = `${clientCsv}\n${reviewCsv}`;
 
-  assert.match(clientCsv, /Signal Type/);
-  assert.match(clientCsv, /Location Match/);
+  assert.match(clientCsv, /Match Tags/);
   assert.match(clientCsv, /Prospect City\/State/);
+  assert.match(clientCsv, /Donor Name \(FEC\)/);
   assert.match(combinedCsv, /John Smith/);
   assert.match(combinedCsv, /Alice Donor/);
   assert.match(combinedCsv, /Jane Lobbyist/);
-  assert.match(combinedCsv, /Registration/);
   assert.match(combinedCsv, /\$0\.00/);
-  assert.match(combinedCsv, /Registered Lobbyist/);
   assert.match(combinedCsv, /Progressive Coalition/);
   assert.match(combinedCsv, /city_state_match|state_match|zip_match/);
   assert.match(reviewCsv, /William Smith/);

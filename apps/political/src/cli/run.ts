@@ -22,6 +22,11 @@ export async function runCli(args: string[]): Promise<void> {
   const runId = createRunId();
   const lockPath = stateStore.acquireLock("state");
   try {
+    const resolvedProspectsPath = path.resolve(prospectsPath);
+    if (!config.ldaApiKey) {
+      logger.info("LDA_API_KEY missing; run will use only staged lobbying data");
+    }
+
     const matcher = new PoliticalMatcher({
       runId,
       logger,
@@ -29,7 +34,7 @@ export async function runCli(args: string[]): Promise<void> {
       outputDir: config.outputDir,
       maxProspectSkipRate: config.maxProspectSkipRate,
     });
-    const manifest = matcher.execute(path.resolve(prospectsPath));
+    const manifest = matcher.execute(resolvedProspectsPath);
     process.stdout.write(`${JSON.stringify(manifest.outputs, null, 2)}\n`);
   } finally {
     stateStore.releaseLock(lockPath);

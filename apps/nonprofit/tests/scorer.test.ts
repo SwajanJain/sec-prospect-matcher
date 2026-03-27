@@ -19,8 +19,11 @@ function makeProspect(overrides: Partial<ProspectRecord> = {}): ProspectRecord {
     companyRaw: "Acme Health",
     companyNormalized: "acme health",
     allCompaniesNormalized: ["acme health"],
+    title: "",
+    address: "",
     city: "",
     state: "CA",
+    zip: "",
     country: "",
     externalId: "",
     ...overrides,
@@ -52,8 +55,10 @@ function makeRecord(overrides: Partial<NonprofitRecord> = {}): NonprofitRecord {
     role: "officer",
     amount: 250000,
     hoursPerWeek: 40,
+    street: "",
     city: "",
     state: "",
+    zip: "",
     personLocationSource: "unknown",
     recordFingerprint: "fingerprint",
     withinFilingDuplicateCount: 1,
@@ -74,8 +79,8 @@ describe("scoreNonprofitMatch", () => {
     assert.equal(result.confidenceTier, "Risky");
   });
 
-  it("keeps direct named donors strong", () => {
-    const prospect = makeProspect({ companyRaw: "", companyNormalized: "", allCompaniesNormalized: [], state: "GA" });
+  it("keeps direct named donors strong when identity is corroborated", () => {
+    const prospect = makeProspect({ companyRaw: "", companyNormalized: "", allCompaniesNormalized: [], state: "GA", city: "Atlanta" });
     const record = makeRecord({
       source: "990-PF-DONOR",
       sourceSection: "schedule_b_contributor",
@@ -93,8 +98,10 @@ describe("scoreNonprofitMatch", () => {
       titleBucket: "board_trustee",
       role: "donor",
       amount: 100000,
+      street: "",
       city: "Atlanta",
       state: "GA",
+      zip: "",
       personLocationSource: "person_address",
     });
 
@@ -104,6 +111,7 @@ describe("scoreNonprofitMatch", () => {
       repeatedEinPersonCount: 1,
     });
 
+    // identity signals: city+state match (1) + family foundation affinity (2) → Verified
     assert.equal(result.confidenceTier, "Verified");
   });
 
@@ -118,6 +126,56 @@ describe("scoreNonprofitMatch", () => {
 
     assert.notEqual(result.confidenceTier, "Likely");
     assert.ok(result.conflictFlags.includes("duplicate_prospect_name"));
+  });
+
+  it("name-only match without identity corroboration stays Risky", () => {
+    const prospect = makeProspect({ state: "", city: "", companyRaw: "Unrelated Corp", companyNormalized: "unrelated corp", allCompaniesNormalized: ["unrelated corp"] });
+    const record = makeRecord({
+      source: "990-PF-OFFICER",
+      sourceSection: "pf_officer_info",
+      filing: {
+        ein: "111111111",
+        orgName: "THE BLOCK FRIEDMAN FAMILY FOUNDATION",
+        orgCity: "", orgState: "",
+        taxPeriodEnd: "2025-11-30", returnType: "990PF", objectId: "pf-2",
+      },
+      title: "VICE PRESIDENT", normalizedTitle: "vice president",
+      titleBucket: "board_trustee", role: "director",
+      amount: 0, street: "", city: "", state: "", zip: "",
+      personLocationSource: "unknown",
+    });
+
+    const result = scoreNonprofitMatch(prospect, record, "exact", {
+      nameFrequency: 1, prospectCollisionCount: 1, repeatedEinPersonCount: 1,
+    });
+
+    // No state, no org affinity, no foundation affinity → no identity signals
+    assert.equal(result.confidenceTier, "Risky");
+  });
+
+  it("city+state match elevates to Likely", () => {
+    const prospect = makeProspect({ state: "NY", city: "New York", companyRaw: "Other Co", companyNormalized: "other co", allCompaniesNormalized: ["other co"] });
+    const record = makeRecord({
+      source: "990-PF-OFFICER",
+      sourceSection: "pf_officer_info",
+      filing: {
+        ein: "222222222",
+        orgName: "Some Foundation",
+        orgCity: "New York", orgState: "NY",
+        taxPeriodEnd: "2025-06-30", returnType: "990PF", objectId: "pf-3",
+      },
+      title: "PRESIDENT", normalizedTitle: "president",
+      titleBucket: "executive", role: "officer",
+      amount: 0, street: "", city: "New York", state: "NY", zip: "",
+      personLocationSource: "person_address",
+    });
+
+    const result = scoreNonprofitMatch(prospect, record, "exact", {
+      nameFrequency: 1, prospectCollisionCount: 1, repeatedEinPersonCount: 1,
+    });
+
+    // city+state match = 1 identity signal → Likely (not Verified, needs 2)
+    assert.equal(result.confidenceTier, "Likely");
   });
 
   it("requires corroboration for professional staff roles", () => {

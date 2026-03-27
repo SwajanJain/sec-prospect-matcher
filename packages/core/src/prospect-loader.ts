@@ -11,9 +11,12 @@ const COLUMN_ALIASES: Record<string, string[]> = {
   aliasName: ["prospect_alias_name", "alias_name", "alias_names", "aliases"],
   company: ["company", "employer", "organization", "org", "prospect_company"],
   otherCompany: ["prospect_other_company", "other_company", "other_companies", "custom_companies"],
+  address: ["address", "address_block", "street", "street_address", "mailing_address"],
   city: ["city", "location"],
   state: ["state"],
+  zip: ["zip", "postcode", "postal_code", "zip_code"],
   country: ["country"],
+  title: ["title", "designation", "job_title", "position"],
   externalId: ["external_id", "externalid", "crm_id"],
 };
 
@@ -46,8 +49,11 @@ export function loadProspectsDetailed(csvPath: string): {
   const aliasNameIndex = findColumn(headers, COLUMN_ALIASES.aliasName);
   const companyIndex = findColumn(headers, COLUMN_ALIASES.company);
   const otherCompanyIndex = findColumn(headers, COLUMN_ALIASES.otherCompany);
+  const addressIndex = findColumn(headers, COLUMN_ALIASES.address);
   const cityIndex = findColumn(headers, COLUMN_ALIASES.city);
   const stateIndex = findColumn(headers, COLUMN_ALIASES.state);
+  const zipIndex = findColumn(headers, COLUMN_ALIASES.zip);
+  const titleIndex = findColumn(headers, COLUMN_ALIASES.title);
   const countryIndex = findColumn(headers, COLUMN_ALIASES.country);
   const externalIdIndex = findColumn(headers, COLUMN_ALIASES.externalId);
 
@@ -93,8 +99,11 @@ export function loadProspectsDetailed(csvPath: string): {
       companyRaw,
       companyNormalized: stripLegalSuffixes(companyRaw),
       allCompaniesNormalized: allCompanies.map((c) => stripLegalSuffixes(c)),
+      title: titleIndex >= 0 ? columns[titleIndex] ?? "" : "",
+      address: addressIndex >= 0 ? columns[addressIndex] ?? "" : "",
       city: cityIndex >= 0 ? columns[cityIndex] ?? "" : "",
       state: stateIndex >= 0 ? columns[stateIndex] ?? "" : "",
+      zip: zipIndex >= 0 ? columns[zipIndex] ?? "" : "",
       country: countryIndex >= 0 ? columns[countryIndex] ?? "" : "",
       externalId: externalIdIndex >= 0 ? columns[externalIdIndex] ?? "" : "",
     });

@@ -45,8 +45,15 @@ function isoDate(value: Date): string {
 }
 
 function prospectAddressLike(prospect: ProspectRecord): string | undefined {
+  // If we have a full street address, build "street, city, state zip" for Tier 1/2 matching
+  if (prospect.address && prospect.city && prospect.state) {
+    const stateZip = prospect.zip ? `${prospect.state} ${prospect.zip}` : prospect.state;
+    return `${prospect.address}, ${prospect.city}, ${stateZip}`;
+  }
   if (!prospect.city && !prospect.state) return undefined;
-  return `UNKNOWN, ${prospect.city}, ${prospect.state}`.trim();
+  // Fallback to city+state only (Tier 3/4)
+  const stateZip = prospect.zip ? `${prospect.state} ${prospect.zip}` : prospect.state;
+  return `UNKNOWN, ${prospect.city}, ${stateZip}`.trim();
 }
 
 function propertyAddressLike(property: PropertyRecord): { situs?: string; mailing?: string } {

@@ -116,15 +116,12 @@ export interface MatchResult {
   prospectId: string;
   prospectName: string;
   prospectCompany: string;
-  signalType: SignalType;
-  matchConfidence: number;
-  matchQuality: MatchScore["matchQuality"];
-  guardrailStatus: MatchRoute["guardrailStatus"];
-  matchReason: string;
-  employerMatchStatus: EmployerMatchResult["status"];
-  locationMatchStatus: LocationMatchResult["status"];
+  prospectTitle: string;
   prospectCityState: string;
-  dataSource: SourceName;
+  donorNameFec: string;
+  donorEmployer: string;
+  donorOccupation: string;
+  donorCityState: string;
   donationAmount: number;
   donationDate: string;
   recipient: string;
@@ -132,13 +129,15 @@ export interface MatchResult {
   party: string;
   candidateName: string;
   candidateOffice: string;
-  donorNameFec: string;
-  donorEmployer: string;
-  donorOccupation: string;
-  donorCityState: string;
+  dataSource: SourceName;
+  matchConfidence: number;
+  matchTags: string[];
   partisanLean: string;
-  signalTier: number;
   action: string;
+  // Internal fields (not exported to CSV but used for routing)
+  signalType: SignalType;
+  guardrailStatus: MatchRoute["guardrailStatus"];
+  signalTier: number;
   flags: string[];
   contribution: NormalizedContribution;
 }

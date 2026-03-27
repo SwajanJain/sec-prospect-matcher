@@ -1,6 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import readline from "node:readline";
+import { Readable } from "node:stream";
+import { pipeline } from "node:stream/promises";
 import { execFileSync } from "node:child_process";
 
 import { StateStore } from "@pm/core";
@@ -21,6 +23,30 @@ async function buildSubIdSet(filePath: string): Promise<Set<string>> {
   return ids;
 }
 
+async function downloadToFile(url: string, destination: string): Promise<void> {
+  const response = await fetch(url);
+  if (!response.ok || !response.body) {
+    throw new Error(`Failed to download ${url}: ${response.status} ${response.statusText}`);
+  }
+
+  const totalBytes = Number(response.headers.get("content-length") || "0");
+  let downloadedBytes = 0;
+  let lastLoggedBytes = 0;
+  const progressChunk = 100 * 1024 * 1024;
+
+  const source = Readable.fromWeb(response.body as globalThis.ReadableStream<Uint8Array>);
+  source.on("data", (chunk: Buffer) => {
+    downloadedBytes += chunk.length;
+    if (downloadedBytes - lastLoggedBytes >= progressChunk) {
+      lastLoggedBytes = downloadedBytes;
+      const totalMb = totalBytes > 0 ? ` / ${(totalBytes / (1024 * 1024)).toFixed(0)} MB` : "";
+      process.stderr.write(`[INFO] Downloaded ${(downloadedBytes / (1024 * 1024)).toFixed(0)} MB${totalMb} from ${url}\n`);
+    }
+  });
+
+  await pipeline(source, fs.createWriteStream(destination));
+}
+
 export async function downloadFecBulkFiles(stateStore: StateStore, cycleYear = "2026"): Promise<void> {
   const baseUrl = `https://www.fec.gov/files/bulk-downloads/${cycleYear}`;
   const rawDir = path.join(stateStore.paths.raw, "fec");
@@ -35,12 +61,7 @@ export async function downloadFecBulkFiles(stateStore: StateStore, cycleYear = "
   ];
 
   for (const file of files) {
-    const response = await fetch(`${baseUrl}/${file.name}`);
-    if (!response.ok) {
-      throw new Error(`Failed to download ${file.name}: ${response.status} ${response.statusText}`);
-    }
-    const buffer = Buffer.from(await response.arrayBuffer());
-    fs.writeFileSync(path.join(currentDir, file.output), buffer);
+    await downloadToFile(`${baseUrl}/${file.name}`, path.join(currentDir, file.output));
   }
 
   for (const zipName of ["indiv.zip", "cm.zip", "cn.zip", "ccl.zip"]) {

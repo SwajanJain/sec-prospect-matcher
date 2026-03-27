@@ -56,7 +56,7 @@ const NON_INFORMATIVE_OCCUPATIONS = new Set([
   "business owner", "entrepreneur", "investor",
 ]);
 
-function classifyOccupation(occupation: string): IndustryCategory | null {
+export function classifyOccupation(occupation: string): IndustryCategory | null {
   const trimmed = (occupation || "").trim();
   if (!trimmed || NON_INFORMATIVE_OCCUPATIONS.has(trimmed.toLowerCase())) return null;
   for (const [pattern, category] of OCCUPATION_KEYWORDS) {

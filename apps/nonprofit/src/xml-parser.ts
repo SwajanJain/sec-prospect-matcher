@@ -30,11 +30,15 @@ function safeNum(val: unknown): number {
   return isNaN(n) ? 0 : n;
 }
 
-function extractAddress(addr: Record<string, unknown> | undefined): { city: string; state: string } {
-  if (!addr) return { city: "", state: "" };
+function extractAddress(addr: Record<string, unknown> | undefined): { street: string; city: string; state: string; zip: string } {
+  if (!addr) return { street: "", city: "", state: "", zip: "" };
+  const line1 = safeStr(addr.AddressLine1Txt);
+  const line2 = safeStr(addr.AddressLine2Txt);
   return {
+    street: [line1, line2].filter(Boolean).join(" "),
     city: safeStr(addr.CityNm),
     state: safeStr(addr.StateAbbreviationCd),
+    zip: safeStr(addr.ZIPCd),
   };
 }
 
@@ -105,8 +109,10 @@ function buildRecord(params: {
   role: string;
   amount: number;
   hoursPerWeek: number;
+  street: string;
   city: string;
   state: string;
+  zip: string;
   personLocationSource: NonprofitRecord["personLocationSource"];
 }): NonprofitRecord | null {
   const parsed = tryParsePerson(params.rawName);
@@ -129,8 +135,10 @@ function buildRecord(params: {
     role: params.role,
     amount: params.amount,
     hoursPerWeek: params.hoursPerWeek,
+    street: params.street,
     city: params.city,
     state: params.state,
+    zip: params.zip,
     personLocationSource: params.personLocationSource,
     recordFingerprint: buildRecordFingerprint(
       params.filing.objectId,
@@ -206,8 +214,10 @@ function parse990PFDonors(data: Record<string, unknown>, filing: FilingHeader): 
       role: "donor",
       amount: safeNum(contrib.TotalContributionsAmt),
       hoursPerWeek: 0,
+      street: addr.street,
       city: addr.city,
       state: addr.state,
+      zip: addr.zip,
       personLocationSource: addr.city || addr.state ? "person_address" : "unknown",
     });
     if (record) records.push(record);
@@ -239,8 +249,10 @@ function parse990PFOfficers(data: Record<string, unknown>, filing: FilingHeader)
       role: classifyRole(title),
       amount: safeNum(officer.CompensationAmt),
       hoursPerWeek: safeNum(officer.AverageHrsPerWkDevotedToPosRt),
+      street: addr.street,
       city: addr.city,
       state: addr.state,
+      zip: addr.zip,
       personLocationSource: addr.city || addr.state ? "person_address" : "unknown",
     });
     if (record) records.push(record);
@@ -266,8 +278,10 @@ function parse990PartVIIOfficers(irs990: Record<string, unknown>, filing: Filing
       role: classifyRole(title, officer),
       amount: comp,
       hoursPerWeek: safeNum(officer.AverageHoursPerWeekRt),
+      street: "",
       city: "",
       state: "",
+      zip: "",
       personLocationSource: "unknown",
     });
     if (record) records.push(record);
@@ -299,8 +313,10 @@ function parse990RelatedOrgOfficers(data: Record<string, unknown>, filing: Filin
       role: classifyRole(title, officer),
       amount: comp,
       hoursPerWeek: 0,
+      street: "",
       city: "",
       state: "",
+      zip: "",
       personLocationSource: "unknown",
     });
     if (record) records.push(record);

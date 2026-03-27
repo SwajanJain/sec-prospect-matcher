@@ -1,5 +1,5 @@
 export interface LocationMatchResult {
-  status: "zip_match" | "city_state_match" | "state_match" | "state_mismatch" | "no_data";
+  status: "zip_match" | "city_state_match" | "city_match" | "state_match" | "state_mismatch" | "no_data";
   detail: string;
 }
 
@@ -64,6 +64,10 @@ export function matchLocation(
 
   if (pCity && dCity && pState && dState && pCity === dCity && pState === dState) {
     return { status: "city_state_match", detail: `City/state match: ${dCity}, ${dState}` };
+  }
+
+  if (pCity && dCity && pCity === dCity && (!pState || !dState)) {
+    return { status: "city_match", detail: `City match: ${dCity}` };
   }
 
   if (pState && dState) {
