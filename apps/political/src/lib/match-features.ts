@@ -1,5 +1,6 @@
 import { EmployerMatchResult, MatchFeatures, NormalizedContribution, ProspectRecord, VariantType } from "../core/types";
-import { matchEmployer } from "@pm/core";
+import { matchEmployer, matchLocation } from "@pm/core";
+import { matchOccupation } from "./occupation-matcher";
 
 export interface NameStats {
   donorNameCounts: Map<string, number>;
@@ -36,19 +37,38 @@ export function buildMatchFeatures(
   const donorCount = nameStats.donorNameCounts.get(record.donorNameNormalized) ?? 1;
   const prospectCount = nameStats.prospectNameCounts.get(record.donorNameNormalized) ?? 1;
   const employerResult = bestEmployerMatch(prospect, record.employerRaw);
+  const locationMatch = matchLocation(
+    prospect.city, prospect.state, prospect.zip,
+    record.city, record.state, record.zip,
+  );
+  const allCompanies = [prospect.companyRaw, ...prospect.otherCompanies].filter(Boolean);
+  const occupationMatch = matchOccupation(allCompanies, record.occupationRaw);
+  const middleNameAgrees = Boolean(prospect.middleName && record.middleName && prospect.middleInitial === record.middleInitial);
+  const suffixAgrees = Boolean(prospect.suffix && record.suffix && prospect.suffix === record.suffix);
+
+  const identitySignalCount = [
+    employerResult.status === "confirmed" || employerResult.status === "likely",
+    locationMatch.status === "zip_match" || locationMatch.status === "city_state_match",
+    occupationMatch.status === "corroborated",
+    middleNameAgrees,
+    suffixAgrees,
+  ].filter(Boolean).length;
 
   return {
     exactFullName: prospect.nameNormalizedFull === record.donorNameNormalizedFull,
     exactNormalizedName: prospect.nameNormalized === record.donorNameNormalized,
     nicknameMatch: variantType === "nickname",
-    middleNameAgrees: Boolean(prospect.middleName && record.middleName && prospect.middleInitial === record.middleInitial),
+    middleNameAgrees,
     middleNameConflicts:
       Boolean(prospect.middleInitial && record.middleInitial) && prospect.middleInitial !== record.middleInitial,
-    suffixAgrees: Boolean(prospect.suffix && record.suffix && prospect.suffix === record.suffix),
+    suffixAgrees,
     suffixConflicts: Boolean(prospect.suffix && record.suffix) && prospect.suffix !== record.suffix,
     employerResult,
+    locationMatch,
+    occupationMatch,
     nameFrequencyBucket: getNameFrequencyBucket(Math.max(donorCount, prospectCount)),
     candidateProspectCount: prospectCount,
+    identitySignalCount,
     repeatedConsistentRows: donorCount > 1 && employerResult.status !== "mismatch" ? donorCount - 1 : 0,
     repeatedConflictingRows: donorCount > 1 && employerResult.status === "mismatch" ? donorCount - 1 : 0,
     recordCompleteness: [

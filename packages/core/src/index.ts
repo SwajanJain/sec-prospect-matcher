@@ -11,6 +11,10 @@ export type { IndexedProspect, ProspectIndexBuild } from "./name-index";
 // Employer matching
 export { LEGAL_SUFFIXES_RE, stripLegalSuffixes, matchEmployer } from "./employer-matcher";
 
+// Geographic matching
+export { normalizeState, normalizeCity, normalizeZip5, matchLocation } from "./geo-matcher";
+export type { LocationMatchResult } from "./geo-matcher";
+
 // Prospect loading
 export { loadProspects, loadProspectsDetailed } from "./prospect-loader";
 

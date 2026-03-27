@@ -7,7 +7,7 @@ import type { IndexedProspect, Logger, ProspectLoadSummary } from "@pm/core";
 import { buildMatchFeatures, NameStats } from "../lib/match-features";
 import { scoreMatch } from "../lib/confidence-scorer";
 import { routeMatch } from "../lib/review-router";
-import { classifyDonation, classifyProspectAggregate } from "../lib/signal-classifier";
+import { classifyDonation, classifyProspectAggregate, classifyRegistration } from "../lib/signal-classifier";
 import { writeMatchCsv, writeOperatorReport } from "../io/csv-export";
 import { createEmptyManifest } from "./run-manifest";
 import {
@@ -32,6 +32,16 @@ interface MatcherOptions {
   stateStore: StateStore;
   outputDir: string;
   maxProspectSkipRate: number;
+}
+
+interface SupplementalSourceConfig {
+  source: SourceFreshness["source"];
+  filePath: string;
+  loader: (filePath: string) => NormalizedContribution[];
+  missingDetails: string;
+  defaultDetails: string;
+  metaPath?: string;
+  onMetadata?: (metadata: FetchArtifactMeta, warnings: string[]) => void;
 }
 
 export class PoliticalMatcher {
@@ -142,7 +152,7 @@ export class PoliticalMatcher {
     if (fs.existsSync(fecFile)) {
       this.logger.info(`Loading FEC contributions from ${fecFile}`);
       const rows = parseFecIndividualFile(fecFile);
-      for (const row of rows) contributions.push(row);
+      contributions.push(...rows);
       freshness.push({
         source: "FEC",
         fetchedAt: new Date(fs.statSync(fecFile).mtimeMs).toISOString(),
@@ -168,9 +178,9 @@ export class PoliticalMatcher {
       const metadata = this.readFetchMetadata(metaPath);
       const degraded = metadata?.status !== "complete";
       const details = metadata
-        ? `Loaded recent OpenFEC API records (${metadata.status})`
+        ? `Loaded recent OpenFEC API records (${metadata.status}${metadata.mode ? `, ${metadata.mode}` : ""})`
         : "Loaded recent OpenFEC API records (metadata missing)";
-      for (const row of rows) contributions.push(row);
+      contributions.push(...rows);
       if (!metadata) {
         warnings.push(`Missing FEC API metadata file: ${metaPath}`);
       } else if (metadata.status !== "complete") {
@@ -181,88 +191,109 @@ export class PoliticalMatcher {
       }
       freshness.push({
         source: "FEC",
-        fetchedAt: new Date(fs.statSync(fecApiJson).mtimeMs).toISOString(),
+        fetchedAt: metadata?.fetchedAt || new Date(fs.statSync(fecApiJson).mtimeMs).toISOString(),
         latestRecordDate: latestDate(rows),
         degraded,
         details,
       });
     }
 
-    const sourceLoaders: Array<{
-      source: SourceFreshness["source"];
-      filePath: string;
-      loader: (filePath: string) => NormalizedContribution[];
-      details: string;
-    }> = [];
-
-    const irsJson = path.join(this.stateStore.paths.recent, "irs527.json");
-    if (fs.existsSync(irsJson)) {
-      sourceLoaders.push({
+    const supplementalSources: SupplementalSourceConfig[] = [
+      {
         source: "527",
-        filePath: irsJson,
+        filePath: path.join(this.stateStore.paths.recent, "irs527.json"),
         loader: (filePath) => this.readJsonRows(filePath),
-        details: "Loaded recent IRS 527 contributions",
-      });
-    } else {
-      sourceLoaders.push({
-        source: "527",
-        filePath: path.join(this.stateStore.paths.recent, "irs527.txt"),
-        loader: parse527File,
-        details: "Loaded recent IRS 527 contributions",
-      });
+        metaPath: path.join(this.stateStore.paths.recent, "irs527.meta.json"),
+        missingDetails: "No staged 527 file",
+        defaultDetails: "Loaded recent IRS 527 contributions",
+      },
+      {
+        source: "State",
+        filePath: path.join(this.stateStore.paths.recent, "state.json"),
+        loader: (filePath) => this.readJsonRows(filePath),
+        missingDetails: "State staged data not present",
+        defaultDetails: "Loaded State normalized rows",
+      },
+      {
+        source: "Lobbying",
+        filePath: path.join(this.stateStore.paths.recent, "lda.json"),
+        loader: (filePath) => this.readJsonRows(filePath),
+        metaPath: path.join(this.stateStore.paths.recent, "lda.meta.json"),
+        missingDetails: "Lobbying staged data not present",
+        defaultDetails: "Loaded Lobbying normalized rows",
+        onMetadata: (metadata, sourceWarnings) => {
+          if (metadata.status !== "complete") {
+            sourceWarnings.push(
+              `LDA fetch was ${metadata.status}; loaded ${metadata.recordsFetched} rows across ${metadata.pagesFetched} pages` +
+              `${metadata.error ? ` (${metadata.error})` : ""}`,
+            );
+          }
+          if (metadata.authenticated === false) {
+            sourceWarnings.push("LDA fetch ran without LDA_API_KEY; anonymous rate limits may reduce freshness.");
+          }
+        },
+      },
+    ];
+
+    for (const sourceConfig of supplementalSources) {
+      this.loadSupplementalSource(sourceConfig, contributions, freshness, warnings);
     }
 
-    for (const sourceLoader of sourceLoaders) {
-      if (!fs.existsSync(sourceLoader.filePath)) {
-        freshness.push({
-          source: sourceLoader.source,
-          fetchedAt: "",
-          latestRecordDate: "",
-          degraded: true,
-          details: `No staged ${sourceLoader.source} file`,
-        });
-        continue;
-      }
-      const rows = sourceLoader.loader(sourceLoader.filePath);
-      for (const row of rows) contributions.push(row);
+    const legacy527Path = path.join(this.stateStore.paths.recent, "irs527.txt");
+    if (!fs.existsSync(path.join(this.stateStore.paths.recent, "irs527.json")) && fs.existsSync(legacy527Path)) {
+      const rows = parse527File(legacy527Path);
+      contributions.push(...rows);
       freshness.push({
-        source: sourceLoader.source,
-        fetchedAt: new Date(fs.statSync(sourceLoader.filePath).mtimeMs).toISOString(),
+        source: "527",
+        fetchedAt: new Date(fs.statSync(legacy527Path).mtimeMs).toISOString(),
         latestRecordDate: latestDate(rows),
         degraded: false,
-        details: sourceLoader.details,
+        details: "Loaded legacy IRS 527 text export",
       });
-    }
-
-    const supplementalFiles: Record<"State" | "Lobbying", string> = {
-      State: path.join(this.stateStore.paths.recent, "state.json"),
-      Lobbying: path.join(this.stateStore.paths.recent, "lda.json"),
-    };
-
-    for (const source of ["State", "Lobbying"] as const) {
-      const jsonPath = supplementalFiles[source];
-      if (fs.existsSync(jsonPath)) {
-        const rows = this.readJsonRows(jsonPath);
-        for (const row of rows) contributions.push(row);
-        freshness.push({
-          source,
-          fetchedAt: new Date(fs.statSync(jsonPath).mtimeMs).toISOString(),
-          latestRecordDate: latestDate(rows),
-          degraded: false,
-          details: `Loaded ${source} normalized rows`,
-        });
-      } else {
-        freshness.push({
-          source,
-          fetchedAt: "",
-          latestRecordDate: "",
-          degraded: true,
-          details: `${source} staged data not present`,
-        });
-      }
     }
 
     return { contributions, freshness, warnings };
+  }
+
+  private loadSupplementalSource(
+    config: SupplementalSourceConfig,
+    contributions: NormalizedContribution[],
+    freshness: SourceFreshness[],
+    warnings: string[],
+  ): void {
+    if (!fs.existsSync(config.filePath)) {
+      freshness.push({
+        source: config.source,
+        fetchedAt: "",
+        latestRecordDate: "",
+        degraded: true,
+        details: config.missingDetails,
+      });
+      return;
+    }
+
+    const rows = config.loader(config.filePath);
+    contributions.push(...rows);
+    const metadata = config.metaPath ? this.readFetchMetadata(config.metaPath) : null;
+    const degraded = metadata?.status ? metadata.status !== "complete" : false;
+    const details = metadata
+      ? `${config.defaultDetails} (${metadata.status}${metadata.mode ? `, ${metadata.mode}` : ""})`
+      : config.defaultDetails;
+
+    if (config.metaPath && !metadata) {
+      warnings.push(`Missing ${config.source} metadata file: ${config.metaPath}`);
+    }
+    if (metadata && config.onMetadata) {
+      config.onMetadata(metadata, warnings);
+    }
+
+    freshness.push({
+      source: config.source,
+      fetchedAt: metadata?.fetchedAt || new Date(fs.statSync(config.filePath).mtimeMs).toISOString(),
+      latestRecordDate: latestDate(rows),
+      degraded,
+      details,
+    });
   }
 
   private readJsonRows(filePath: string): NormalizedContribution[] {
@@ -355,7 +386,7 @@ export class PoliticalMatcher {
         recipient: record.recipientName || record.recipientId || "Unknown recipient",
         recipientType: record.recipientType || record.source,
         party: record.party || "UNKNOWN",
-        candidateName: "",
+        candidateName: metadataString(record.metadata.honoreeName),
         candidateOffice: "",
       };
     }
@@ -403,17 +434,22 @@ export class PoliticalMatcher {
         }
 
         const recipient = this.resolveRecipient(record, enrichment);
-        const donationClassification = classifyDonation(record.amount, recipient.recipient, recipient.recipientType);
+        const classification = record.signalType === "registration"
+          ? classifyRegistration(recipient.recipient)
+          : classifyDonation(record.amount, recipient.recipient, recipient.recipientType);
         rows.push({
           runId: this.runId,
           prospectId: candidate.prospect.prospectId,
           prospectName: candidate.prospect.nameRaw,
           prospectCompany: candidate.prospect.companyRaw,
+          signalType: record.signalType,
           matchConfidence: score.matchConfidence,
           matchQuality: score.matchQuality,
           guardrailStatus: route.guardrailStatus,
           matchReason: score.matchReason,
           employerMatchStatus: features.employerResult.status,
+          locationMatchStatus: features.locationMatch.status,
+          prospectCityState: [candidate.prospect.city, candidate.prospect.state].filter(Boolean).join(", "),
           dataSource: record.source,
           donationAmount: record.amount,
           donationDate: record.donationDate || record.loadDate,
@@ -427,9 +463,9 @@ export class PoliticalMatcher {
           donorOccupation: record.occupationRaw,
           donorCityState: [record.city, record.state].filter(Boolean).join(", "),
           partisanLean: "Unknown",
-          signalTier: donationClassification.tier,
-          action: donationClassification.action,
-          flags: [],
+          signalTier: classification.tier,
+          action: classification.action,
+          flags: record.signalType === "registration" ? ["Registered Lobbyist"] : [],
           contribution: {
             ...record,
             recipientName: recipient.recipient,
@@ -467,6 +503,10 @@ export class PoliticalMatcher {
 
     return rows;
   }
+}
+
+function metadataString(value: string | number | boolean | null | undefined): string {
+  return typeof value === "string" ? value : "";
 }
 
 function normalizeParty(party: string): string {

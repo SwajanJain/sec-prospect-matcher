@@ -2,9 +2,11 @@
 export type { PersonNameParts, ProspectRecord, VariantType, EmployerMatchResult, ProspectLoadFailure, ProspectLoadSummary } from "@pm/core";
 
 // Import shared types for use in this file's interfaces
-import type { EmployerMatchResult, ProspectLoadSummary, VariantType } from "@pm/core";
+import type { EmployerMatchResult, LocationMatchResult, ProspectLoadSummary, VariantType } from "@pm/core";
+import type { OccupationMatchResult } from "../lib/occupation-matcher";
 
 export type SourceName = "FEC" | "State" | "527" | "Lobbying";
+export type SignalType = "contribution" | "registration";
 
 export interface FetchArtifactMeta {
   source: string;
@@ -14,10 +16,15 @@ export interface FetchArtifactMeta {
   pagesFetched: number;
   requestCount: number;
   error?: string;
+  mode?: string;
+  authenticated?: boolean;
+  contributionRows?: number;
+  registrationRows?: number;
 }
 
 export interface NormalizedContribution {
   source: SourceName;
+  signalType: SignalType;
   sourceRecordId: string;
   sourceCycle: string;
   sourceEntityType: string;
@@ -65,8 +72,11 @@ export interface MatchFeatures {
   suffixAgrees: boolean;
   suffixConflicts: boolean;
   employerResult: EmployerMatchResult;
+  locationMatch: LocationMatchResult;
+  occupationMatch: OccupationMatchResult;
   nameFrequencyBucket: "low" | "medium" | "high";
   candidateProspectCount: number;
+  identitySignalCount: number;
   repeatedConsistentRows: number;
   repeatedConflictingRows: number;
   recordCompleteness: number;
@@ -87,7 +97,9 @@ export interface MatchRoute {
     | "blocked_employer_conflict"
     | "blocked_extreme_ambiguity"
     | "blocked_weak_nickname_match"
-    | "blocked_low_information";
+    | "blocked_low_information"
+    | "blocked_no_corroboration"
+    | "blocked_state_conflict";
   guardrailReason: string;
 }
 
@@ -104,11 +116,14 @@ export interface MatchResult {
   prospectId: string;
   prospectName: string;
   prospectCompany: string;
+  signalType: SignalType;
   matchConfidence: number;
   matchQuality: MatchScore["matchQuality"];
   guardrailStatus: MatchRoute["guardrailStatus"];
   matchReason: string;
   employerMatchStatus: EmployerMatchResult["status"];
+  locationMatchStatus: LocationMatchResult["status"];
+  prospectCityState: string;
   dataSource: SourceName;
   donationAmount: number;
   donationDate: string;

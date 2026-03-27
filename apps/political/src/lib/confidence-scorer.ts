@@ -4,6 +4,7 @@ export function scoreMatch(features: MatchFeatures): MatchScore {
   let score = 0;
   const reasons: string[] = [];
 
+  // Name base
   if (features.exactFullName) {
     score += 45;
     reasons.push("exact_name");
@@ -15,37 +16,73 @@ export function scoreMatch(features: MatchFeatures): MatchScore {
     reasons.push("nickname");
   }
 
+  // Middle name / suffix (positive only)
   if (features.middleNameAgrees) {
     score += 10;
     reasons.push("middle_match");
   }
-  if (features.middleNameConflicts) score -= 15;
-  if (features.suffixAgrees) score += 5;
-  if (features.suffixConflicts) score -= 10;
-
-  score += features.employerResult.scoreImpact;
-  if (["confirmed", "likely", "weak_overlap"].includes(features.employerResult.status)) {
-    reasons.push(features.employerResult.status);
+  if (features.suffixAgrees) {
+    score += 5;
   }
 
-  if (features.nameFrequencyBucket === "medium") score -= 10;
-  if (features.nameFrequencyBucket === "high") score -= 20;
+  // Employer (positive only)
+  if (features.employerResult.status === "confirmed") {
+    score += 35;
+    reasons.push("confirmed");
+  } else if (features.employerResult.status === "likely") {
+    score += 25;
+    reasons.push("likely");
+  } else if (features.employerResult.status === "weak_overlap") {
+    score += 10;
+    reasons.push("weak_overlap");
+  }
 
+  // Location
+  if (features.locationMatch.status === "zip_match") {
+    score += 20;
+    reasons.push("zip_match");
+  } else if (features.locationMatch.status === "city_state_match") {
+    score += 15;
+    reasons.push("city_state");
+  } else if (features.locationMatch.status === "state_match") {
+    score += 5;
+    reasons.push("state_match");
+  }
+
+  // Occupation
+  if (features.occupationMatch.status === "corroborated") {
+    score += 8;
+    reasons.push("occupation");
+  }
+
+  // Repeated consistent rows (positive only)
   score += Math.min(features.repeatedConsistentRows * 5, 15);
-  score -= Math.min(features.repeatedConflictingRows * 10, 25);
+
+  // Convergence bonus
+  if (features.identitySignalCount >= 3) {
+    score += 10;
+  } else if (features.identitySignalCount >= 2) {
+    score += 5;
+  }
+
   const matchConfidence = Math.max(0, Math.min(100, score));
+
   let matchQuality: MatchScore["matchQuality"] = "Low Confidence";
-  if (matchConfidence >= 90 && ["confirmed", "likely"].includes(features.employerResult.status)) {
+  if (matchConfidence >= 85 && (
+    features.employerResult.status === "confirmed" ||
+    features.employerResult.status === "likely" ||
+    features.identitySignalCount >= 2
+  )) {
     matchQuality = "Verified";
-  } else if (matchConfidence >= 75) {
+  } else if (matchConfidence >= 70) {
     matchQuality = "Likely Match";
-  } else if (matchConfidence >= 40) {
+  } else if (matchConfidence >= 35) {
     matchQuality = "Review Needed";
   }
 
   return {
     matchConfidence,
     matchQuality,
-    matchReason: reasons.slice(0, 2).join("+") || "name_only",
+    matchReason: reasons.slice(0, 3).join("+") || "name_only",
   };
 }
