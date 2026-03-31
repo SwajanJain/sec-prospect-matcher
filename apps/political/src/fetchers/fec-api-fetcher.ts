@@ -115,15 +115,28 @@ export async function fetchRecentFecApi(options: FecApiFetchOptions): Promise<No
 
     let body: string;
     let rateLimitRetries = 0;
+    let curlRetries = 0;
     const MAX_RATE_RETRIES = 3;
+    const MAX_CURL_RETRIES = 5;
     while (true) {
       try {
-        body = execFileSync("curl", ["-s", "--max-time", "30", url], { encoding: "utf8" });
+        body = execFileSync("curl", ["-s", "--max-time", "60", url], { encoding: "utf8" });
       } catch {
+        curlRetries++;
+        if (curlRetries <= MAX_CURL_RETRIES) {
+          const waitSec = 10 * curlRetries;
+          process.stderr.write(
+            `[WARN] FEC API curl failed (attempt ${curlRetries}/${MAX_CURL_RETRIES}), retrying in ${waitSec}s\n`,
+          );
+          await sleep(waitSec * 1000);
+          lastRequestTime = Date.now();
+          requestCount++;
+          continue;
+        }
         status = allRows.length > 0 ? "partial" : "failed";
-        errorMessage = "curl request failed";
+        errorMessage = "curl request failed after retries";
         process.stderr.write(
-          `[ERROR] FEC API curl failed after ${requestCount} requests. ` +
+          `[ERROR] FEC API curl failed after ${MAX_CURL_RETRIES} retries. ` +
           `Returning ${allRows.length} records fetched so far.\n`,
         );
         body = "";
