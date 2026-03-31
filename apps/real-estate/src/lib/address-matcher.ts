@@ -34,6 +34,10 @@ export function compareAddresses(
 
   // Situs address = where the property is → weaker (investment/vacation properties are anywhere)
   if (situs) {
+    if (prospect.line1 && prospect.line1 !== "UNKNOWN"
+        && prospect.normalizedKey && prospect.normalizedKey === situs.normalizedKey) {
+      return { status: "situs_exact", confidence: 70, matchedAgainst: "situs" };
+    }
     if (prospect.city && prospect.state && prospect.city === situs.city && prospect.state === situs.state) {
       return { status: "situs_city_state", confidence: 30, matchedAgainst: "situs" };
     }

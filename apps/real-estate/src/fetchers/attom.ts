@@ -35,7 +35,7 @@ export class AttomClient {
       page: String(args.page),
       pageSize: String(pageSize),
     });
-    const url = `${this.baseUrl}/property/detailmortgageowner?${query.toString()}`;
+    const url = `${this.baseUrl}/property/expandedprofile?${query.toString()}`;
 
     const response = await this.fetchWithRotation(url);
     const body = await response.text();
@@ -54,6 +54,18 @@ export class AttomClient {
       raw: parsed,
       fromCache: false,
     };
+  }
+
+  async fetchExpandedHistory(attomId: string): Promise<unknown> {
+    const query = new URLSearchParams({ attomId });
+    const url = `${this.baseUrl}/saleshistory/expandedhistory?${query.toString()}`;
+    const response = await this.fetchWithRotation(url);
+    const body = await response.text();
+    const parsed = JSON.parse(body) as AttomApiResponse;
+    if (!response.ok && parsed.status?.msg !== "SuccessWithoutResult") {
+      throw new Error(`ATTOM history request failed (${response.status}): ${body.slice(0, 300)}`);
+    }
+    return parsed;
   }
 
   private async fetchWithRotation(url: string): Promise<Response> {

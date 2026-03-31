@@ -2,6 +2,7 @@ import type { IndexedProspect, Logger, ProspectLoadSummary, ProspectRecord, Vari
 
 export type MatchQuality = "high" | "medium" | "low" | "review";
 export type OwnerType = "individual" | "joint" | "trust" | "llc" | "corporation" | "estate" | "unknown";
+export type MatchRole = "buyer" | "seller";
 export type ChangeType =
   | "new_to_cache"
   | "owner_change"
@@ -56,12 +57,13 @@ export interface AddressMatchResult {
   // mailing_state      — state only on owner's home address
   // situs_city_state   — city + state matches property location (weaker — investment/vacation)
   // situs_state        — state only on property location (noise)
-  status: "mailing_exact" | "mailing_zip" | "mailing_city_state" | "mailing_state" | "situs_city_state" | "situs_state" | "mismatch";
+  status: "mailing_exact" | "mailing_zip" | "mailing_city_state" | "mailing_state" | "situs_exact" | "situs_city_state" | "situs_state" | "mismatch";
   confidence: number;
   matchedAgainst: "mailing" | "situs" | "none";
 }
 
 export interface MatchFeatures {
+  role: MatchRole;
   variantType: VariantType | "trust_extracted" | "co_owner" | "fuzzy" | "none";
   addressStatus: AddressMatchResult["status"];
   stateMatch: boolean;
@@ -92,6 +94,8 @@ export interface PropertyRecord {
   ownerRaw2?: string;
   ownerType: OwnerType;
   parsedOwners: ParsedOwner[];
+  sellerRaw?: string;
+  parsedSellers: ParsedOwner[];
 
   ownerMailingAddress?: string;
   ownerMailingCity?: string;
@@ -108,6 +112,13 @@ export interface PropertyRecord {
 
   lastSaleDate?: string;
   lastSalePrice?: number;
+  saleRecordDate?: string;
+  saleTransactionDate?: string;
+  saleSearchDate?: string;
+  saleDocumentNumber?: string;
+  saleTransactionType?: string;
+  saleTransactionId?: string;
+  quitClaimFlag?: string;
   isArmsLength?: boolean;
   mortgageAmount?: number;
   mortgageLender?: string;
@@ -131,8 +142,11 @@ export interface PriorStateRecord {
 export interface PropertyMatch {
   prospectId: string;
   prospectName: string;
+  role: MatchRole;
   property: PropertyRecord;
   matchedOwner: ParsedOwner;
+  sourceNameOnRecord: string;
+  disclaimer?: string;
   changeType: ChangeType;
   nameScore: number;
   addressScore: number;
@@ -158,7 +172,6 @@ export interface MonitoringStats {
   candidateMatches: number;
   acceptedMatches: number;
   reviewMatches: number;
-  commonNameFlags: number;
 }
 
 export interface MonitoringManifest {

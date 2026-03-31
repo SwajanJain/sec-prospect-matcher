@@ -15,6 +15,14 @@ function getString(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
 }
 
+function firstString(...values: unknown[]): string {
+  for (const value of values) {
+    const normalized = getString(value);
+    if (normalized) return normalized;
+  }
+  return "";
+}
+
 function getNumber(value: unknown): number | undefined {
   if (typeof value === "number" && Number.isFinite(value)) return value;
   if (typeof value === "string" && value.trim()) {
@@ -25,9 +33,9 @@ function getNumber(value: unknown): number | undefined {
 }
 
 function normalizeOwner(ownerPayload: AnyRecord): ParsedOwner[] {
-  const last = getString(ownerPayload.lastname);
-  const firstAndMi = getString(ownerPayload.firstnameandmi);
-  const full = getString(ownerPayload.fullname) || [firstAndMi, last].filter(Boolean).join(" ").trim();
+  const last = firstString(ownerPayload.lastname, ownerPayload.lastName);
+  const firstAndMi = firstString(ownerPayload.firstnameandmi, ownerPayload.firstNameAndMi);
+  const full = firstString(ownerPayload.fullname, ownerPayload.fullName) || [firstAndMi, last].filter(Boolean).join(" ").trim();
   if (!full) return [];
 
   const parsed = parsePersonName(full);
@@ -56,16 +64,27 @@ export function normalizeAttomProperty(payload: unknown): PropertyRecord {
   const sale = asRecord(root.sale);
   const saleAmount = asRecord(sale.amount);
   const mortgage = asRecord(root.mortgage);
-  const owner = asRecord(root.owner);
+  const owner = asRecord(assessment.owner);
 
   const ownerPayloads = [owner.owner1, owner.owner2, owner.owner3, owner.owner4].map(asRecord);
   const parsedOwners = ownerPayloads.flatMap(normalizeOwner);
-  const ownerRaw = ownerPayloads.map((entry) => getString(entry.fullname)).filter(Boolean).join(" | ");
-  const ownerMailingAddress = getString(owner.mailingaddressoneline);
+  const ownerRaw = ownerPayloads.map((entry) => firstString(entry.fullname, entry.fullName)).filter(Boolean).join(" | ");
+  const ownerMailingAddress = firstString(owner.mailingaddressoneline, owner.mailingAddressOneLine);
   const mailing = normalizeAddress(ownerMailingAddress);
-  const situs = normalizeAddress(getString(address.oneLine) || getString(address.line1));
+  const situs = normalizeAddress(firstString(address.oneLine, address.line1));
   const ownerType = classifyOwnerEntity(ownerRaw || getString(owner.owner1));
-  const absenteeStatus = getString(owner.absenteeownerstatus).toUpperCase();
+  const absenteeStatus = firstString(owner.absenteeownerstatus, owner.absenteeOwnerStatus).toUpperCase();
+  const sellerRaw = getString(sale.sellerName);
+  const parsedSellers = parseOwnerName(sellerRaw);
+  const saleRecordDate = firstString(saleAmount.saleRecDate, saleAmount.salerecdate);
+  const saleTransactionDate = firstString(sale.saleTransDate, sale.saleTransdate);
+  const saleSearchDate = firstString(sale.saleSearchDate, sale.salesearchdate);
+  const saleAmountValue = getNumber(saleAmount.saleAmt ?? saleAmount.value ?? sale.amount);
+  const saleDocumentNumber = firstString(saleAmount.saleDocNum, saleAmount.saledocnum);
+  const saleTransactionType = firstString(saleAmount.saleTransType, saleAmount.saleTranstype);
+  const quitClaimFlag = firstString(summary.quitClaimFlag, summary.quitclaimflag);
+  const propertyType = firstString(summary.propType, summary.proptype);
+  const assessedTotal = getNumber(assessed.assdTtlValue ?? assessed.assdttlvalue);
 
   return {
     source: "attom",
@@ -73,27 +92,36 @@ export function normalizeAttomProperty(payload: unknown): PropertyRecord {
     parcelId: getString(identifier.apn),
     countyFips: getString(address.fips),
     county: getString(address.county),
-    sourceCalendardate: getString(root.calendardate),
-    situsAddress: getString(address.oneLine) || getString(address.line1) || situs?.line1 || "",
+    sourceCalendardate: firstString(root.calendardate, root.calendarDate),
+    situsAddress: firstString(address.oneLine, address.line1) || situs?.line1 || "",
     situsCity: getString(address.locality) || situs?.city,
     situsState: getString(address.countrySubd) || situs?.state,
     situsZip: getString(address.postal1) || situs?.zip,
     ownerRaw,
-    ownerRaw2: getString(asRecord(owner.owner2).fullname),
+    ownerRaw2: firstString(asRecord(owner.owner2).fullname, asRecord(owner.owner2).fullName),
     ownerType,
     parsedOwners,
+    sellerRaw,
+    parsedSellers,
     ownerMailingAddress,
     ownerMailingCity: mailing?.city,
     ownerMailingState: mailing?.state,
     ownerMailingZip: mailing?.zip,
-    propertyType: getString(summary.proptype),
+    propertyType,
     useCode: getString(summary.propclass),
-    assessedLand: getNumber(assessed.assdlandvalue),
-    assessedImprovement: getNumber(assessed.assdimprvalue),
-    assessedTotal: getNumber(assessed.assdttlvalue),
+    assessedLand: getNumber(assessed.assdLandValue ?? assessed.assdlandvalue),
+    assessedImprovement: getNumber(assessed.assdImprValue ?? assessed.assdimprvalue),
+    assessedTotal,
     estimatedValue: getNumber(avm.value),
-    lastSaleDate: getString(sale.saleTransDate) || getString(sale.salesearchdate),
-    lastSalePrice: getNumber(saleAmount.value ?? sale.amount),
+    lastSaleDate: saleRecordDate || saleTransactionDate || saleSearchDate,
+    lastSalePrice: saleAmountValue,
+    saleRecordDate,
+    saleTransactionDate,
+    saleSearchDate,
+    saleDocumentNumber,
+    saleTransactionType,
+    saleTransactionId: getString(sale.transactionIdent),
+    quitClaimFlag,
     mortgageAmount: getNumber(mortgage.amount),
     mortgageLender: getString(mortgage.lendername),
     isOwnerOccupied: absenteeStatus === "O",

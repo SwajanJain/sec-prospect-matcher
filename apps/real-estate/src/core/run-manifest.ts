@@ -26,7 +26,6 @@ export function createEmptyManifest(
       candidateMatches: 0,
       acceptedMatches: 0,
       reviewMatches: 0,
-      commonNameFlags: 0,
     },
     outputs: {
       clientCsv: path.join(runDir, "client.csv"),

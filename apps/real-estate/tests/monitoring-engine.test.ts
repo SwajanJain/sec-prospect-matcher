@@ -27,21 +27,11 @@ test("MonitoringEngine produces an alert CSV from ATTOM county scan", async () =
   writeFixture(
     prospectsPath,
     [
-      "prospect_id,name,city,state",
-      "p1,John Smith,Austin,TX",
-      "p2,Jane Doe,Seattle,WA",
+      "prospect_id,name,address,city,state,zip",
+      "p1,John Smith,500 Elm St,Austin,TX,78702",
+      "p2,Mary Seller,1 Main St,Austin,TX,78701",
     ].join("\n"),
   );
-
-  cacheStore.writePriorStates([{
-    sourcePropertyId: "123",
-    ownerFingerprints: ["mary seller"],
-    lastSaleDate: "2024-01-01",
-    lastSalePrice: 700000,
-    mortgageAmount: 300000,
-    assessedTotal: 900000,
-    lastSeen: "2026-03-08T00:00:00.000Z",
-  }]);
 
   const payload: AttomApiResponse = {
     property: [{
@@ -54,17 +44,24 @@ test("MonitoringEngine produces an alert CSV from ATTOM county scan", async () =
         fips: "48453",
         county: "Travis",
       },
-      owner: {
-        owner1: { fullname: "John Smith", lastname: "Smith", firstnameandmi: "John A" },
-        mailingaddressoneline: "500 Elm St, Austin, TX 78702",
-        absenteeownerstatus: "O",
+      summary: { propType: "SFR", propclass: "RES", quitClaimFlag: "False" },
+      assessment: {
+        owner: {
+          owner1: { fullName: "John Smith", lastName: "Smith", firstNameAndMi: "John A" },
+          mailingAddressOneLine: "500 Elm St, Austin, TX 78702",
+          absenteeOwnerStatus: "O",
+        },
+        assessed: { assdTtlValue: "1200000" },
       },
-      summary: { proptype: "SFR", propclass: "RES" },
-      assessment: { assessed: { assdttlvalue: "1200000" } },
       avm: { amount: { value: "1500000" } },
-      sale: { saleTransDate: "2026-03-08", amount: { value: "980000" } },
+      sale: {
+        sellerName: "Mary Seller",
+        saleTransDate: "2026-03-08",
+        transactionIdent: "txn-1",
+        amount: { saleRecDate: "2026-03-09", saleAmt: "980000", saleDocNum: "DOC-1", saleTransType: "Resale" },
+      },
       mortgage: { amount: "400000", lendername: "Test Bank" },
-      calendardate: "2026/03/09",
+      calendarDate: "2026/03/09",
     }],
     status: {
       total: 1,
@@ -76,7 +73,24 @@ test("MonitoringEngine produces an alert CSV from ATTOM county scan", async () =
 
   const client = new AttomClient({
     apiKeys: ["test"],
-    fetchImpl: async () => new Response(JSON.stringify(payload), { status: 200 }),
+    fetchImpl: async (input) => {
+      const url = String(input);
+      if (url.includes("/saleshistory/expandedhistory")) {
+        return new Response(JSON.stringify({
+          property: [{
+            saleHistory: [{
+              buyerName: "John Smith",
+              sellerName: "Mary Seller",
+              saleRecDate: "2026-03-09",
+              saleTransDate: "2026-03-08",
+              saleDocNum: "DOC-1",
+            }],
+          }],
+          status: { total: 1 },
+        }), { status: 200 });
+      }
+      return new Response(JSON.stringify(payload), { status: 200 });
+    },
   });
 
   const engine = new MonitoringEngine({
@@ -97,5 +111,8 @@ test("MonitoringEngine produces an alert CSV from ATTOM county scan", async () =
 
   const clientCsv = fs.readFileSync(manifest.outputs.clientCsv, "utf8");
   assert.match(clientCsv, /John Smith/);
-  assert.match(clientCsv, /owner_change/);
+  assert.match(clientCsv, /buyer/);
+  assert.match(clientCsv, /seller/);
+  assert.match(clientCsv, /history:seller_confirmed/);
+  assert.match(clientCsv, /Location shown is the sold property address, not a verified seller residence\./);
 });

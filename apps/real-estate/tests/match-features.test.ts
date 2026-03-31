@@ -34,6 +34,7 @@ function baseProperty(overrides: Partial<PropertyRecord> = {}): PropertyRecord {
     ownerRaw: "JOHN SMITH",
     ownerType: "individual",
     parsedOwners: [],
+    parsedSellers: [],
     ownerMailingState: "TX",
     ...overrides,
   };
@@ -46,11 +47,11 @@ test("stateMatch is true when prospect state matches mailing state", () => {
   const features = buildMatchFeatures({
     prospect: baseProspect({ state: "TX" }),
     property: baseProperty({ ownerMailingState: "TX" }),
+    role: "buyer",
     variantType: "exact",
     addressMatch: mailingCityState,
-    candidateCount: 1,
     portfolioCorroborationCount: 1,
-    changeType: "owner_change",
+    changeType: "sale_update",
   });
   assert.equal(features.stateMatch, true);
 });
@@ -59,11 +60,11 @@ test("stateMatch is true (not penalized) when prospect has no state", () => {
   const features = buildMatchFeatures({
     prospect: baseProspect({ state: "" }),
     property: baseProperty({ ownerMailingState: "TX" }),
+    role: "buyer",
     variantType: "exact",
     addressMatch: noAddress,
-    candidateCount: 1,
     portfolioCorroborationCount: 1,
-    changeType: "owner_change",
+    changeType: "sale_update",
   });
   assert.equal(features.stateMatch, true);
 });
@@ -72,11 +73,11 @@ test("portfolioCorroborationCount is passed through", () => {
   const features = buildMatchFeatures({
     prospect: baseProspect(),
     property: baseProperty(),
+    role: "buyer",
     variantType: "exact",
     addressMatch: noAddress,
-    candidateCount: 1,
     portfolioCorroborationCount: 3,
-    changeType: "owner_change",
+    changeType: "sale_update",
   });
   assert.equal(features.portfolioCorroborationCount, 3);
 });
@@ -85,11 +86,11 @@ test("stateMatch is false when prospect state mismatches both mailing and situs"
   const features = buildMatchFeatures({
     prospect: baseProspect({ state: "CA" }),
     property: baseProperty({ ownerMailingState: "TX", situsState: "TX" }),
+    role: "seller",
     variantType: "exact",
     addressMatch: noAddress,
-    candidateCount: 1,
     portfolioCorroborationCount: 1,
-    changeType: "owner_change",
+    changeType: "sale_update",
   });
   assert.equal(features.stateMatch, false);
 });

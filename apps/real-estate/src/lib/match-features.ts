@@ -5,13 +5,14 @@ import type { AddressMatchResult, ChangeType, MatchFeatures, PropertyRecord } fr
 export function buildMatchFeatures(args: {
   prospect: ProspectRecord;
   property: PropertyRecord;
-  variantType: VariantType;
+  role: "buyer" | "seller";
+  variantType: VariantType | "trust_extracted" | "co_owner" | "fuzzy" | "none";
   addressMatch: AddressMatchResult;
-  candidateCount: number;
   portfolioCorroborationCount: number;
   changeType: ChangeType;
 }): MatchFeatures {
   return {
+    role: args.role,
     variantType: args.variantType,
     addressStatus: args.addressMatch.status,
     stateMatch: args.prospect.state
@@ -25,6 +26,8 @@ export function buildMatchFeatures(args: {
 
 export function propertySignalFromChange(changeType: ChangeType, property: PropertyRecord): string {
   switch (changeType) {
+    case "sale_update":
+      return `Recent sale recorded at ${property.situsAddress}`;
     case "owner_change":
       return `New owner detected at ${property.situsAddress}`;
     case "new_to_cache":

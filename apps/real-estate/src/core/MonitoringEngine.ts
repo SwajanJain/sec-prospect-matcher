@@ -23,13 +23,14 @@ import type {
   PropertyRecord,
 } from "./types";
 import { compareAddresses } from "../lib/address-matcher";
-import { buildOwnerFingerprints, classifyPropertyChange } from "../lib/change-classifier";
+import { buildOwnerFingerprints } from "../lib/change-classifier";
 import { scoreMatch, variantWeight } from "../lib/confidence-scorer";
 import { estimateGivingCapacity } from "../lib/capacity-formula";
-import { buildMatchFeatures, propertySignalFromChange } from "../lib/match-features";
+import { buildMatchFeatures } from "../lib/match-features";
 import { routeMatch } from "../lib/review-router";
 import { writeMatchCsv } from "../io/csv-export";
 import { normalizeAttomProperty } from "../parsers/source-normalizers";
+import { parseOwnerName } from "../parsers/owner-name-parser";
 import { AttomClient } from "../fetchers/attom";
 import { CacheStore } from "../fetchers/cache-store";
 import { readEnvFile } from "../cli/util";
@@ -40,61 +41,103 @@ interface MonitoringEngineDeps {
   logger?: Logger;
 }
 
+interface HistoryTransactionRow {
+  buyerName?: string;
+  sellerName?: string;
+  saleRecordDate?: string;
+  saleTransactionDate?: string;
+  saleDocumentNumber?: string;
+}
+
+const REFRESH_LOOKBACK_DAYS = 90;
+const SELLER_LOCATION_DISCLAIMER = "Location shown is the sold property address, not a verified seller residence.";
+
 function isoDate(value: Date): string {
   return value.toISOString().slice(0, 10).replace(/-/g, "/");
 }
 
+function normalizeDate(value: string | undefined): string | undefined {
+  if (!value) return undefined;
+  const match = value.trim().match(/^(\d{4})[-/](\d{2})[-/](\d{2})$/);
+  if (!match) return undefined;
+  return `${match[1]}-${match[2]}-${match[3]}`;
+}
+
+function toCalendarDate(value: string): string {
+  return value.replace(/-/g, "/");
+}
+
+function shiftCalendarDate(value: string, days: number): string {
+  const normalized = normalizeDate(value);
+  if (!normalized) return value;
+  const date = new Date(`${normalized}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + days);
+  return isoDate(date);
+}
+
 function prospectAddressLike(prospect: ProspectRecord): string | undefined {
-  // If we have a full street address, build "street, city, state zip" for Tier 1/2 matching
   if (prospect.address && prospect.city && prospect.state) {
     const stateZip = prospect.zip ? `${prospect.state} ${prospect.zip}` : prospect.state;
     return `${prospect.address}, ${prospect.city}, ${stateZip}`;
   }
   if (!prospect.city && !prospect.state) return undefined;
-  // Fallback to city+state only (Tier 3/4)
   const stateZip = prospect.zip ? `${prospect.state} ${prospect.zip}` : prospect.state;
   return `UNKNOWN, ${prospect.city}, ${stateZip}`.trim();
 }
 
-function propertyAddressLike(property: PropertyRecord): { situs?: string; mailing?: string } {
+function propertyAddressLike(property: PropertyRecord, role: "buyer" | "seller"): { situs?: string; mailing?: string } {
   const situs = property.situsCity && property.situsState
     ? `UNKNOWN, ${property.situsCity}, ${property.situsState} ${property.situsZip ?? ""}`.trim()
     : property.situsAddress;
+
+  if (role === "seller") {
+    return { situs };
+  }
+
   const mailing = property.ownerMailingCity && property.ownerMailingState
     ? `UNKNOWN, ${property.ownerMailingCity}, ${property.ownerMailingState} ${property.ownerMailingZip ?? ""}`.trim()
     : property.ownerMailingAddress;
+
   return { situs, mailing };
 }
 
-function normalizedOwnerKeys(owner: ParsedOwner): Array<{ key: string; variantType: VariantType | "trust_extracted" | "co_owner" }> {
+function normalizedPartyKeys(owner: ParsedOwner): Array<{ key: string; variantType: VariantType | "trust_extracted" | "co_owner" }> {
   const results = new Map<string, VariantType | "trust_extracted" | "co_owner">();
-  if (owner.normalized) results.set(owner.normalized, owner.extractedFrom === "trust_name" ? "trust_extracted" : owner.extractedFrom === "co_owner" ? "co_owner" : "exact");
+  if (owner.normalized) {
+    results.set(
+      owner.normalized,
+      owner.extractedFrom === "trust_name"
+        ? "trust_extracted"
+        : owner.extractedFrom === "co_owner"
+          ? "co_owner"
+          : "exact",
+    );
+  }
   for (const variant of generateNameVariants(owner.raw)) {
     results.set(variant.value, variant.variantType);
   }
   return Array.from(results.entries()).map(([key, variantType]) => ({ key, variantType }));
 }
 
-function rarityMap(prospects: ProspectRecord[]): Map<string, number> {
-  const counts = new Map<string, number>();
-  for (const prospect of prospects) {
-    const key = `${prospect.firstName} ${prospect.lastName}`.trim().toLowerCase();
-    counts.set(key, (counts.get(key) ?? 0) + 1);
-  }
-  return counts;
+function effectiveSaleDate(property: PropertyRecord): string | undefined {
+  return normalizeDate(property.saleRecordDate) ?? normalizeDate(property.saleTransactionDate) ?? normalizeDate(property.lastSaleDate);
 }
 
-function nextStartDate(watermark: string | undefined, fallback: string): string {
-  if (!watermark) return fallback;
-  const date = new Date(`${watermark}T00:00:00Z`);
-  date.setUTCDate(date.getUTCDate() + 1);
-  return isoDate(date);
+function inDateRange(date: string | undefined, startDate: string, endDate: string): boolean {
+  if (!date) return false;
+  return date >= startDate && date <= endDate;
+}
+
+function transactionKey(property: PropertyRecord): string {
+  const saleDate = effectiveSaleDate(property) ?? "unknown-date";
+  const doc = property.saleDocumentNumber || property.saleTransactionId || "unknown-doc";
+  return `${property.sourcePropertyId}|${doc}|${saleDate}`;
 }
 
 function dedupeMatches(matches: PropertyMatch[]): PropertyMatch[] {
   const bestByKey = new Map<string, PropertyMatch>();
   for (const match of matches) {
-    const key = `${match.prospectId}|${match.property.sourcePropertyId}`;
+    const key = `${match.prospectId}|${match.role}|${transactionKey(match.property)}`;
     const existing = bestByKey.get(key);
     if (!existing || existing.combinedScore < match.combinedScore) {
       bestByKey.set(key, match);
@@ -115,12 +158,18 @@ function buildPriorState(property: PropertyRecord): PriorStateRecord {
   };
 }
 
-function buildSignals(property: PropertyRecord, changeType: ChangeType, matchedCount: number) {
+function buildSignals(property: PropertyRecord, role: "buyer" | "seller") {
+  const signal = role === "buyer"
+    ? `Recent property purchase recorded at ${property.situsAddress}`
+    : `Recent property sale recorded at ${property.situsAddress}`;
+  const action = role === "buyer"
+    ? "Review for buyer capacity and recent acquisition context"
+    : "Review for liquidity or relocation context";
   return [{
-    tier: (changeType === "owner_change" ? 1 : 2) as 1 | 2,
-    signal: propertySignalFromChange(changeType, property),
+    tier: 1 as const,
+    signal,
     detail: property.situsAddress,
-    action: matchedCount > 1 ? "Review portfolio context" : "Review for prospect research",
+    action,
   }];
 }
 
@@ -131,6 +180,83 @@ function qualitySortValue(quality: MatchQuality): number {
     case "low": return 2;
     default: return 1;
   }
+}
+
+function hasMatchableParty(property: PropertyRecord): boolean {
+  return property.parsedOwners.length > 0 || property.parsedSellers.length > 0;
+}
+
+function isTransactionCandidate(property: PropertyRecord, alertStartDate: string, alertEndDate: string): boolean {
+  const saleDate = normalizeDate(property.saleRecordDate) ?? normalizeDate(property.saleTransactionDate);
+  if (!inDateRange(saleDate, alertStartDate, alertEndDate)) return false;
+  if (!hasMatchableParty(property)) return false;
+  if ((property.lastSalePrice ?? 0) <= 100) return false;
+  return true;
+}
+
+function asRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" ? value as Record<string, unknown> : {};
+}
+
+function getString(value: unknown): string {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function extractHistoryRows(payload: unknown): HistoryTransactionRow[] {
+  const root = asRecord(payload);
+  const propertyEntries = Array.isArray(root.property) ? root.property : [];
+  const rows: HistoryTransactionRow[] = [];
+
+  for (const entry of propertyEntries) {
+    const property = asRecord(entry);
+    const saleHistory = Array.isArray(property.saleHistory)
+      ? property.saleHistory
+      : Array.isArray(property.salehistory)
+        ? property.salehistory
+        : [];
+
+    for (const historyEntry of saleHistory) {
+      const history = asRecord(historyEntry);
+      rows.push({
+        buyerName: getString(history.buyerName),
+        sellerName: getString(history.sellerName),
+        saleRecordDate: normalizeDate(getString(history.saleRecDate)),
+        saleTransactionDate: normalizeDate(getString(history.saleTransDate)),
+        saleDocumentNumber: getString(history.saleDocNum),
+      });
+    }
+  }
+
+  return rows;
+}
+
+function historyMatchesTransaction(row: HistoryTransactionRow, property: PropertyRecord): boolean {
+  const propertyDate = effectiveSaleDate(property);
+  const rowDate = row.saleRecordDate ?? row.saleTransactionDate;
+  if (property.saleDocumentNumber && row.saleDocumentNumber) {
+    return property.saleDocumentNumber === row.saleDocumentNumber;
+  }
+  if (propertyDate && rowDate) {
+    return propertyDate === rowDate;
+  }
+  return true;
+}
+
+function historyConfirmsParty(match: PropertyMatch, rows: HistoryTransactionRow[]): boolean {
+  for (const row of rows) {
+    if (!historyMatchesTransaction(row, match.property)) continue;
+    const partyName = match.role === "buyer" ? row.buyerName : row.sellerName;
+    if (!partyName) continue;
+    const parsed = parseOwnerName(partyName);
+    if (parsed.some((entry) => entry.normalized && entry.normalized === match.matchedOwner.normalized)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function variantForScore(value: VariantType | "trust_extracted" | "co_owner"): VariantType | "trust_extracted" | "co_owner" {
+  return value;
 }
 
 export class MonitoringEngine {
@@ -149,118 +275,78 @@ export class MonitoringEngine {
     const { prospects, summary } = loadProspectsDetailed(options.prospectsPath);
     manifest.prospectLoad = summary;
     const { prospectIndex } = buildProspectIndex(prospects);
-    const nameRarity = rarityMap(prospects);
 
-    const startDateFallback = options.startDate ?? isoDate(new Date());
-    const endDate = options.endDate ?? isoDate(new Date());
+    const alertEndDate = normalizeDate(options.endDate) ?? normalizeDate(isoDate(new Date()))!;
+    const alertStartDate = normalizeDate(options.startDate) ?? alertEndDate;
+    const scanEndDate = toCalendarDate(alertEndDate);
+    const scanStartDate = shiftCalendarDate(scanEndDate, -(REFRESH_LOOKBACK_DAYS - 1));
     const accepted: PropertyMatch[] = [];
     const review: PropertyMatch[] = [];
-
     const countyErrors: Array<{ county: string; error: string }> = [];
 
     for (const county of options.counties) {
       try {
-      const watermark = this.cacheStore.readWatermark(county);
-      const startDate = options.startDate ?? nextStartDate(watermark?.lastCompleted, startDateFallback);
-      const firstScanForCounty = !watermark?.lastCompleted;
-      this.cacheStore.writeWatermark(county, {
-        lastCompleted: watermark?.lastCompleted,
-        lastStarted: endDate,
-        status: "partial",
-      });
+        const watermark = this.cacheStore.readWatermark(county);
+        this.cacheStore.writeWatermark(county, {
+          lastCompleted: watermark?.lastCompleted,
+          lastStarted: alertEndDate,
+          status: "partial",
+        });
 
-      const priorStateWrites: PriorStateRecord[] = [];
-      let page = 1;
-      let totalPages: number | undefined;
-      const matchesForCounty: PropertyMatch[] = [];
+        const priorStateWrites: PriorStateRecord[] = [];
+        const matchesForCounty: PropertyMatch[] = [];
+        let page = 1;
+        let totalPages: number | undefined;
 
-      while (true) {
-        const pageResult = await this.loadPage(county, startDate, endDate, page);
-        manifest.counts.apiCalls += pageResult.fromCache ? 0 : 1;
-        manifest.counts.cacheHits += pageResult.fromCache ? 1 : 0;
-        if (typeof pageResult.pages === "number") totalPages = pageResult.pages;
-        this.cacheStore.markPageComplete(county, startDate, endDate, page, totalPages);
+        while (true) {
+          const pageResult = await this.loadPage(county, scanStartDate, scanEndDate, page);
+          manifest.counts.apiCalls += pageResult.fromCache ? 0 : 1;
+          manifest.counts.cacheHits += pageResult.fromCache ? 1 : 0;
+          if (typeof pageResult.pages === "number") totalPages = pageResult.pages;
+          this.cacheStore.markPageComplete(county, scanStartDate, scanEndDate, page, totalPages);
 
-        for (const rawProperty of pageResult.properties) {
-          const property = normalizeAttomProperty(rawProperty);
-          if (!property.sourcePropertyId) continue;
-          manifest.counts.propertyRecordsProcessed += 1;
-          manifest.counts.ownersParsed += property.parsedOwners.length;
+          for (const rawProperty of pageResult.properties) {
+            const property = normalizeAttomProperty(rawProperty);
+            if (!property.sourcePropertyId) continue;
+            manifest.counts.propertyRecordsProcessed += 1;
+            manifest.counts.ownersParsed += property.parsedOwners.length + property.parsedSellers.length;
+            priorStateWrites.push(buildPriorState(property));
 
-          const prior = this.cacheStore.readPriorState(property.sourcePropertyId);
-          const changeType = classifyPropertyChange(property, prior);
-          priorStateWrites.push(buildPriorState(property));
+            if (!isTransactionCandidate(property, alertStartDate, alertEndDate)) continue;
+            const propertyMatches = this.matchProperty(property, prospectIndex);
+            matchesForCounty.push(...propertyMatches);
+            manifest.counts.candidateMatches += propertyMatches.length;
+          }
 
-          if (!this.shouldAlert(changeType, firstScanForCounty, options.scanAll ?? false)) continue;
-          const propertyMatches = this.matchProperty(property, prospects, prospectIndex, nameRarity, changeType);
-          for (const match of propertyMatches) {
-            matchesForCounty.push(match);
-            manifest.counts.candidateMatches += 1;
-            if (match.matchReasons.some((reason) => reason.includes("common_name"))) {
-              manifest.counts.commonNameFlags += 1;
-            }
+          if (pageResult.properties.length < pageResult.pageSize) break;
+          if (typeof totalPages === "number" && page >= totalPages) break;
+          page += 1;
+        }
+
+        this.cacheStore.writePriorStates(priorStateWrites);
+        this.cacheStore.writeWatermark(county, {
+          lastCompleted: alertEndDate,
+          lastStarted: alertEndDate,
+          status: "complete",
+        });
+        manifest.counts.countiesScanned += 1;
+
+        const deduped = dedupeMatches(matchesForCounty);
+        await this.enrichAmbiguousMatches(deduped);
+
+        for (const match of deduped.sort((a, b) => qualitySortValue(b.quality) - qualitySortValue(a.quality) || b.combinedScore - a.combinedScore)) {
+          if (routeMatch(match.quality) === "client") {
+            accepted.push(match);
+            manifest.counts.acceptedMatches += 1;
+          } else {
+            review.push(match);
+            manifest.counts.reviewMatches += 1;
           }
         }
-
-        if (pageResult.properties.length < pageResult.pageSize) break;
-        if (typeof totalPages === "number" && page >= totalPages) break;
-        page += 1;
-      }
-
-      this.cacheStore.writePriorStates(priorStateWrites);
-      this.cacheStore.writeWatermark(county, {
-        lastCompleted: endDate.replace(/\//g, "-"),
-        lastStarted: endDate.replace(/\//g, "-"),
-        status: "complete",
-      });
-      manifest.counts.countiesScanned += 1;
-
-      const deduped = dedupeMatches(matchesForCounty);
-
-      // Second pass: count how many distinct properties each prospect matched,
-      // then re-score with the real portfolio corroboration count.
-      const propertyCountByProspect = new Map<string, number>();
-      for (const match of deduped) {
-        propertyCountByProspect.set(match.prospectId, (propertyCountByProspect.get(match.prospectId) ?? 0) + 1);
-      }
-      for (const match of deduped) {
-        const count = propertyCountByProspect.get(match.prospectId) ?? 1;
-        if (count > 1) {
-          // Re-score with real portfolio count
-          const prospect = prospects.find((p) => p.prospectId === match.prospectId);
-          if (!prospect) continue;
-          const addressMatch = compareAddresses(prospectAddressLike(prospect), propertyAddressLike(match.property));
-          const rarityKey = `${prospect.firstName} ${prospect.lastName}`.trim().toLowerCase();
-          const features = buildMatchFeatures({
-            prospect,
-            property: match.property,
-            variantType: match.matchReasons.find((r) => r.startsWith("name:"))?.slice(5) as VariantType ?? "exact",
-            addressMatch,
-            candidateCount: nameRarity.get(rarityKey) ?? prospects.length,
-            portfolioCorroborationCount: count,
-            changeType: match.changeType,
-          });
-          const rescored = scoreMatch(features);
-          match.combinedScore = rescored.combinedScore;
-          match.quality = rescored.quality;
-          match.matchReasons = rescored.reasons;
-        }
-      }
-
-      for (const match of deduped.sort((a, b) => qualitySortValue(b.quality) - qualitySortValue(a.quality) || b.combinedScore - a.combinedScore)) {
-        if (routeMatch(match.quality) === "client") {
-          accepted.push(match);
-          manifest.counts.acceptedMatches += 1;
-        } else {
-          review.push(match);
-          manifest.counts.reviewMatches += 1;
-        }
-      }
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         this.logger.warn(`County ${county} failed: ${message}`);
         countyErrors.push({ county, error: message });
-        // watermark stays "partial" — will be retried on next run
       }
     }
 
@@ -290,15 +376,25 @@ export class MonitoringEngine {
 
   private matchProperty(
     property: PropertyRecord,
-    prospects: ProspectRecord[],
     prospectIndex: Map<string, IndexedProspect[]>,
-    rarityByName: Map<string, number>,
-    changeType: ChangeType,
+  ): PropertyMatch[] {
+    return [
+      ...this.matchParties("buyer", property.parsedOwners, property, prospectIndex),
+      ...this.matchParties("seller", property.parsedSellers, property, prospectIndex),
+    ];
+  }
+
+  private matchParties(
+    role: "buyer" | "seller",
+    parties: ParsedOwner[],
+    property: PropertyRecord,
+    prospectIndex: Map<string, IndexedProspect[]>,
   ): PropertyMatch[] {
     const matches: PropertyMatch[] = [];
-    for (const owner of property.parsedOwners) {
+
+    for (const party of parties) {
       const candidates = new Map<string, { prospect: ProspectRecord; variantType: VariantType | "trust_extracted" | "co_owner" }>();
-      for (const key of normalizedOwnerKeys(owner)) {
+      for (const key of normalizedPartyKeys(party)) {
         for (const indexed of prospectIndex.get(key.key) ?? []) {
           if (!candidates.has(indexed.prospect.prospectId)) {
             candidates.set(indexed.prospect.prospectId, { prospect: indexed.prospect, variantType: key.variantType });
@@ -307,16 +403,15 @@ export class MonitoringEngine {
       }
 
       for (const candidate of candidates.values()) {
-        const addressMatch = compareAddresses(prospectAddressLike(candidate.prospect), propertyAddressLike(property));
-        const rarityKey = `${candidate.prospect.firstName} ${candidate.prospect.lastName}`.trim().toLowerCase();
+        const addressMatch = compareAddresses(prospectAddressLike(candidate.prospect), propertyAddressLike(property, role));
         const features = buildMatchFeatures({
           prospect: candidate.prospect,
           property,
-          variantType: candidate.variantType === "trust_extracted" || candidate.variantType === "co_owner" ? "exact" : candidate.variantType,
+          role,
+          variantType: variantForScore(candidate.variantType),
           addressMatch,
-          candidateCount: rarityByName.get(rarityKey) ?? prospects.length,
           portfolioCorroborationCount: 1,
-          changeType,
+          changeType: "sale_update",
         });
         const scored = scoreMatch(features);
         const capacity = estimateGivingCapacity([{
@@ -327,27 +422,55 @@ export class MonitoringEngine {
         matches.push({
           prospectId: candidate.prospect.prospectId,
           prospectName: candidate.prospect.nameRaw,
+          role,
           property,
-          matchedOwner: owner,
-          changeType,
-          nameScore: variantWeight(candidate.variantType === "trust_extracted" || candidate.variantType === "co_owner" ? "exact" : candidate.variantType),
+          matchedOwner: party,
+          sourceNameOnRecord: party.raw,
+          disclaimer: role === "seller" ? SELLER_LOCATION_DISCLAIMER : undefined,
+          changeType: "sale_update",
+          nameScore: variantWeight(variantForScore(candidate.variantType)),
           addressScore: addressMatch.confidence,
           combinedScore: scored.combinedScore,
           quality: scored.quality,
           matchReasons: scored.reasons,
-          signals: buildSignals(property, changeType, 1),
+          signals: buildSignals(property, role),
           estimatedCapacity5yr: capacity.fiveYearCapacity,
         });
       }
     }
+
     return matches;
   }
 
-  private shouldAlert(changeType: ChangeType, firstScanForCounty: boolean, scanAll: boolean): boolean {
-    if (scanAll) return true;
-    if (changeType === "owner_change") return true;
-    if (changeType === "new_to_cache") return !firstScanForCounty;
-    return false;
+  private async enrichAmbiguousMatches(matches: PropertyMatch[]): Promise<void> {
+    const targets = Array.from(new Set(
+      matches
+        .filter((match) => match.quality !== "high")
+        .map((match) => match.property.sourcePropertyId)
+        .filter(Boolean),
+    ));
+
+    if (targets.length === 0) return;
+
+    const historyByProperty = new Map<string, HistoryTransactionRow[]>();
+
+    for (const attomId of targets) {
+      try {
+        const payload = await this.attomClient.fetchExpandedHistory(attomId);
+        historyByProperty.set(attomId, extractHistoryRows(payload));
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        this.logger.warn(`Expanded history lookup failed for ${attomId}: ${message}`);
+      }
+    }
+
+    for (const match of matches) {
+      const rows = historyByProperty.get(match.property.sourcePropertyId);
+      if (!rows || rows.length === 0) continue;
+      if (historyConfirmsParty(match, rows)) {
+        match.matchReasons = Array.from(new Set([...match.matchReasons, `history:${match.role}_confirmed`]));
+      }
+    }
   }
 
   static fromEnv(cwd: string, stateDir?: string): MonitoringEngine {

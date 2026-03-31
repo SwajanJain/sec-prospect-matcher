@@ -12,6 +12,7 @@ function baseProperty(overrides: Partial<PropertyRecord> = {}): PropertyRecord {
     ownerRaw: "JOHN SMITH",
     ownerType: "individual",
     parsedOwners: [{ raw: "JOHN SMITH", normalized: "john smith", firstName: "john", lastName: "smith", extractedFrom: "direct" }],
+    parsedSellers: [],
     lastSaleDate: "2025-06-01",
     lastSalePrice: 500000,
     mortgageAmount: 300000,

@@ -23,11 +23,12 @@ function nameLabel(variantType: MatchFeatures["variantType"]): string {
 function addressWeight(status: MatchFeatures["addressStatus"]): number {
   switch (status) {
     case "mailing_exact":      return 45; // street address matches owner's home → strongest
-    case "mailing_zip":        return 35; // ZIP matches owner's home → strong
-    case "mailing_city_state": return 20; // city + state matches owner's home → moderate
-    case "situs_city_state":   return 10; // property is in prospect's city → weak (could be investment)
-    case "mailing_state":      return 3;  // state only on owner's home → very weak
-    case "situs_state":        return 0;  // property state only → noise
+    case "mailing_zip":        return 38; // ZIP matches owner's home → strong
+    case "mailing_city_state": return 22; // city + state matches owner's home → moderate
+    case "situs_exact":        return 25; // exact situs match is useful, but weaker than mailing
+    case "situs_city_state":   return 15; // property is in prospect's city → weak (could be investment)
+    case "mailing_state":      return 5;  // state only on owner's home → very weak
+    case "situs_state":        return 3;  // property state only → weak corroboration
     default: return 0;
   }
 }
@@ -45,15 +46,6 @@ export function scoreMatch(features: MatchFeatures): MatchScoreResult {
   score += address;
   if (address > 0) reasons.push(`address:${features.addressStatus}`);
 
-  // Change type — only signal real ownership events, not cache metadata
-  if (features.changeType === "owner_change") {
-    score += 15;
-    reasons.push("change:owner_change");
-  } else if (features.changeType === "refinance") {
-    score += 4;
-    reasons.push("change:refinance");
-  }
-
   // Penalties
   if (!features.stateMatch) {
     score -= 20;
@@ -66,11 +58,19 @@ export function scoreMatch(features: MatchFeatures): MatchScoreResult {
     reasons.push(`portfolio:${features.portfolioCorroborationCount}_properties`);
   }
 
-  const quality =
-    score >= 80 ? "high" :
-    score >= 60 ? "medium" :
+  let quality: MatchScoreResult["quality"] =
+    score >= 85 ? "high" :
+    score >= 65 ? "medium" :
     score >= 40 ? "low" :
     "review";
+
+  if (features.addressStatus === "mismatch") {
+    quality = "review";
+  }
+
+  if (features.role === "seller" && quality === "high") {
+    quality = "medium";
+  }
 
   return { combinedScore: score, quality, reasons };
 }
