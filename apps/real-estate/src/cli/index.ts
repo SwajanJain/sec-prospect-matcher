@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { bulkFetchCli } from "./bulk-fetch";
 import { fetchCli } from "./fetch";
 import { inspectCli } from "./inspect";
 import { monitorCli } from "./monitor";
@@ -12,6 +13,9 @@ async function main(): Promise<void> {
   switch (command) {
     case "monitor":
       await monitorCli(rest);
+      return;
+    case "bulk-fetch":
+      await bulkFetchCli(rest);
       return;
     case "run":
       await runCli(rest);
@@ -26,7 +30,7 @@ async function main(): Promise<void> {
       await validateCli(rest);
       return;
     default:
-      throw new Error("Usage: restate <monitor|run|fetch|inspect|validate> ...");
+      throw new Error("Usage: restate <monitor|bulk-fetch|run|fetch|inspect|validate> ...");
   }
 }
 
