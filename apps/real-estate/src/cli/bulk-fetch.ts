@@ -10,7 +10,7 @@ export async function bulkFetchCli(argv: string[]): Promise<void> {
   const args = parseArgs(argv);
   if (!args.counties || !args.start || !args.end) {
     throw new Error(
-      "Usage: restate bulk-fetch --counties=11001,36061 --start=YYYY/MM/DD --end=YYYY/MM/DD",
+      "Usage: restate bulk-fetch --counties=11001,36061 --start=YYYY/MM/DD --end=YYYY/MM/DD [--delay=2000]",
     );
   }
 
@@ -29,6 +29,7 @@ export async function bulkFetchCli(argv: string[]): Promise<void> {
 
   const counties = args.counties.split(",").map((c) => c.trim()).filter(Boolean);
   const { start, end } = args;
+  const delayMs = Number(args.delay || "2000");
 
   let countiesComplete = 0;
   let countiesSkipped = 0;
@@ -36,7 +37,7 @@ export async function bulkFetchCli(argv: string[]): Promise<void> {
   let totalPages = 0;
   let totalProperties = 0;
 
-  process.stderr.write(`Bulk fetch: ${counties.length} counties, ${start} → ${end}\n\n`);
+  process.stderr.write(`Bulk fetch: ${counties.length} counties, ${start} → ${end}, ${delayMs}ms delay\n\n`);
 
   for (let i = 0; i < counties.length; i++) {
     const fips = counties[i];
@@ -102,6 +103,7 @@ export async function bulkFetchCli(argv: string[]): Promise<void> {
           || (typeof countyTotalPages === "number" && page >= countyTotalPages);
 
         if (done) break;
+        if (delayMs > 0) await new Promise((resolve) => setTimeout(resolve, delayMs));
         page++;
       }
 
