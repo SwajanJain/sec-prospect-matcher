@@ -30,6 +30,7 @@ export function createEmptyManifest(
     outputs: {
       clientCsv: path.join(runDir, "client.csv"),
       reviewCsv: path.join(runDir, "review.csv"),
+      summaryTxt: path.join(runDir, "summary.txt"),
       manifestJson: path.join(runDir, "manifest.json"),
       statsJson: path.join(runDir, "stats.json"),
     },

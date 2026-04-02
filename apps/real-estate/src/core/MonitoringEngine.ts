@@ -28,7 +28,7 @@ import { scoreMatch, variantWeight } from "../lib/confidence-scorer";
 import { estimateGivingCapacity } from "../lib/capacity-formula";
 import { buildMatchFeatures } from "../lib/match-features";
 import { routeMatch } from "../lib/review-router";
-import { writeMatchCsv } from "../io/csv-export";
+import { writeMatchCsv, writeSummary } from "../io/csv-export";
 import { normalizeAttomProperty } from "../parsers/source-normalizers";
 import { parseOwnerName } from "../parsers/owner-name-parser";
 import { AttomClient } from "../fetchers/attom";
@@ -83,6 +83,15 @@ function prospectAddressLike(prospect: ProspectRecord): string | undefined {
   if (!prospect.city && !prospect.state) return undefined;
   const stateZip = prospect.zip ? `${prospect.state} ${prospect.zip}` : prospect.state;
   return `UNKNOWN, ${prospect.city}, ${stateZip}`.trim();
+}
+
+function prospectAddressDisplay(prospect: ProspectRecord): string {
+  const parts: string[] = [];
+  if (prospect.address) parts.push(prospect.address);
+  if (prospect.city) parts.push(prospect.city);
+  const stateZip = [prospect.state, prospect.zip].filter(Boolean).join(" ");
+  if (stateZip) parts.push(stateZip);
+  return parts.join(", ");
 }
 
 function propertyAddressLike(property: PropertyRecord, role: "buyer" | "seller"): { situs?: string; mailing?: string } {
@@ -284,7 +293,9 @@ export class MonitoringEngine {
     const review: PropertyMatch[] = [];
     const countyErrors: Array<{ county: string; error: string }> = [];
 
-    for (const county of options.counties) {
+    for (let ci = 0; ci < options.counties.length; ci++) {
+      const county = options.counties[ci];
+      this.logger.info(`[${ci + 1}/${options.counties.length}] County ${county}...`);
       try {
         const watermark = this.cacheStore.readWatermark(county);
         this.cacheStore.writeWatermark(county, {
@@ -310,7 +321,7 @@ export class MonitoringEngine {
             if (!property.sourcePropertyId) continue;
             manifest.counts.propertyRecordsProcessed += 1;
             manifest.counts.ownersParsed += property.parsedOwners.length + property.parsedSellers.length;
-            priorStateWrites.push(buildPriorState(property));
+            if (!options.skipPriorState) priorStateWrites.push(buildPriorState(property));
 
             if (!isTransactionCandidate(property, alertStartDate, alertEndDate)) continue;
             const propertyMatches = this.matchProperty(property, prospectIndex);
@@ -323,16 +334,19 @@ export class MonitoringEngine {
           page += 1;
         }
 
-        this.cacheStore.writePriorStates(priorStateWrites);
+        if (!options.skipPriorState) this.cacheStore.writePriorStates(priorStateWrites);
         this.cacheStore.writeWatermark(county, {
           lastCompleted: alertEndDate,
           lastStarted: alertEndDate,
           status: "complete",
         });
         manifest.counts.countiesScanned += 1;
+        this.logger.info(`  ${county}: ${page} pages, ${matchesForCounty.length} raw matches`);
 
         const deduped = dedupeMatches(matchesForCounty);
-        await this.enrichAmbiguousMatches(deduped);
+        if (!options.skipEnrichment) {
+          await this.enrichAmbiguousMatches(deduped);
+        }
 
         for (const match of deduped.sort((a, b) => qualitySortValue(b.quality) - qualitySortValue(a.quality) || b.combinedScore - a.combinedScore)) {
           if (routeMatch(match.quality) === "client") {
@@ -358,6 +372,11 @@ export class MonitoringEngine {
     fs.mkdirSync(runDir, { recursive: true });
     writeMatchCsv(manifest.outputs.clientCsv, accepted);
     writeMatchCsv(manifest.outputs.reviewCsv, review);
+    writeSummary(manifest.outputs.summaryTxt, accepted, review, manifest.counts, {
+      startDate: alertStartDate,
+      endDate: alertEndDate,
+      prospectsPath: options.prospectsPath,
+    });
     manifest.finishedAt = new Date().toISOString();
     fs.writeFileSync(manifest.outputs.statsJson, `${JSON.stringify(manifest.counts, null, 2)}\n`, "utf8");
     fs.writeFileSync(manifest.outputs.manifestJson, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
@@ -414,6 +433,13 @@ export class MonitoringEngine {
           changeType: "sale_update",
         });
         const scored = scoreMatch(features);
+        const reasons = [...scored.reasons];
+        if (property.quitClaimFlag?.toLowerCase() === "true") {
+          reasons.push("flag:quitclaim");
+        }
+        if (property.saleTransactionType && property.saleTransactionType !== "Resale") {
+          reasons.push(`flag:${property.saleTransactionType.toLowerCase().replace(/\s+/g, "_")}`);
+        }
         const capacity = estimateGivingCapacity([{
           value: property.estimatedValue ?? property.assessedTotal ?? 0,
           isOwnerOccupied: property.isOwnerOccupied ?? false,
@@ -422,6 +448,7 @@ export class MonitoringEngine {
         matches.push({
           prospectId: candidate.prospect.prospectId,
           prospectName: candidate.prospect.nameRaw,
+          prospectAddress: prospectAddressDisplay(candidate.prospect),
           role,
           property,
           matchedOwner: party,
@@ -432,7 +459,7 @@ export class MonitoringEngine {
           addressScore: addressMatch.confidence,
           combinedScore: scored.combinedScore,
           quality: scored.quality,
-          matchReasons: scored.reasons,
+          matchReasons: reasons,
           signals: buildSignals(property, role),
           estimatedCapacity5yr: capacity.fiveYearCapacity,
         });

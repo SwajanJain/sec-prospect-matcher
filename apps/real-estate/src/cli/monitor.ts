@@ -27,6 +27,8 @@ export async function monitorCli(argv: string[]): Promise<void> {
     endDate: args.end,
     outputDir,
     scanAll: args["scan-all"] === "true",
+    skipEnrichment: args["skip-enrichment"] === "true",
+    skipPriorState: args["skip-prior-state"] === "true",
   });
   process.stdout.write(`${manifest.outputs.clientCsv}\n`);
 }

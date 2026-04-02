@@ -142,6 +142,7 @@ export interface PriorStateRecord {
 export interface PropertyMatch {
   prospectId: string;
   prospectName: string;
+  prospectAddress?: string;
   role: MatchRole;
   property: PropertyRecord;
   matchedOwner: ParsedOwner;
@@ -186,6 +187,7 @@ export interface MonitoringManifest {
   outputs: {
     clientCsv: string;
     reviewCsv: string;
+    summaryTxt: string;
     manifestJson: string;
     statsJson: string;
   };
@@ -200,6 +202,8 @@ export interface MonitoringRunOptions {
   endDate?: string;
   outputDir: string;
   scanAll?: boolean;
+  skipEnrichment?: boolean;
+  skipPriorState?: boolean;
 }
 
 export interface MonitorContext {
