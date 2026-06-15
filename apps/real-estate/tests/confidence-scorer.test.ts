@@ -34,10 +34,17 @@ test("buyer exact name + mailing city_state reaches medium quality", () => {
   assert.equal(result.combinedScore, 72);
 });
 
-test("seller exact name + situs city_state reaches medium quality", () => {
+// Seller situs tiers now mirror buyer mailing tiers (sold property = prior residence).
+test("seller exact name + situs city_state reaches medium (parity with mailing_city_state)", () => {
   const result = scoreMatch(baseFeatures({ role: "seller", addressStatus: "situs_city_state" }));
   assert.equal(result.quality, "medium");
-  assert.equal(result.combinedScore, 65);
+  assert.equal(result.combinedScore, 72);
+});
+
+test("seller exact name + situs exact reaches high (no auto-cap)", () => {
+  const result = scoreMatch(baseFeatures({ role: "seller", addressStatus: "situs_exact" }));
+  assert.equal(result.quality, "high");
+  assert.equal(result.combinedScore, 95);
 });
 
 test("state mismatch penalty is 20 points", () => {
@@ -88,10 +95,12 @@ test("exact name reason shows first_last not exact", () => {
   assert.ok(!result.reasons.includes("name:exact"));
 });
 
-test("mailing address outweighs situs address", () => {
+// Buyer mailing and seller situs at city+state level are now scored equally
+// (sold property is the seller's prior residence — functional parity).
+test("mailing and situs city+state are scored at parity", () => {
   const mailing = scoreMatch(baseFeatures({ addressStatus: "mailing_city_state", changeType: "no_change" }));
-  const situs = scoreMatch(baseFeatures({ addressStatus: "situs_city_state", changeType: "no_change" }));
-  assert.ok(mailing.combinedScore > situs.combinedScore);
+  const situs = scoreMatch(baseFeatures({ role: "seller", addressStatus: "situs_city_state", changeType: "no_change" }));
+  assert.equal(mailing.combinedScore, situs.combinedScore);
 });
 
 test("quality thresholds: high >= 85, medium >= 65, low >= 40, review < 40", () => {
