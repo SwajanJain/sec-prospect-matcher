@@ -53,11 +53,13 @@ export interface AddressMatchResult {
   // Hierarchy (strongest → weakest):
   // mailing_exact      — full street address matches owner's home address (need prospect street)
   // mailing_zip        — ZIP code matches owner's home ZIP (need prospect ZIP)
-  // mailing_city_state — city + state matches owner's home city (current best we have)
+  // mailing_city_state — city + state matches owner's home city
   // mailing_state      — state only on owner's home address
-  // situs_city_state   — city + state matches property location (weaker — investment/vacation)
-  // situs_state        — state only on property location (noise)
-  status: "mailing_exact" | "mailing_zip" | "mailing_city_state" | "mailing_state" | "situs_exact" | "situs_city_state" | "situs_state" | "mismatch";
+  // situs_exact        — full street address matches sold property (seller's prior home)
+  // situs_zip          — ZIP matches sold property ZIP (seller's prior ZIP)
+  // situs_city_state   — city + state matches property location
+  // situs_state        — state only on property location
+  status: "mailing_exact" | "mailing_zip" | "mailing_city_state" | "mailing_state" | "situs_exact" | "situs_zip" | "situs_city_state" | "situs_state" | "mismatch";
   confidence: number;
   matchedAgainst: "mailing" | "situs" | "none";
 }
@@ -78,7 +80,7 @@ export interface MatchScoreResult {
 }
 
 export interface PropertyRecord {
-  source: "attom" | "county_fixture";
+  source: "attom" | "batchdata" | "county_fixture";
   sourcePropertyId: string;
   parcelId?: string;
   countyFips?: string;

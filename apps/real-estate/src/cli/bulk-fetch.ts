@@ -1,33 +1,89 @@
+import fs from "node:fs";
 import path from "node:path";
 
 import { StateStore } from "@pm/core";
 
 import { AttomClient } from "../fetchers/attom";
+import { BatchDataClient } from "../fetchers/batchdata";
 import { CacheStore } from "../fetchers/cache-store";
+import { CountyLookup, loadCountyList } from "../lib/county-list";
 import { parseArgs, readEnvFile } from "./util";
+
+interface Fetcher {
+  fetchCountyPage(args: { fips: string; startDate: string; endDate: string; page: number }): Promise<{
+    properties: unknown[];
+    pageSize: number;
+    pages?: number;
+  }>;
+}
+
+class AttomFetcherAdapter implements Fetcher {
+  constructor(private readonly client: AttomClient) {}
+  fetchCountyPage(args: { fips: string; startDate: string; endDate: string; page: number }) {
+    return this.client.fetchCountyPage(args);
+  }
+}
+
+class BatchDataFetcherAdapter implements Fetcher {
+  constructor(private readonly client: BatchDataClient, private readonly lookup: CountyLookup) {}
+  fetchCountyPage(args: { fips: string; startDate: string; endDate: string; page: number }) {
+    const c = this.lookup.resolve(args.fips);
+    return this.client.fetchCountyPage({
+      countyName: c.countyName, state: c.state,
+      startDate: args.startDate, endDate: args.endDate, page: args.page,
+    });
+  }
+}
 
 export async function bulkFetchCli(argv: string[]): Promise<void> {
   const args = parseArgs(argv);
-  if (!args.counties || !args.start || !args.end) {
+  const vendor = (args.vendor ?? "attom").toLowerCase();
+  if (vendor !== "attom" && vendor !== "batchdata") {
+    throw new Error(`Unknown --vendor=${vendor}. Use attom or batchdata.`);
+  }
+
+  let counties: string[];
+  if (args["county-list"]) {
+    if (!fs.existsSync(args["county-list"])) throw new Error(`--county-list not found: ${args["county-list"]}`);
+    counties = loadCountyList(args["county-list"]).map((e) => e.fips);
+  } else if (args.counties) {
+    counties = args.counties.split(",").map((c) => c.trim()).filter(Boolean);
+  } else {
     throw new Error(
-      "Usage: restate bulk-fetch --counties=11001,36061 --start=YYYY/MM/DD --end=YYYY/MM/DD [--delay=2000]",
+      "Usage:\n" +
+      "  restate bulk-fetch --counties=11001,36061 --start=YYYY/MM/DD --end=YYYY/MM/DD [--delay=2000]\n" +
+      "  restate bulk-fetch --vendor=batchdata --county-list=/path/counties.csv --start=YYYY-MM-DD --end=YYYY-MM-DD",
     );
+  }
+  if (!args.start || !args.end) {
+    throw new Error("--start and --end (YYYY-MM-DD for batchdata, YYYY/MM/DD for attom) are required");
   }
 
   const cwd = process.cwd();
   const envValues = readEnvFile(cwd);
-  const apiKeyRaw = process.env.ATTOM_API_KEY ?? envValues.ATTOM_API_KEY ?? "";
-  const apiKeys = apiKeyRaw.split(",").map((k) => k.trim()).filter(Boolean);
-  if (apiKeys.length === 0) throw new Error("Missing ATTOM_API_KEY in environment or .env");
-
   const root = args["state-dir"] ?? process.env.RESTATE_STATE_DIR ?? envValues.RESTATE_STATE_DIR ?? path.join(cwd, ".restate");
   const stateStore = new StateStore(root);
   stateStore.ensure();
 
-  const client = new AttomClient({ apiKeys });
-  const cacheStore = new CacheStore(stateStore);
+  let fetcher: Fetcher;
+  let cacheStore: CacheStore;
+  if (vendor === "batchdata") {
+    const apiKey = process.env.BATCHDATA_API_KEY ?? envValues.BATCHDATA_API_KEY ?? "";
+    if (!apiKey) throw new Error("Missing BATCHDATA_API_KEY in environment or .env");
+    if (!args["county-list"]) throw new Error("--vendor=batchdata requires --county-list (for FIPS→name lookup)");
+    cacheStore = new CacheStore(stateStore, "batchdata");
+    fetcher = new BatchDataFetcherAdapter(
+      new BatchDataClient({ apiKey }),
+      CountyLookup.fromCsv(args["county-list"]),
+    );
+  } else {
+    const apiKeyRaw = process.env.ATTOM_API_KEY ?? envValues.ATTOM_API_KEY ?? "";
+    const apiKeys = apiKeyRaw.split(",").map((k) => k.trim()).filter(Boolean);
+    if (apiKeys.length === 0) throw new Error("Missing ATTOM_API_KEY in environment or .env");
+    cacheStore = new CacheStore(stateStore, "attom");
+    fetcher = new AttomFetcherAdapter(new AttomClient({ apiKeys }));
+  }
 
-  const counties = args.counties.split(",").map((c) => c.trim()).filter(Boolean);
   const { start, end } = args;
   const delayMs = Number(args.delay || "2000");
 
@@ -79,7 +135,7 @@ export async function bulkFetchCli(argv: string[]): Promise<void> {
         let result;
         for (let attempt = 1; attempt <= 4; attempt++) {
           try {
-            result = await client.fetchCountyPage({ fips, startDate: start, endDate: end, page });
+            result = await fetcher.fetchCountyPage({ fips, startDate: start, endDate: end, page });
             break;
           } catch (err) {
             const msg = err instanceof Error ? err.message : String(err);
