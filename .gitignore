@@ -12,3 +12,9 @@ tmp/
 apps/nonprofit/data/
 apps/nonprofit/output/
 apps/nonprofit/output-fresh/
+
+# Real-estate matcher: vendor cache (large), client prospect lists (PII), run outputs.
+# (apps/real-estate/data/ holds only county FIPS lists and IS committed.)
+/.restate/
+/data/
+/output/

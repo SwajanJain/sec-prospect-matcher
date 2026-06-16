@@ -15,15 +15,20 @@ function ensureDir(filePath: string): void {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
 }
 
+export type CacheVendor = "attom" | "batchdata";
+
 export class CacheStore {
-  constructor(private readonly stateStore: StateStore) {}
+  constructor(
+    private readonly stateStore: StateStore,
+    private readonly vendor: CacheVendor = "attom",
+  ) {}
 
   pagePath(fips: string, startDate: string, endDate: string, page: number): string {
-    return path.join(this.stateStore.paths.raw, "attom", fips, `${startDate}_${endDate}`, `page-${page}.json`);
+    return path.join(this.stateStore.paths.raw, this.vendor, fips, `${startDate}_${endDate}`, `page-${page}.json`);
   }
 
   scanManifestPath(fips: string, startDate: string, endDate: string): string {
-    return path.join(this.stateStore.paths.raw, "attom", fips, `${startDate}_${endDate}`, "scan-manifest.json");
+    return path.join(this.stateStore.paths.raw, this.vendor, fips, `${startDate}_${endDate}`, "scan-manifest.json");
   }
 
   readPage<T>(fips: string, startDate: string, endDate: string, page: number): T | null {

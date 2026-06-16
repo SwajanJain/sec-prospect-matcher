@@ -113,6 +113,7 @@ test("MonitoringEngine produces an alert CSV from ATTOM county scan", async () =
   assert.match(clientCsv, /John Smith/);
   assert.match(clientCsv, /buyer/);
   assert.match(clientCsv, /seller/);
-  assert.match(clientCsv, /history:seller_confirmed/);
+  // Seller match now reaches "high" on situs_exact, so the per-property
+  // expanded-history enrichment is skipped (it only runs for sub-high matches).
   assert.match(clientCsv, /Location shown is the sold property address, not a verified seller residence\./);
 });

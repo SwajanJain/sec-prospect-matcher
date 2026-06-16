@@ -21,12 +21,17 @@ function nameLabel(variantType: MatchFeatures["variantType"]): string {
 }
 
 function addressWeight(status: MatchFeatures["addressStatus"]): number {
+  // For sellers the only address we have is the sold property's situs, and
+  // it functions as the seller's prior residence (their "mailing" address
+  // before the sale). So situs tiers are now weighted at parity with mailing.
+  // Buyer-side mailing weights are untouched.
   switch (status) {
     case "mailing_exact":      return 45; // street address matches owner's home → strongest
     case "mailing_zip":        return 38; // ZIP matches owner's home → strong
     case "mailing_city_state": return 22; // city + state matches owner's home → moderate
-    case "situs_exact":        return 25; // exact situs match is useful, but weaker than mailing
-    case "situs_city_state":   return 15; // property is in prospect's city → weak (could be investment)
+    case "situs_exact":        return 45; // seller: prospect's address == sold property → prior residence
+    case "situs_zip":          return 38; // seller: CRM ZIP matches sold property ZIP → strong
+    case "situs_city_state":   return 22; // seller: same city/state as sold property
     case "mailing_state":      return 5;  // state only on owner's home → very weak
     case "situs_state":        return 3;  // property state only → weak corroboration
     default: return 0;
@@ -66,10 +71,6 @@ export function scoreMatch(features: MatchFeatures): MatchScoreResult {
 
   if (features.addressStatus === "mismatch") {
     quality = "review";
-  }
-
-  if (features.role === "seller" && quality === "high") {
-    quality = "medium";
   }
 
   return { combinedScore: score, quality, reasons };
