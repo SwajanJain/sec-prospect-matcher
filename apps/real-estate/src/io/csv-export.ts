@@ -15,14 +15,26 @@ function propertyAddressOneLine(row: PropertyMatch): string {
   return parts.join(", ");
 }
 
+// Confidence tier derived from the address evidence in the match reasons.
+// street-verified = exact street match (~0.3% FP), zip-verified = ZIP match
+// (<1% FP rare names), city-verified / name-only = weaker corroboration.
+function confidenceTier(row: PropertyMatch): string {
+  const reasons = row.matchReasons.join(" ");
+  if (/address:(mailing_exact|situs_exact)/.test(reasons)) return "street-verified";
+  if (/address:(mailing_zip|situs_zip)/.test(reasons)) return "zip-verified";
+  if (/address:(mailing_city_state|situs_city_state)/.test(reasons)) return "city-verified";
+  return "name-only";
+}
+
 const CLIENT_HEADERS = [
   "Prospect Name",
   "Source Name on Record",
   "Role",
   "Prospect Address (from CRM)",
-  "Property Address (from ATTOM)",
-  "Buyer Mailing Address (from ATTOM)",
+  "Property Address",
+  "Buyer Mailing Address",
   "Match Quality",
+  "Confidence Tier",
   "Combined Score",
   "Match Reason",
   "Sale Date",
@@ -50,6 +62,7 @@ export function writeMatchCsv(filePath: string, rows: PropertyMatch[]): void {
       propertyAddressOneLine(row),
       row.role === "buyer" ? row.property.ownerMailingAddress ?? "" : "",
       row.quality,
+      confidenceTier(row),
       row.combinedScore,
       row.matchReasons.join("; "),
       row.property.saleRecordDate ?? row.property.saleTransactionDate ?? row.property.lastSaleDate ?? "",
@@ -101,7 +114,7 @@ export function writeSummary(
   const lines: string[] = [];
   lines.push(`Real Estate Alerts — ${options.startDate} to ${options.endDate}`);
   lines.push("");
-  lines.push(`Matched ${options.prospectsPath} against ${stats.propertyRecordsProcessed.toLocaleString("en-US")} ATTOM property records across ${stats.countiesScanned} counties.`);
+  lines.push(`Matched ${options.prospectsPath} against ${stats.propertyRecordsProcessed.toLocaleString("en-US")} property records across ${stats.countiesScanned} counties.`);
   lines.push("");
   lines.push(`Results: ${accepted.length} client matches (${uniqueProspects} unique prospects)`);
   lines.push(`  Buyers: ${buyers.length}    Sellers: ${sellers.length}`);
@@ -128,7 +141,7 @@ export function writeSummary(
   lines.push("");
   lines.push("Data notes:");
   lines.push("  - Buyer matches confirmed via owner mailing address corroboration");
-  lines.push("  - Seller matches use property address only (no post-sale address from ATTOM) — capped at medium confidence");
+  lines.push("  - Seller matches use the sold property address as the prior residence corroboration");
   lines.push(`  - ${stats.apiCalls} live API calls made (all data from cache)`);
   lines.push(`  - ${stats.ownersParsed.toLocaleString("en-US")} owner/seller names parsed`);
   lines.push("");
